@@ -85,8 +85,18 @@ function displayStats() {
       <button class="back-button">Back</button>
     </div>
   `;
+
+  
+  document.querySelector('.back-button').addEventListener('click', (event) => {
+    event.preventDefault();
+    overlay.style.display = 'none';
+  });
+
+
   overlay.style.display = 'block';
 }
+
+setMysteryElementOfTheDay();
 
 
 renderGuess();
