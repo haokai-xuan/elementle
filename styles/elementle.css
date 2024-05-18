@@ -313,3 +313,84 @@ a.additional-info:hover {
 .back-button:hover {
   background-color: rgb(0, 155, 0);
 }
+
+@media (max-width: 1200px) {
+  h1 {
+    font-size: 50px;
+  }
+
+  .guess-input {
+    width: 100%;
+  }
+
+  .guess-button,
+  .hint-button,
+  .share-button,
+  .back-button {
+    width: 100%;
+    font-size: 16px;
+    padding: 8px;
+    margin-top: 5px;
+  }
+
+  .element {
+    width: 200px;
+    height: 200px;
+    padding: 10px;
+  }
+
+  .element-grid {
+    grid-template-columns: 1fr;
+    grid-gap: 10px;
+  }
+
+  .atomic-number,
+  .family,
+  .symbol {
+    font-size: 16px;
+  }
+
+  .container {
+    padding: 10px;
+  }
+
+  .stats-container {
+    width: 90%;
+  }
+
+  a.additional-info {
+    display: inline-block;
+    padding: 8px 16px;
+    text-decoration: none;
+    background-color: rgb(42, 42, 42);
+    color: white;
+    border: 2px solid white;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: 0.3s;
+    margin-right: 10px;
+    margin-top: 20px;
+    font-size: 20px;
+  }
+  
+  .share-button {
+    font-size: 20px;
+    border: 2px solid white;
+    padding: 10px 16px;
+    background-color: rgb(42, 42, 42);
+    color: white;
+    border-radius: 8px; /* Make the button rounder */
+    transition: 0.3s;
+    overflow: hidden; /* Hides any overflowing text */
+    white-space: nowrap; /* Prevents text from wrapping to the next line */
+    width: auto; /* Allow the button width to adjust based on text length */
+    min-width: 75px; /* Minimum width of the button */
+    max-width: 200px; /* Maximum width of the button */
+    text-align: center; /* Center aligns the text */
+    display: flex; /* Use flexbox for centering */
+    align-items: center; /* Vertically center the content */
+    justify-content: center; /* Horizontally center the content */
+    margin-top: 20px;
+  }
+}
