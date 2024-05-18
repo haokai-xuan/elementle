@@ -1,0 +1,315 @@
+h1 {
+  font-size: 80px;
+  font-family: Helvetica;
+}
+
+body {
+  background-color: rgb(25, 25, 25);
+  color: white;
+}
+
+.guess-input {
+  font-size: 20px; /* Increase the font size */
+  padding: 10px; /* Increase the padding */
+  background-color: rgb(42, 42, 42);
+  border: 2px solid white;
+  color: white;
+  width: 300px; /* Increase the width */
+  border-radius: 10px; /* Make the input field rounder */
+}
+
+
+.guess-input:disabled,
+.guess-button:disabled {
+  cursor: not-allowed;
+}
+
+button {
+  cursor: pointer;
+}
+
+.guess-button,
+.hint-button {
+  font-size: 20px;
+  padding: 10px;
+  border: 2px solid white;
+  background-color: green;
+  color: white;
+  width: 100px;
+  border-radius: 8px; /* Make the button rounder */
+  transition: all 0.3s ease;
+}
+
+.hint-container {
+  font-size: 15px;
+  font-family: Helvetica;
+  margin-top: 10px;
+}
+
+.guess-button:hover,
+.hint-button:hover {
+  background-color: rgb(0, 155, 0);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.autocomplete-list {
+  list-style: none;
+  padding: unset;
+  margin: unset;
+  position: absolute;
+  width: 100%;
+  z-index: 1; /* Ensure the list appears above other elements */
+}
+
+.autocomplete-list li {
+  border: 1px solid white;
+  border-top: unset;
+  background-color: rgb(42, 42, 42);
+}
+
+.autocomplete-list li:hover {
+  background: rgb(97, 97, 97);
+}
+
+.autocomplete-list button {
+  border: unset;
+  background: unset;
+  color: white ;
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 6px;
+  font-size: 20px;
+}
+
+.autocomplete-wrapper {
+  display: inline-block;
+  position: relative;
+}
+
+.container {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+a.additional-info {
+  display: inline-block;
+  padding: 8px 16px;
+  text-decoration: none;
+  background-color: rgb(42, 42, 42);
+  color: white;
+  border: 2px solid white;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  transition: 0.3s;
+  margin-right: 10px;
+  margin-top: 20px;
+  font-size: 20px;
+}
+
+a.additional-info:hover {
+  background-color: rgb(97, 97, 97);
+}
+
+.guess-button:disabled,
+.guess-input:disabled {
+  cursor: disabled;
+}
+
+.share-button {
+  font-size: 20px;
+  border: 2px solid white;
+  padding: 10px 16px;
+  background-color: rgb(42, 42, 42);
+  color: white;
+  border-radius: 8px; /* Make the button rounder */
+  transition: 0.3s;
+  overflow: hidden; /* Hides any overflowing text */
+  white-space: nowrap; /* Prevents text from wrapping to the next line */
+  width: auto; /* Allow the button width to adjust based on text length */
+  min-width: 75px; /* Minimum width of the button */
+  max-width: 200px; /* Maximum width of the button */
+  text-align: center; /* Center aligns the text */
+  display: flex; /* Use flexbox for centering */
+  align-items: center; /* Vertically center the content */
+  justify-content: center; /* Horizontally center the content */
+  margin-top: 20px;
+}
+
+
+.share-button:hover {
+  background-color: rgb(97, 97, 97);
+}
+
+.correct-guess-container {
+  display: flex;
+}
+
+.popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  transition: opacity 0.5s ease;
+  opacity: 0;
+  font-size: 20px;
+}
+
+
+.grid-container {
+  margin-top: 55px;
+  display: flex;
+  justify-content: center;
+}
+
+.element-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-gap: 20px;
+}
+
+.element {
+  position: relative;
+  width: 250px;
+  height: 250px;
+  border: 2px solid rgb(97, 97, 97);
+  border-radius: 15px;
+  background-color: rgb(42, 42, 42);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.element.guessed-element:hover {
+  transform: scale(1.025);
+  box-shadow: rgba(255, 255, 255, 0.16) 0px 5px 18px 0px, rgba(255, 255, 255, 0.06) 0px 0px 0px 1px;
+}
+
+.name {
+  font-size: 20px;
+}
+
+.atomic-number,
+.family {
+  position: absolute;
+  color: white;
+  font-size: 20px;
+}
+
+.atomic-number {
+  top: 5px;
+  left: 5px;
+}
+
+.family {
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 20px;
+}
+
+.symbol {
+  font-size: 80px;
+}
+
+.green {
+  color: rgb(83, 141, 78);
+}
+
+.yellow {
+  color: rgb(181, 159, 59);
+}
+
+.reveal-answer {
+  margin-top: 55px;
+  background-color: rgb(192, 223, 251);
+  border-radius: 4px;
+  padding: 10px 16px;
+  font-size: 20px;
+  color: rgb(48, 98, 144);
+}
+
+.shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+  100% { transform: translateX(0); }
+}
+
+.glow-red {
+  border: 2px solid red; /* Change border color to red */
+  box-shadow: 0 0 10px red; /* Add red glow effect */
+}
+
+.stats-button {
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: none; /* Adjust padding as needed */
+  background: none;
+}
+
+.overlay {
+  display: none;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.5); /* semi-transparent black overlay */
+  z-index: 999; /* Ensure the overlay is on top of other content */
+  color: black;
+  font-size: 20px;
+}
+
+.stats-container {
+  background-color: #fff;
+  border: 2px solid #ccc;
+  border-radius: 5px;
+  padding: 20px;
+  width: 300px;
+  margin: 20px auto;
+  text-align: center;
+}
+
+.stats-container h2 {
+  margin-bottom: 10px;
+}
+
+.stats-container p {
+  margin: 10px 0;
+}
+
+.back-button {
+  font-size: 20px;
+  padding: 10px;
+  background-color: green;
+  color: white;
+  width: 100px;
+  border-radius: 8px; /* Make the button rounder */
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.back-button:hover {
+  background-color: rgb(0, 155, 0);
+}

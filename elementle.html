@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Elementle - Guess the Element</title>
+    <link rel="stylesheet" href="styles/elementle.css">
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>ELEMENTLE</h1>
+
+      <form action="" autocomplete="off">
+        <div class="autocomplete-wrapper js-autocomplete-wrapper">
+          <input id="guess-input" placeholder="Element" class="guess-input js-guess-input">
+          <!-- <ul class="autocomplete-list">
+            <li>
+              <button>
+                USA
+              </button>
+            </li>
+            <li>
+              <button>
+                UK
+              </button>
+            </li>
+          </ul> -->
+        </div>
+        <button class="guess-button js-guess-button">GUESS</button>
+        <button class="hint-button js-hint-button">HINT</button>
+        <button class="js-stats-button stats-button">&#128200;</button>
+        <div class="js-overlay overlay"></div>
+        
+        <div class="hint-container js-hint-container"></div>
+      </form>
+
+      <div class="js-reveal-answer"></div>
+        
+      <div class="grid-container">
+        <div class="element-grid">
+          <div class="element js-1"></div>
+          <div class="element js-2"></div>
+          <div class="element js-3"></div>
+          <div class="element js-4"></div>
+          <div class="element js-5"></div>
+          <div class="element js-6"></div>
+          <div class="element js-7"></div>
+          <div class="element js-8"></div>
+        </div>
+      </div>
+
+      <div class="correct-guess-container">
+        <div class="js-additional-info additional-info"></div>
+        <div class="js-share-button"></div>
+      </div>
+    </div>
+
+    <script src="data/elements.js"></script>
+    <script src="scripts/elementle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  </body>
+</html>
