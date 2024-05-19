@@ -345,9 +345,12 @@ a.additional-info:hover {
   }
 
   .atomic-number,
-  .family,
-  .symbol {
+  .family {
     font-size: 16px;
+  }
+
+  .symbol {
+    font-size: 64px;
   }
 
   .container {
