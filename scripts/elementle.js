@@ -336,13 +336,13 @@ function setMysteryElementOfTheDay() {
     // if no mystery element is stored for today or the stored mystery element is not from today
     storedMysteryElement = selectMysteryElement();
     storeMysteryElement(storedMysteryElement);
-    localStorage.removeItem('guessesList'); // clear guesses list if it's a new day
     numberOfGuesses = 0;
 
     inputElement.disabled = false;
     guessButtonElement.disabled = false;
     localStorage.setItem('guessedCorrectly', 'false');
     localStorage.setItem('numberOfGuesses', '0');
+    localStorage.setItem('guessesList', JSON.stringify([]));
 
     document.querySelector('.js-reveal-answer').remove();
     document.querySelector('.js-additional-info').remove();
