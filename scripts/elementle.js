@@ -360,20 +360,33 @@ function getMysteryElement() {
 }
 
 function displayResults() {
-  document.querySelector('.js-additional-info').innerHTML = `<a class="additional-info" href="https://en.wikipedia.org/wiki/${getMysteryElement().name}" target="_blank">&#128218; Wikipedia</a>`;
+  const additionalInfoElement = document.querySelector('.js-additional-info');
+  const revealAnswerElement = document.querySelector('.js-reveal-answer');
+
+  if (!additionalInfoElement || !revealAnswerElement) {
+    // Handle gracefully if the elements are not found
+    console.error("Additional info or reveal answer element not found.");
+    return;
+  }
+
+  additionalInfoElement.innerHTML = `<a class="additional-info" href="https://en.wikipedia.org/wiki/${getMysteryElement().name}" target="_blank">&#128218; Wikipedia</a>`;
   inputElement.disabled = true;
   guessButtonElement.disabled = true;
 
-  document.querySelector('.js-share-button').innerHTML = `<button class="share-button"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-share" viewBox="0 0 16 16">
+  const shareButtonElement = document.querySelector('.js-share-button');
+  if (shareButtonElement) {
+    shareButtonElement.innerHTML = `<button class="share-button"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-share" viewBox="0 0 16 16">
   <path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.5 2.5 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5m-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3m11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3"/>
   </svg> &nbsp; Share</button>`;
+  }
 
   guessedCorrectly = localStorage.getItem('guessedCorrectly');
 
   if (guessedCorrectly === 'false') {
-    document.querySelector('.js-reveal-answer').innerHTML = `<p class="reveal-answer">Element: ${getMysteryElement().name}</p>`;
+    revealAnswerElement.innerHTML = `<p class="reveal-answer">Element: ${getMysteryElement().name}</p>`;
   }
 }
+
 
 function createPopup(text) {
   const popupElement = document.createElement('div');
