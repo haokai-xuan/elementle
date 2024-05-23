@@ -343,7 +343,7 @@ function setMysteryElementOfTheDay() {
     localStorage.setItem('guessedCorrectly', 'false');
     localStorage.setItem('numberOfGuesses', '0');
     localStorage.setItem('guessesList', JSON.stringify([]));
-    guessesList = [];
+    guessesList.length = 0;
     guessedCorrectly = false;
 
     document.querySelector('.js-reveal-answer').remove();
