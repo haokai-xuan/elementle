@@ -306,9 +306,21 @@ function onElementButtonClick(event) {
 
 
 function selectMysteryElement() {
-  const randomIndex = Math.floor(Math.random() * elements.length);
+  // Set a fixed seed value for the PRNG
+  const currentDate = new Date().toISOString().slice(0, 10);
+
+  const seed = parseInt(currentDate); // You can choose any integer value as the seed
+
+  // Initialize the PRNG with the seed
+  const randomGenerator = new Math.seedrandom(seed);
+
+  // Generate a random index using the PRNG
+  const randomIndex = Math.floor(randomGenerator() * elements.length);
+
+  // Return the element at the random index
   return elements[randomIndex];
 }
+
 
 function storeMysteryElement(mysteryElement) {
   localStorage.setItem('mysteryElement', JSON.stringify(mysteryElement));
