@@ -309,7 +309,9 @@ function selectMysteryElement() {
   // Set a fixed seed value for the PRNG
   const currentDate = new Date().toISOString().slice(0, 10);
 
-  const seed = parseInt(currentDate); // You can choose any integer value as the seed
+  const cleanedDate = currentDate.replace(/-/g, '');
+
+  const seed = parseInt(cleanedDate, 10); // You can choose any integer value as the seed
 
   // Initialize the PRNG with the seed
   const randomGenerator = new Math.seedrandom(seed);
