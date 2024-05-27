@@ -379,10 +379,21 @@ function displayResults() {
   const additionalInfoElement = document.querySelector('.js-additional-info');
   const revealAnswerElement = document.querySelector('.js-reveal-answer');
 
-  if (!additionalInfoElement || !revealAnswerElement) {
-    // Handle gracefully if the elements are not found
-    console.error("Additional info or reveal answer element not found.");
-    return;
+  const correctGuessContainer = document.querySelector('.correct-guess-container');
+  const revealAnswerContainer = document.querySelector('.reveal-answer-container');
+
+
+  // Create the elements if they don't exist
+  if (!additionalInfoElement) {
+    additionalInfoElement = document.createElement('div');
+    additionalInfoElement.className = 'js-additional-info';
+    correctGuessContainer.appendChild(additionalInfoElement); // Append to the appropriate container
+  }
+
+  if (!revealAnswerElement) {
+    revealAnswerElement = document.createElement('div');
+    revealAnswerElement.className = 'js-reveal-answer';
+    revealAnswerContainer.appendChild(revealAnswerElement); // Append to the appropriate container
   }
 
   additionalInfoElement.innerHTML = `<a class="additional-info" href="https://en.wikipedia.org/wiki/${getMysteryElement().name}" target="_blank">&#128218; Wikipedia</a>`;
@@ -390,6 +401,13 @@ function displayResults() {
   guessButtonElement.disabled = true;
 
   const shareButtonElement = document.querySelector('.js-share-button');
+
+  if (!shareButtonElement) {
+    shareButtonElement = document.createElement('div');
+    shareButtonElement.className = 'js-share-button';
+    correctGuessContainer.appendChild(shareButtonElement); // Append to the appropriate container
+  }
+
   if (shareButtonElement) {
     shareButtonElement.innerHTML = `<button class="share-button"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-share" viewBox="0 0 16 16">
   <path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.5 2.5 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5m-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3m11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3"/>
