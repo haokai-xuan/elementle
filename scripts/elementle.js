@@ -376,11 +376,11 @@ function getMysteryElement() {
 }
 
 function displayResults() {
-  const additionalInfoElement = document.querySelector('.js-additional-info');
-  const revealAnswerElement = document.querySelector('.js-reveal-answer');
+  let additionalInfoElement = document.querySelector('.js-additional-info');
+  let revealAnswerElement = document.querySelector('.js-reveal-answer');
 
-  const correctGuessContainer = document.querySelector('.correct-guess-container');
-  const revealAnswerContainer = document.querySelector('.reveal-answer-container');
+  let correctGuessContainer = document.querySelector('.correct-guess-container');
+  let revealAnswerContainer = document.querySelector('.reveal-answer-container');
 
 
   // Create the elements if they don't exist
@@ -400,7 +400,7 @@ function displayResults() {
   inputElement.disabled = true;
   guessButtonElement.disabled = true;
 
-  const shareButtonElement = document.querySelector('.js-share-button');
+  let shareButtonElement = document.querySelector('.js-share-button');
 
   if (!shareButtonElement) {
     shareButtonElement = document.createElement('div');
