@@ -419,6 +419,17 @@ function displayResults() {
   if (guessedCorrectly === 'false') {
     revealAnswerElement.innerHTML = `<p class="reveal-answer">Element: ${getMysteryElement().name}</p>`;
   }
+
+  shareButtonElement.addEventListener('click', () => {
+    guessedCorrectly = localStorage.getItem('guessedCorrectly');
+    numberOfGuesses = localStorage.getItem('numberOfGuesses');
+    if (guessedCorrectly === 'true') {
+      navigator.clipboard.writeText(`#Elementle 🧪\n${new Date().toISOString().slice(0, 10)}\n${numberOfGuesses}/8 (100%)\nhttps://elementlegame.com`);
+    } else {
+      navigator.clipboard.writeText(`#Elementle 🧪\n${new Date().toISOString().slice(0, 10)}\nX/8\nhttps://elementlegame.com`);
+    }
+    createPopup('Copied results to clipboard');
+  });
 }
 
 
