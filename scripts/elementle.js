@@ -1,3 +1,13 @@
+const options = { 
+  year: 'numeric', 
+  month: '2-digit', 
+  day: '2-digit', 
+  hour: '2-digit', 
+  minute: '2-digit', 
+  second: '2-digit', 
+  hour12: false 
+};
+
 const inputElement = document.querySelector('.js-guess-input');
 inputElement.addEventListener('input', onInputChange);
 
@@ -17,10 +27,10 @@ shareButtonElement.addEventListener('click', () => {
   guessedCorrectly = localStorage.getItem('guessedCorrectly');
   numberOfGuesses = localStorage.getItem('numberOfGuesses');
   if (guessedCorrectly === 'true') {
-    navigator.clipboard.writeText(`#Elementle 🧪\n${new Date().toISOString().slice(0, 10)}\n${numberOfGuesses}/8 (100%)\nhttps://elementlegame.com`);
+    navigator.clipboard.writeText(`#Elementle 🧪\n${new Date().toLocaleDateString('en-US', options).slice(0, 10)}\n${numberOfGuesses}/8 (100%)\nhttps://elementlegame.com`);
   }
   else {
-    navigator.clipboard.writeText(`#Elementle 🧪\n${new Date().toISOString().slice(0, 10)}\nX/8\nhttps://elementlegame.com`);
+    navigator.clipboard.writeText(`#Elementle 🧪\n${new Date().toLocaleDateString('en-US', options).slice(0, 10)}\nX/8\nhttps://elementlegame.com`);
   }
   createPopup('Copied results to clipboard');
 });
@@ -304,12 +314,14 @@ function onElementButtonClick(event) {
   removeAutocompleteDropdown();
 }
 
-
 function selectMysteryElement() {
   // Set a fixed seed value for the PRNG
-  const currentDate = new Date().toISOString().slice(0, 10);
+  const currentDate = new Date();
 
-  const cleanedDate = currentDate.replace(/-/g, '');
+  const localDateTime = currentDate.toLocaleString('en-US', options).slice(0, 10);
+
+
+  const cleanedDate = localDateTime.replace(/\//g, '');
 
   const seed = parseInt(cleanedDate, 10); // You can choose any integer value as the seed
 
@@ -326,12 +338,12 @@ function selectMysteryElement() {
 
 function storeMysteryElement(mysteryElement) {
   localStorage.setItem('mysteryElement', JSON.stringify(mysteryElement));
-  localStorage.setItem('mysteryElementDate', new Date().toISOString().slice(0, 10)); // store date as YYYY-MM-DD format
+  localStorage.setItem('mysteryElementDate', new Date().toLocaleDateString('en-US', options).slice(0, 10)); // store date as MM/DD/YYYY format
 }
 
 function getStoredMysteryElement() {
   const storedDate = localStorage.getItem('mysteryElementDate');
-  const currentDate = new Date().toISOString().slice(0, 10); // get date in YYYY-MM-DD format
+  const currentDate = new Date().toLocaleDateString('en-US', options).slice(0, 10); // store date as MM/DD/YYYY format
   if (storedDate === currentDate) {
     // mystery element was selected today, return it
     return JSON.parse(localStorage.getItem('mysteryElement'));
@@ -344,7 +356,7 @@ function getStoredMysteryElement() {
 function setMysteryElementOfTheDay() {
   let storedMysteryElement = getStoredMysteryElement();
   const storedDate = localStorage.getItem('mysteryElementDate');
-  const currentDate = new Date().toISOString().slice(0, 10); // get current date in YYYY-MM-DD format
+  const currentDate = new Date().toLocaleDateString('en-US', options).slice(0, 10); // store date as MM/DD/YYYY format
   
   if (!storedMysteryElement || storedDate !== currentDate) {
     // if no mystery element is stored for today or the stored mystery element is not from today
@@ -424,9 +436,9 @@ function displayResults() {
     guessedCorrectly = localStorage.getItem('guessedCorrectly');
     numberOfGuesses = localStorage.getItem('numberOfGuesses');
     if (guessedCorrectly === 'true') {
-      navigator.clipboard.writeText(`#Elementle 🧪\n${new Date().toISOString().slice(0, 10)}\n${numberOfGuesses}/8 (100%)\nhttps://elementlegame.com`);
+      navigator.clipboard.writeText(`#Elementle 🧪\n${new Date().toLocaleDateString('en-US', options).slice(0, 10)}\n${numberOfGuesses}/8 (100%)\nhttps://elementlegame.com`);
     } else {
-      navigator.clipboard.writeText(`#Elementle 🧪\n${new Date().toISOString().slice(0, 10)}\nX/8\nhttps://elementlegame.com`);
+      navigator.clipboard.writeText(`#Elementle 🧪\n${new Date().toLocaleDateString('en-US', options).slice(0, 10)}\nX/8\nhttps://elementlegame.com`);
     }
     createPopup('Copied results to clipboard');
   });
