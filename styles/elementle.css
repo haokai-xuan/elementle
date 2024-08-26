@@ -282,13 +282,14 @@ a.additional-info:hover {
 }
 
 .stats-container {
-  background-color: #fff;
-  border: 2px solid #ccc;
+  background-color: #2a2a2a;
+  border: 2px solid rgb(97, 97, 97);
   border-radius: 5px;
   padding: 20px;
   width: 300px;
   margin: 20px auto;
   text-align: center;
+  color: white;
 }
 
 .stats-container h2 {
