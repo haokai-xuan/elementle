@@ -431,14 +431,6 @@ a.additional-info:hover {
     font-size: 48px; /* Smaller symbol */
   }
 
-  .button-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px; /* Space between the buttons */
-    margin-top: 20px; /* Add margin to the top */
-  }
-
   .share-button,
   a.additional-info {
     font-size: 18px; /* Slightly smaller font size */
