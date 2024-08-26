@@ -324,7 +324,14 @@ a.additional-info:hover {
   }
 
   .guess-button,
-  .hint-button,
+  .hint-button {
+    width: 50%; /* Set a smaller width for the buttons */
+    font-size: 16px;
+    padding: 8px;
+    margin: 5px auto; /* Center the buttons horizontally */
+    display: block; /* Ensure the buttons are block elements for centering */
+  }
+
   .share-button,
   .back-button {
     width: 100%;
@@ -340,8 +347,7 @@ a.additional-info:hover {
   }
 
   .element-grid {
-    grid-template-columns: 1fr;
-    grid-gap: 10px;
+    grid-template-columns: repeat(2, 1fr); /* Two columns layout */
   }
 
   .atomic-number,
