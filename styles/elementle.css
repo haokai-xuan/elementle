@@ -431,9 +431,33 @@ a.additional-info:hover {
     font-size: 48px; /* Smaller symbol */
   }
 
-  .share-button {
+  .button-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px; /* Space between the buttons */
+    margin-top: 20px; /* Add margin to the top */
+  }
+
+  .share-button,
+  a.additional-info {
     font-size: 18px; /* Slightly smaller font size */
     padding: 8px 12px; /* Adjust padding */
     min-width: 60px; /* Smaller minimum width */
+    height: 50px; /* Same height for both buttons */
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center; /* Center the text */
+  }
+
+  a.additional-info {
+    text-decoration: none;
+    background-color: rgb(42, 42, 42);
+    color: white;
+    border: 2px solid white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.3s;
   }
 }
