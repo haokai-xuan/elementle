@@ -404,3 +404,31 @@ a.additional-info:hover {
     margin-top: 20px;
   }
 }
+
+@media (max-width: 450px) {
+  .element {
+    width: 150px; /* Smaller width */
+    height: 150px; /* Smaller height */
+    padding: 8px; /* Adjust padding */
+  }
+
+  .element-grid {
+    grid-template-columns: repeat(2, 1fr); /* Maintain two columns */
+    grid-gap: 8px; /* Reduce gap between elements */
+  }
+
+  .atomic-number,
+  .family {
+    font-size: 14px; /* Smaller text */
+  }
+
+  .symbol {
+    font-size: 48px; /* Smaller symbol */
+  }
+
+  .share-button {
+    font-size: 18px; /* Slightly smaller font size */
+    padding: 8px 12px; /* Adjust padding */
+    min-width: 60px; /* Smaller minimum width */
+  }
+}
