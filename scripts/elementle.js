@@ -23,18 +23,6 @@ document.body.addEventListener('click', () => {
   removeAutocompleteDropdown();
 });
 
-shareButtonElement.addEventListener('click', () => {
-  guessedCorrectly = localStorage.getItem('guessedCorrectly');
-  numberOfGuesses = localStorage.getItem('numberOfGuesses');
-  if (guessedCorrectly === 'true') {
-    navigator.clipboard.writeText(`#Elementle 🧪\n${new Date().toLocaleDateString('en-US', options).slice(0, 10)}\n${numberOfGuesses}/8 (100%)\nhttps://elementlegame.com`);
-  }
-  else {
-    navigator.clipboard.writeText(`#Elementle 🧪\n${new Date().toLocaleDateString('en-US', options).slice(0, 10)}\nX/8\nhttps://elementlegame.com`);
-  }
-  createPopup('Copied results to clipboard');
-});
-
 document.body.addEventListener('keydown', (event) => {
   if (event.key === 'Enter'){
       if (document.querySelector('.autocomplete-list')) {
@@ -436,11 +424,36 @@ function displayResults() {
   shareButtonElement.addEventListener('click', () => {
     guessedCorrectly = localStorage.getItem('guessedCorrectly');
     numberOfGuesses = localStorage.getItem('numberOfGuesses');
+    const guessedList = JSON.parse(localStorage.getItem('guessesList'));
+    let shareText = `#Elementle 🧪\n${new Date().toLocaleDateString('en-US', options).slice(0, 10)}\n`;
+  
+    let line = '';
+    guessedList.forEach((guessedElement, index) => {
+      if (guessedElement.atomicNumber === getMysteryElement().atomicNumber){
+        line += '🟩';
+      }
+      else if(guessedElement.atomicNumber < getMysteryElement().atomicNumber){
+        line += '⬆️';
+      }
+      else {
+        line += '⬇️';
+      }
+
+      for (let i = index + 1; i < 8; i++){
+        line += '⬜';
+      }
+
+      shareText += `${line}\n`
+      line = line.slice(0, index + 1);
+    });
+  
     if (guessedCorrectly === 'true') {
-      navigator.clipboard.writeText(`#Elementle 🧪\n${new Date().toLocaleDateString('en-US', options).slice(0, 10)}\n${numberOfGuesses}/8 (100%)\nhttps://elementlegame.com`);
+      shareText += `${numberOfGuesses}/8 (100%)\nhttps://elementlegame.com`;
     } else {
-      navigator.clipboard.writeText(`#Elementle 🧪\n${new Date().toLocaleDateString('en-US', options).slice(0, 10)}\nX/8\nhttps://elementlegame.com`);
+      shareText += `❌/8\nhttps://elementlegame.com`;
     }
+  
+    navigator.clipboard.writeText(shareText);
     createPopup('Copied results to clipboard');
   });
 }
