@@ -44,6 +44,7 @@ document.body.addEventListener('keydown', (event) => {
   }
 });
 
+document.querySelector('.js-current-year').textContent = new Date().getFullYear();
 
 const savedGuessesList = localStorage.getItem('guessesList');
 const guessesList = savedGuessesList ? JSON.parse(savedGuessesList) : [];
@@ -124,7 +125,7 @@ function renderGuess() {
     if (guessedList && guessedList.length > 0 && guessedList[i]) {
       elementDiv.classList.add('guessed-element');
       const guessedElement = guessedList[i];
-      const atomicSignal = (guessedElement.atomicNumber === getMysteryElement().atomicNumber) ? '&#127881;' : (guessedElement.atomicNumber < getMysteryElement().atomicNumber) ? '&#8679;' : '&#8681;';
+      const atomicSignal = (guessedElement.atomicNumber === getMysteryElement().atomicNumber) ? '&#127881;' : (guessedElement.atomicNumber < getMysteryElement().atomicNumber) ? '⬆️' : '⬇️';
       const familyClass = (guessedElement.family === getMysteryElement().family) ? 'green' : 'family';
 
       // Render the guessed element information
