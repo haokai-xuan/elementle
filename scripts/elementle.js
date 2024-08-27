@@ -124,7 +124,7 @@ function displayHelp() {
           <li><span>⬆️</span> means the mystery element number is higher.</li>
           <li><span>⬇️</span> means the mystery element number is lower.</li>
           <li><span style="color: rgb(83, 141, 78)">Green symbol letter</span> means the letter is correct and in the right spot.</li>
-          <li><span style="color: rgb(181, 159, 59)">Yellow letter</span> means the letter is correct but in the wrong spot.</li>
+          <li><span style="color: rgb(181, 159, 59)">Yellow symbol letter</span> means the letter is correct but in the wrong spot.</li>
           <li><span style="color: rgb(83, 141, 78)">Green family name</span> means the element belongs to the correct family.</li>
         </ul>
       </li>
