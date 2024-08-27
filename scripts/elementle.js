@@ -508,6 +508,9 @@ function displayResults() {
       else if (guessedElement.atomicNumber > getMysteryElement().atomicNumber){
         line += '⬇️';
       }
+      else{
+        line += '🎉';
+      }
 
       const mysterySymbol = getMysteryElement().symbol.toLowerCase();
       const guessedSymbol = guessedElement.symbol.toLowerCase();
