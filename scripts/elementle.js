@@ -165,10 +165,16 @@ function renderGuess() {
       const atomicSignal = (guessedElement.atomicNumber === getMysteryElement().atomicNumber) ? '&#127881;' : (guessedElement.atomicNumber < getMysteryElement().atomicNumber) ? '⬆️' : '⬇️';
       const familyClass = (guessedElement.family === getMysteryElement().family) ? 'green' : 'family';
 
+      // Apply fade-in-text effect only to the text elements in the newly guessed element
+      const applyFadeIn = (i === guessedList.length - 1) ? 'fade-in-text' : '';
+
       // Render the guessed element information
       const atomicNumberSpan = document.createElement('span');
       atomicNumberSpan.classList.add('atomic-number');
       atomicNumberSpan.innerHTML = guessedElement.atomicNumber + ` ${atomicSignal}`;
+      if (applyFadeIn) {
+        atomicNumberSpan.classList.add(applyFadeIn);
+      }
       elementDiv.appendChild(atomicNumberSpan);
 
       const symbolSpan = document.createElement('span');
@@ -191,6 +197,9 @@ function renderGuess() {
       letterSpans.forEach(span => {
         symbolSpan.appendChild(span);
       });
+      if (applyFadeIn) {
+        symbolSpan.classList.add(applyFadeIn);
+      }
       elementDiv.appendChild(symbolSpan);
 
       const nameSpan = document.createElement('span');
@@ -200,15 +209,20 @@ function renderGuess() {
         nameSpan.classList.add('green');
         atomicNumberSpan.classList.add('green');
       }
+      if (applyFadeIn) {
+        nameSpan.classList.add(applyFadeIn);
+      }
       elementDiv.appendChild(nameSpan);
 
       const familySpan = document.createElement('span');
       familySpan.classList.add('family');
       familySpan.textContent = guessedElement.family;
       familySpan.classList.add(familyClass);
+      if (applyFadeIn) {
+        familySpan.classList.add(applyFadeIn);
+      }
       elementDiv.appendChild(familySpan);
-    }
-    else {
+    } else {
       // Render empty boxes for elements that have not been guessed yet
       const emptyDiv = document.createElement('div');
       emptyDiv.classList.add('empty-box');
