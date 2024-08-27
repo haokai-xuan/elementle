@@ -64,7 +64,11 @@ document.querySelector('.js-stats-button').addEventListener('click', (event) => 
 });
 
 function displayStats() {
-  document.querySelector('.js-overlay').style.display = 'block';
+  const overlay = document.querySelector('.js-overlay');
+  overlay.style.display = 'block'; // Ensure the overlay is displayed
+  setTimeout(() => {
+    overlay.classList.add('show'); // Add the show class to trigger fade-in
+  }, 10); // Short delay to ensure the display property is applied first
 
   const totalGames = localStorage.getItem('totalGames') || 0;
   const totalWins = localStorage.getItem('totalWins') || 0;
@@ -72,7 +76,6 @@ function displayStats() {
   const currentStreak = localStorage.getItem('currentStreak') || 0;
   const winStreak = localStorage.getItem('winStreak') || 0;
 
-  const overlay = document.querySelector('.js-overlay');
   overlay.innerHTML = `
     <div class="stats-container">
       <h2>Game Statistics</h2>
@@ -85,13 +88,59 @@ function displayStats() {
     </div>
   `;
 
-  
   document.querySelector('.back-button').addEventListener('click', (event) => {
     event.preventDefault();
-    overlay.style.display = 'none';
+    overlay.classList.remove('show'); // Remove the show class to trigger fade-out
+    overlay.addEventListener('transitionend', () => {
+      if (!overlay.classList.contains('show')) {
+        overlay.style.display = 'none'; // Hide overlay after transition ends
+      }
+    }, { once: true });
   });
+}
 
 
+
+document.querySelector('.js-help-button').addEventListener('click', (event) => {
+  event.preventDefault();
+  displayHelp();
+});
+
+function displayHelp() {
+  document.querySelector('.js-overlay').style.display = 'block';
+  const overlay = document.querySelector('.js-overlay');
+
+  setTimeout(() => {
+    overlay.classList.add('show'); // Add the show class to trigger fade-in
+  }, 10); // Short delay to ensure the display property is applied first
+
+  overlay.innerHTML = `
+    <div class="help-container">
+    <h2>How to Play</h2>
+    <ul>
+      <li>New game available at 00:00 local time.</li>
+      <li>Indications are provided after each guess:
+        <ul>
+          <li><span>⬆️</span> means the mystery element number is higher.</li>
+          <li><span>⬇️</span> means the mystery element number is lower.</li>
+          <li><span style="color: rgb(83, 141, 78)">Green symbol letter</span> means the letter is correct and in the right spot.</li>
+          <li><span style="color: rgb(181, 159, 59)">Yellow letter</span> means the letter is correct but in the wrong spot.</li>
+          <li><span style="color: rgb(83, 141, 78)">Green family name</span> means the element belongs to the correct family.</li>
+        </ul>
+      </li>
+    </ul>
+    <button class="back-button">Back</a>
+  </div>`;
+
+  document.querySelector('.back-button').addEventListener('click', (event) => {
+    event.preventDefault();
+    overlay.classList.remove('show'); // Remove the show class to trigger fade-out
+    overlay.addEventListener('transitionend', () => {
+      if (!overlay.classList.contains('show')) {
+        overlay.style.display = 'none'; // Hide overlay after transition ends
+      }
+    }, { once: true });
+  });
   overlay.style.display = 'block';
 }
 
