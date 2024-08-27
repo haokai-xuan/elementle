@@ -150,9 +150,11 @@ setMysteryElementOfTheDay();
 renderGuess();
 function renderGuess() {
   const guessedList = JSON.parse(localStorage.getItem('guessesList'));
-
   const elementGrid = document.querySelector('.element-grid');
   elementGrid.innerHTML = '';
+
+  // Retrieve the fade-in applied state from localStorage
+  const fadeInAppliedList = JSON.parse(localStorage.getItem('fadeInAppliedList')) || [];
 
   // Loop through the elements to render each grid
   for (let i = 0; i < 8; i++) {
@@ -166,7 +168,7 @@ function renderGuess() {
       const familyClass = (guessedElement.family === getMysteryElement().family) ? 'green' : 'family';
 
       // Apply fade-in-text effect only to the text elements in the newly guessed element
-      const applyFadeIn = (i === guessedList.length - 1) ? 'fade-in-text' : '';
+      const applyFadeIn = !fadeInAppliedList[i] ? 'fade-in-text' : '';
 
       // Render the guessed element information
       const atomicNumberSpan = document.createElement('span');
@@ -222,6 +224,9 @@ function renderGuess() {
         familySpan.classList.add(applyFadeIn);
       }
       elementDiv.appendChild(familySpan);
+
+      // Mark fade-in as applied
+      fadeInAppliedList[i] = true;
     } else {
       // Render empty boxes for elements that have not been guessed yet
       const emptyDiv = document.createElement('div');
@@ -232,7 +237,11 @@ function renderGuess() {
     // Append the grid to the element grid container
     elementGrid.appendChild(elementDiv);
   }
+
+  // Update the fadeInAppliedList in localStorage
+  localStorage.setItem('fadeInAppliedList', JSON.stringify(fadeInAppliedList));
 }
+
 
 
 function processGuess() {
@@ -421,6 +430,7 @@ function setMysteryElementOfTheDay() {
     localStorage.setItem('guessedCorrectly', 'false');
     localStorage.setItem('numberOfGuesses', '0');
     localStorage.setItem('guessesList', JSON.stringify([]));
+    localStorage.setItem('fadeInAppliedList', JSON.stringify([]));
     guessesList.length = 0;
     guessedCorrectly = false;
 
@@ -491,24 +501,51 @@ function displayResults() {
     let shareText = `#Elementle 🧪\n${new Date().toLocaleDateString('en-US', options).slice(0, 10)}\n`;
   
     let line = '';
-    guessedList.forEach((guessedElement, index) => {
-      if (guessedElement.atomicNumber === getMysteryElement().atomicNumber){
-        line += '🟩';
-      }
-      else if(guessedElement.atomicNumber < getMysteryElement().atomicNumber){
+    guessedList.forEach((guessedElement) => {
+      if (guessedElement.atomicNumber < getMysteryElement().atomicNumber){
         line += '⬆️';
       }
-      else {
+      else if (guessedElement.atomicNumber > getMysteryElement().atomicNumber){
         line += '⬇️';
       }
 
-      for (let i = index + 1; i < 8; i++){
+      const mysterySymbol = getMysteryElement().symbol.toLowerCase();
+      const guessedSymbol = guessedElement.symbol.toLowerCase();
+    
+    // Case when the guessed element has a 2-letter symbol
+    if (guessedSymbol.length === 2) {
+      for (let i = 0; i < 2; i++) {
+        const guessedLetter = guessedSymbol.charAt(i);
+        const mysteryLetter = mysterySymbol.charAt(i) || '0';
+
+        if (guessedLetter === mysteryLetter) {
+          line += '🟩';
+        } else if (mysterySymbol.includes(guessedLetter)) {
+          line += '🟨';
+        } else {
+          line += '⬜';
+        }
+      }
+    }
+    // Case when the guessed element has a 1-letter symbol
+    else if (guessedSymbol.length === 1) {
+      const guessedLetter = guessedSymbol.charAt(0);
+      const mysteryLetter = mysterySymbol.charAt(0);
+
+      if (guessedLetter === mysteryLetter) {
+        line += '🟩';
+      } else if (mysterySymbol.includes(guessedLetter)) {
+        line += '🟨';
+      } else {
         line += '⬜';
       }
+    }
 
-      shareText += `${line}\n`
-      line = line.slice(0, index + 1);
+      // Add the result of this guess to the shareText
+      shareText += `${line}\n`;
+      line = ''; // Reset line for the next guess
     });
+    
   
     if (guessedCorrectly === 'true') {
       shareText += `${numberOfGuesses}/8 (100%)\nhttps://elementlegame.com`;
