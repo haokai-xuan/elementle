@@ -1,6 +1,14 @@
+*{
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
 h1 {
   font-size: 80px;
   font-family: Helvetica;
+  margin-top: 50px;
+  margin-bottom: 40px;
 }
 
 body {
@@ -321,10 +329,43 @@ a.additional-info:hover {
   background-color: rgb(0, 155, 0);
 }
 
-.footer-style {
+footer {
+  background-color: #111;
+  margin-top: 100px;
+}
+
+.footer-container {
+  width: 100%;
+  padding: 30px 30px 20px;
+}
+
+.footer-nav ul {
+  display: flex;
+  justify-content: center;
+  list-style-type: none;
+}
+
+.footer-nav ul li a {
+  color: white;
+  margin: 20px;
+  text-decoration: none;
+  font-size: 1.3em;
+  opacity: 0.7;
+  transition: 0.5s;
+}
+
+.footer-nav ul li a:hover {
+  opacity: 1;
+}
+
+.footer-bottom {
+  background-color: #000;
+  padding: 20px;
   text-align: center;
-  margin-top: 200px;
-  color: #ccc;
+}
+
+.footer-bottom p {
+  color: white;
 }
 
 .help-button {
@@ -387,6 +428,16 @@ a.additional-info:hover {
 
 
 @media (max-width: 1200px) {
+  .footer-nav ul {
+    flex-direction: column;
+  }
+
+  .footer-nav ul li {
+    width: 100%;
+    text-align: center;
+    margin: 10px;
+  }
+
   h1 {
     font-size: 50px;
   }
@@ -406,7 +457,7 @@ a.additional-info:hover {
 
   .share-button,
   .back-button {
-    width: 100%;
+    width: 75px;
     font-size: 16px;
     padding: 8px;
     margin-top: 5px;
