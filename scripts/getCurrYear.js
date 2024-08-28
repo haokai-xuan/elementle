@@ -1,1 +1,0 @@
-document.querySelector('.js-current-year').textContent = new Date().getFullYear();
