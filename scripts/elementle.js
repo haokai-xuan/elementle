@@ -32,8 +32,6 @@ document.body.addEventListener('keydown', (event) => {
   }
 });
 
-document.querySelector('.js-current-year').textContent = new Date().getFullYear();
-
 const savedGuessesList = localStorage.getItem('guessesList');
 const guessesList = savedGuessesList ? JSON.parse(savedGuessesList) : [];
 
@@ -128,6 +126,7 @@ function displayHelp() {
           <li><span style="color: rgb(83, 141, 78)">Green family name</span> means the element belongs to the correct family.</li>
         </ul>
       </li>
+      <li>Click HINT if you're stuck.</li>
     </ul>
     <button class="back-button">Back</a>
   </div>`;
