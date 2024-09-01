@@ -118,3 +118,7 @@ const elements = [
   { name: 'Tennessine', atomicNumber: 117, family: 'Unknown', hint: 'Synthetic element, named after the state of Tennessee.', symbol: 'Ts' },
   { name: 'Oganesson', atomicNumber: 118, family: 'Unknown', hint: 'Synthetic element, named after physicist Yuri Oganessian.', symbol: 'Og' }  
 ];
+
+elements.sort((a, b) => {
+  return a.name.localeCompare(b.name);
+});
