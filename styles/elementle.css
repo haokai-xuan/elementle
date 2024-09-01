@@ -1,4 +1,5 @@
-*{
+/*Default styles*/
+* {
   padding: 0;
   margin: 0;
   box-sizing: border-box;
@@ -16,24 +17,33 @@ body {
   color: white;
 }
 
+button {
+  cursor: pointer;
+}
+
+.container {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/*Guessing area*/
 .guess-input {
-  font-size: 20px; /* Increase the font size */
-  padding: 10px; /* Increase the padding */
+  font-size: 20px;
+  padding: 10px;
   background-color: rgb(42, 42, 42);
   border: 2px solid white;
   color: white;
-  width: 300px; /* Increase the width */
-  border-radius: 10px; /* Make the input field rounder */
+  width: 300px;
+  border-radius: 10px;
 }
 
 
 .guess-input:disabled,
 .guess-button:disabled {
   cursor: not-allowed;
-}
-
-button {
-  cursor: pointer;
 }
 
 .guess-button,
@@ -44,7 +54,7 @@ button {
   background-color: green;
   color: white;
   width: 100px;
-  border-radius: 8px; /* Make the button rounder */
+  border-radius: 8px;
   transition: all 0.3s ease;
 }
 
@@ -59,17 +69,13 @@ button {
   background-color: rgb(0, 155, 0);
 }
 
-* {
-  box-sizing: border-box;
-}
-
 .autocomplete-list {
   list-style: none;
   padding: unset;
   margin: unset;
   position: absolute;
   width: 100%;
-  z-index: 1; /* Ensure the list appears above other elements */
+  z-index: 1;
 }
 
 .autocomplete-list li {
@@ -98,14 +104,7 @@ button {
   position: relative;
 }
 
-.container {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
+/*Display results*/
 a.additional-info {
   display: inline-block;
   padding: 8px 16px;
@@ -138,21 +137,20 @@ a.additional-info:hover {
   padding: 10px 16px;
   background-color: rgb(42, 42, 42);
   color: white;
-  border-radius: 8px; /* Make the button rounder */
+  border-radius: 8px;
   transition: 0.3s;
-  overflow: hidden; /* Hides any overflowing text */
-  white-space: nowrap; /* Prevents text from wrapping to the next line */
-  width: auto; /* Allow the button width to adjust based on text length */
-  min-width: 75px; /* Minimum width of the button */
-  max-width: 200px; /* Maximum width of the button */
-  text-align: center; /* Center aligns the text */
-  display: flex; /* Use flexbox for centering */
-  align-items: center; /* Vertically center the content */
-  justify-content: center; /* Horizontally center the content */
+  overflow: hidden;
+  white-space: nowrap;
+  width: auto;
+  min-width: 75px;
+  max-width: 200px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-top: 20px;
   font-family: 'Times New Roman', Times, serif;
 }
-
 
 .share-button:hover {
   background-color: rgb(97, 97, 97);
@@ -162,6 +160,7 @@ a.additional-info:hover {
   display: flex;
 }
 
+/*Popup*/
 .popup {
   position: fixed;
   top: 50%;
@@ -176,7 +175,26 @@ a.additional-info:hover {
   font-size: 20px;
 }
 
+.overlay {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  color: black;
+  font-size: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+.overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
 
+/*Display guesses section*/
 .grid-container {
   margin-top: 55px;
   display: flex;
@@ -253,6 +271,7 @@ a.additional-info:hover {
   color: rgb(48, 98, 144);
 }
 
+/*Shake animation*/
 .shake {
   animation: shake 0.5s ease-in-out;
 }
@@ -266,35 +285,17 @@ a.additional-info:hover {
 }
 
 .glow-red {
-  border: 2px solid red; /* Change border color to red */
-  box-shadow: 0 0 10px red; /* Add red glow effect */
+  border: 2px solid red;
+  box-shadow: 0 0 10px red;
 }
 
+/*Game info styles*/
 .stats-button {
   border: none;
   font-size: 24px;
   cursor: pointer;
-  padding: none; /* Adjust padding as needed */
+  padding: none;
   background: none;
-}
-
-.overlay {
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  background-color: rgba(0, 0, 0, 0.5); /* semi-transparent black overlay */
-  z-index: 999; /* Ensure the overlay is on top of other content */
-  color: black;
-  font-size: 20px;
-  opacity: 0; /* Initial opacity set to 0 for fade-in effect */
-  pointer-events: none; /* Prevent interaction when hidden */
-  transition: opacity 0.5s ease; /* Transition for opacity change */
-}
-.overlay.show {
-  opacity: 1; /* Fully opaque when shown */
-  pointer-events: auto; /* Allow interaction when visible */
 }
 
 .stats-container {
@@ -322,7 +323,7 @@ a.additional-info:hover {
   background-color: green;
   color: white;
   width: 100px;
-  border-radius: 8px; /* Make the button rounder */
+  border-radius: 8px;
   transition: all 0.3s ease;
   border: none;
 }
@@ -331,6 +332,51 @@ a.additional-info:hover {
   background-color: rgb(0, 155, 0);
 }
 
+.help-button {
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: none;
+  background: none;
+}
+
+.help-container {
+  background-color: #2a2a2a;
+  border: 2px solid rgb(97, 97, 97);
+  border-radius: 5px;
+  padding: 20px;
+  width: 800px;
+  margin: 20px auto;
+  text-align: center;
+  color: white;
+}
+
+.help-container ul {
+  list-style-type: disc;
+  padding-left: 20px;
+  text-align: left;
+}
+
+.help-container li {
+  margin: 10px 0;
+}
+
+.help-container a {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: green;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.help-container a:hover {
+  background-color: rgb(0, 155, 0);
+}
+
+/*Footer styles*/
 footer {
   background-color: #111;
   margin-top: 100px;
@@ -370,51 +416,7 @@ footer {
   color: white;
 }
 
-.help-button {
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  padding: none; /* Adjust padding as needed */
-  background: none;
-}
-
-.help-container {
-  background-color: #2a2a2a;
-  border: 2px solid rgb(97, 97, 97);
-  border-radius: 5px;
-  padding: 20px;
-  width: 800px;
-  margin: 20px auto;
-  text-align: center;
-  color: white;
-}
-
-
-.help-container ul {
-  list-style-type: disc; /* Shows bullet points */
-  padding-left: 20px; /* Padding to indent list items */
-  text-align: left; /* Aligns text to the left within the container */
-}
-
-.help-container li {
-  margin: 10px 0;
-}
-
-.help-container a {
-  display: inline-block;
-  margin-top: 20px;
-  padding: 10px 20px;
-  background-color: green;
-  color: white;
-  text-decoration: none;
-  border-radius: 4px;
-  transition: all 0.3s;
-}
-
-.help-container a:hover {
-  background-color: rgb(0, 155, 0);
-}
-
+/*Fade animation*/
 @keyframes fadeInText {
   from {
     opacity: 0;
@@ -428,7 +430,7 @@ footer {
   animation: fadeInText 0.5s ease-in forwards;
 }
 
-
+/*Adjusting for screens under 1201px wide*/
 @media (max-width: 1200px) {
   .footer-nav ul {
     flex-direction: column;
@@ -450,11 +452,11 @@ footer {
 
   .guess-button,
   .hint-button {
-    width: 50%; /* Set a smaller width for the buttons */
+    width: 50%;
     font-size: 16px;
     padding: 8px;
-    margin: 5px auto; /* Center the buttons horizontally */
-    display: block; /* Ensure the buttons are block elements for centering */
+    margin: 5px auto;
+    display: block;
   }
 
   .share-button,
@@ -472,7 +474,7 @@ footer {
   }
 
   .element-grid {
-    grid-template-columns: repeat(2, 1fr); /* Two columns layout */
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .atomic-number,
@@ -514,52 +516,53 @@ footer {
     padding: 10px 16px;
     background-color: rgb(42, 42, 42);
     color: white;
-    border-radius: 8px; /* Make the button rounder */
+    border-radius: 8px;
     transition: 0.3s;
-    overflow: hidden; /* Hides any overflowing text */
-    white-space: nowrap; /* Prevents text from wrapping to the next line */
-    width: auto; /* Allow the button width to adjust based on text length */
-    min-width: 75px; /* Minimum width of the button */
-    max-width: 200px; /* Maximum width of the button */
-    text-align: center; /* Center aligns the text */
-    display: flex; /* Use flexbox for centering */
-    align-items: center; /* Vertically center the content */
-    justify-content: center; /* Horizontally center the content */
+    overflow: hidden;
+    white-space: nowrap;
+    width: auto;
+    min-width: 75px;
+    max-width: 200px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     margin-top: 20px;
   }
 }
 
+/*Adjusting for screens under 451px wide*/
 @media (max-width: 450px) {
   .element {
-    width: 150px; /* Smaller width */
-    height: 150px; /* Smaller height */
-    padding: 8px; /* Adjust padding */
+    width: 150px;
+    height: 150px;
+    padding: 8px;
   }
 
   .element-grid {
-    grid-template-columns: repeat(2, 1fr); /* Maintain two columns */
-    grid-gap: 8px; /* Reduce gap between elements */
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 8px;
   }
 
   .atomic-number,
   .family {
-    font-size: 12px; /* Smaller text */
+    font-size: 12px;
   }
 
   .symbol {
-    font-size: 48px; /* Smaller symbol */
+    font-size: 48px;
   }
 
   .share-button,
   a.additional-info {
-    font-size: 18px; /* Slightly smaller font size */
-    padding: 8px 12px; /* Adjust padding */
-    min-width: 60px; /* Smaller minimum width */
-    height: 50px; /* Same height for both buttons */
+    font-size: 18px;
+    padding: 8px 12px;
+    min-width: 60px;
+    height: 50px;
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    text-align: center; /* Center the text */
+    text-align: center;
   }
 
   a.additional-info {
