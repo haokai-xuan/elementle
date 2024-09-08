@@ -144,6 +144,10 @@ input[name="name"], input[name="email"] {
   cursor: pointer;
 }
 
+.text-muted {
+  opacity: 0.5;
+}
+
 @media (max-width: 1200px) {
   .footer-nav ul {
     flex-direction: column;
