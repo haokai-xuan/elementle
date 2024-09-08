@@ -296,6 +296,11 @@ a.additional-info:hover {
   cursor: pointer;
   padding: none;
   background: none;
+  transition: transform 0.3s ease;
+}
+
+.stats-button:hover, .help-button:hover {
+  transform: scale(1.2);
 }
 
 .stats-container {
@@ -338,6 +343,7 @@ a.additional-info:hover {
   cursor: pointer;
   padding: none;
   background: none;
+  transition: transform 0.3s ease;
 }
 
 .help-container {
