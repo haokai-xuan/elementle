@@ -80,12 +80,12 @@ function displayStats() {
       <br/>
       <div class="stats">
         <div class="stat">
-          <p class="number">${totalGames}</p>
-          <p class="stat-name">Total Games Played</p>
-        </div>
-        <div class="stat">
           <p class="number">${totalWins}</p>
           <p class="stat-name">Total Wins</p>
+        </div>
+        <div class="stat">
+          <p class="number">${totalGames}</p>
+          <p class="stat-name">Games Played</p>
         </div>
         <div class="stat">
           <p class="number">${winRate}%</p>
