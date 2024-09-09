@@ -322,7 +322,7 @@ a.additional-info:hover {
   display: flex;
   justify-content: center;
   flex-wrap: wrap; /* Allows wrapping on smaller screens */
-  gap: 30px; /* Space between items */
+  gap: 20px; /* Space between items */
 }
 
 .stat {
@@ -340,7 +340,7 @@ a.additional-info:hover {
 
 .stat-name {
   margin: 0;
-  font-size: 1em;
+  font-size: 0.75em;
   color: #666;
 }
 
@@ -354,6 +354,7 @@ a.additional-info:hover {
   border-radius: 8px;
   transition: all 0.3s ease;
   border: none;
+  margin-top: 30px;
 }
 
 .back-button:hover {
