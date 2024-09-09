@@ -76,12 +76,30 @@ function displayStats() {
 
   overlay.innerHTML = `
     <div class="stats-container">
-      <h2>Game Statistics</h2>
-      <p>Total Games Played: ${totalGames}</p>
-      <p>Total Wins: ${totalWins}</p>
-      <p>Win Rate: ${winRate}%</p>
-      <p>Current Streak: ${currentStreak}</p>
-      <p>Max Streak: ${maxWinStreak}</p>
+      <h3>Statistics</h3>
+      <br/>
+      <div class="stats">
+        <div class="stat">
+          <p class="number">${totalGames}</p>
+          <p class="stat-name">Total Games Played</p>
+        </div>
+        <div class="stat">
+          <p class="number">${totalWins}</p>
+          <p class="stat-name">Total Wins</p>
+        </div>
+        <div class="stat">
+          <p class="number">${winRate}%</p>
+          <p class="stat-name">Win Rate</p>
+        </div>
+        <div class="stat">
+          <p class="number">${currentStreak}</p>
+          <p class="stat-name">Current Streak</p>
+        </div>
+        <div class="stat">
+          <p class="number">${maxWinStreak}</p>
+          <p class="stat-name">Max Streak</p>
+        </div>
+      </div>
       <button class="back-button">Back</button>
     </div>
   `;
@@ -115,6 +133,7 @@ function displayHelp() {
   overlay.innerHTML = `
     <div class="help-container">
     <h2>How to Play</h2>
+    <br/>
     <ul>
       <li>New game available at 00:00 local time.</li>
       <li>Indications are provided after each guess:
