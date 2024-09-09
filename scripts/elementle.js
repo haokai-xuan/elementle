@@ -72,7 +72,7 @@ function displayStats() {
   const totalWins = localStorage.getItem('totalWins') || 0;
   const winRate = totalGames > 0 ? ((totalWins / totalGames) * 100).toFixed(2) : 0;
   const currentStreak = localStorage.getItem('currentStreak') || 0;
-  const winStreak = localStorage.getItem('winStreak') || 0;
+  const maxWinStreak = localStorage.getItem('maxWinStreak') || 0;
 
   overlay.innerHTML = `
     <div class="stats-container">
@@ -81,7 +81,7 @@ function displayStats() {
       <p>Total Wins: ${totalWins}</p>
       <p>Win Rate: ${winRate}%</p>
       <p>Current Streak: ${currentStreak}</p>
-      <p>Win Streak: ${winStreak}</p>
+      <p>Max Streak: ${maxWinStreak}</p>
       <button class="back-button">Back</button>
     </div>
   `;
@@ -276,11 +276,7 @@ function processGuess() {
       localStorage.setItem('totalGames', +localStorage.getItem('totalGames') + 1);
       localStorage.setItem('totalWins', +localStorage.getItem('totalWins') + 1);
       localStorage.setItem('currentStreak', +localStorage.getItem('currentStreak') + 1);
-      const winStreak = +localStorage.getItem('winStreak') + 1;
-      localStorage.setItem('winStreak', winStreak);
-      if (winStreak > +localStorage.getItem('maxWinStreak')) {
-        localStorage.setItem('maxWinStreak', winStreak);
-      }
+      localStorage.setItem('maxWinStreak', (localStorage.getItem("currentStreak") > localStorage.getItem("maxWinStreak")) ? localStorage.getItem("currentStreak"): localStorage.getItem("maxWinStreak"));
 
       localStorage.setItem('guessedCorrectly', 'true');
       confetti({
@@ -292,7 +288,6 @@ function processGuess() {
     } else if (numberOfGuesses >= 8) {
       localStorage.setItem('totalGames', +localStorage.getItem('totalGames') + 1);
       localStorage.setItem('currentStreak', 0);
-      localStorage.setItem('winStreak', 0);
       
       localStorage.setItem('guessedCorrectly', 'false');
       displayResults();
@@ -413,7 +408,32 @@ function getStoredMysteryElement() {
   }
 }
 
+function updateLastPlayedDate() {
+  localStorage.setItem('lastPlayedDate', new Date().toLocaleDateString('en-US', options).slice(0, 10));
+}
+
+function getLastPlayedDate() {
+  return localStorage.getItem('lastPlayedDate');
+}
+
+function resetStreakIfNeeded() {
+  const lastPlayedDate = getLastPlayedDate();
+  if (lastPlayedDate) {
+    const lastPlayed = new Date(lastPlayedDate);
+    const currentDate = new Date();
+    const dayBeforeYesterday = new Date();
+    dayBeforeYesterday.setDate(currentDate.getDate() - 2);
+
+    if (lastPlayed.toDateString() === dayBeforeYesterday.toDateString()) {
+      localStorage.setItem('currentStreak', 0);
+    }
+  }
+}
+
+
 function setMysteryElementOfTheDay() {
+  resetStreakIfNeeded(); // Check and reset the streak if needed
+
   let storedMysteryElement = getStoredMysteryElement();
   const storedDate = localStorage.getItem('mysteryElementDate');
   const currentDate = new Date().toLocaleDateString('en-US', options).slice(0, 10); // store date as MM/DD/YYYY format
@@ -558,6 +578,7 @@ function displayResults() {
     navigator.clipboard.writeText(shareText);
     createPopup('Copied results to clipboard');
   });
+  updateLastPlayedDate();
 }
 
 
