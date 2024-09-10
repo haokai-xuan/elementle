@@ -88,12 +88,12 @@ function displayStats() {
           <p class="stat-name">Games Played</p>
         </div>
         <div class="stat">
-          <p class="number">${maxWinStreak}</p>
-          <p class="stat-name">Max Streak</p>
-        </div>
-        <div class="stat">
           <p class="number">${currentStreak}</p>
           <p class="stat-name">Current Streak</p>
+        </div>
+        <div class="stat">
+          <p class="number">${maxWinStreak}</p>
+          <p class="stat-name">Max Streak</p>
         </div>
         <div class="stat">
           <p class="number">${winRate}%</p>
