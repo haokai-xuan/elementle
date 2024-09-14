@@ -70,7 +70,7 @@ function displayStats() {
 
   const totalGames = localStorage.getItem('totalGames') || 0;
   const totalWins = localStorage.getItem('totalWins') || 0;
-  const winRate = totalGames > 0 ? ((totalWins / totalGames) * 100).toFixed(2) : 0;
+  const winRate = totalGames > 0 ? Math.round((totalWins / totalGames) * 100) : 0;
   const currentStreak = localStorage.getItem('currentStreak') || 0;
   const maxWinStreak = localStorage.getItem('maxWinStreak') || 0;
 
