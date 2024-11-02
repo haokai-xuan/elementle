@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Iceland&display=swap');
+
 body {
   background-color: rgb(25, 25, 25);
   color: white;
@@ -45,6 +47,7 @@ p {
 footer {
   background-color: #111;
   margin-top: 100px;
+  font-family: "Iceland", sans-serif;
 }
 
 .footer-container {
