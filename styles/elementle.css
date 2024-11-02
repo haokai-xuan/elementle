@@ -134,6 +134,15 @@ button {
 }
 
 /*Display results*/
+a.additional-info,
+.share-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 50px; /* Same height for both elements */
+  line-height: normal; /* Ensures text is centered */
+}
+
 a.additional-info {
   display: inline-block;
   padding: 8px 16px;
