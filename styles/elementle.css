@@ -1,15 +1,11 @@
 /*Default styles*/
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Iceland&display=swap');
+
 * {
   padding: 0;
   margin: 0;
   box-sizing: border-box;
-}
-
-h1 {
-  font-size: 80px;
-  font-family: Helvetica;
-  margin-top: 50px;
-  margin-bottom: 40px;
+  font-family: "Iceland", sans-serif;
 }
 
 body {
@@ -27,6 +23,40 @@ button {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  margin-top: 60px;
+}
+
+/*Navbar*/
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  color: white;
+  font-size: 48px;
+  border-bottom: 2px solid rgb(97, 97, 97);
+}
+
+.nav-left, .nav-right {
+  display: flex;
+}
+
+.nav-button {
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: none;
+  background: none;
+}
+
+.nav-button:hover svg {
+  transform: scale(1.2);
+  fill: green;
+  transition: transform 0.1s ease-in, fill 0.1s ease-in;
+}
+
+.green-letter {
+  color: green;
 }
 
 /*Guessing area*/
@@ -59,8 +89,7 @@ button {
 }
 
 .hint-container {
-  font-size: 15px;
-  font-family: Helvetica;
+  font-size: 20px;
   margin-top: 10px;
 }
 
@@ -119,7 +148,6 @@ a.additional-info {
   margin-right: 10px;
   margin-top: 20px;
   font-size: 20px;
-  font-family: 'Times New Roman', Times, serif;
 }
 
 a.additional-info:hover {
@@ -149,7 +177,6 @@ a.additional-info:hover {
   align-items: center;
   justify-content: center;
   margin-top: 20px;
-  font-family: 'Times New Roman', Times, serif;
 }
 
 .share-button:hover {
@@ -290,19 +317,6 @@ a.additional-info:hover {
 }
 
 /*Game info styles*/
-.stats-button {
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  padding: none;
-  background: none;
-  transition: transform 0.3s ease;
-}
-
-.stats-button:hover, .help-button:hover {
-  transform: scale(1.2);
-}
-
 .stats-container {
   background-color: #2a2a2a;
   border: 2px solid rgb(97, 97, 97);
@@ -359,15 +373,6 @@ a.additional-info:hover {
 
 .back-button:hover {
   background-color: rgb(0, 155, 0);
-}
-
-.help-button {
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  padding: none;
-  background: none;
-  transition: transform 0.3s ease;
 }
 
 .help-container {
@@ -612,5 +617,13 @@ footer {
   
   .stats-container {
     width: 90%;
+  }
+
+  .navbar {
+    font-size: 24px;
+  }
+  
+  .nav-button {
+    font-size: 12px;
   }
 }
