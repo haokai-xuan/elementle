@@ -400,7 +400,7 @@ function displayResults() {
 
   guessedCorrectly = localStorage.getItem('guessedCorrectlyFP');
 
-  if (guessedCorrectly === 'false') {
+  if (guessedCorrectly === 'false' || !guessedCorrectly) {
     revealAnswerElement.innerHTML = `<p class="reveal-answer">Element: ${getMysteryElement().name}</p>`;
   }
 
