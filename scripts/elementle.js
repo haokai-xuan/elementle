@@ -8,6 +8,11 @@ const options = {
   hour12: false 
 };
 
+const changeModeEl = document.querySelector('.js-change-mode-button');
+changeModeEl.addEventListener('click', () => {
+  window.location.href = '/free-play.html';
+});
+
 const inputElement = document.querySelector('.js-guess-input');
 inputElement.addEventListener('input', onInputChange);
 
