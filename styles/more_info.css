@@ -156,6 +156,10 @@ input[name="name"], input[name="email"] {
   opacity: 0.5;
 }
 
+.credit {
+  opacity: 0.7;
+}
+
 @media (max-width: 1200px) {
   .footer-nav ul {
     flex-direction: column;
