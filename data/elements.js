@@ -107,15 +107,15 @@ const elements = [
   { name: 'Seaborgium', atomicNumber: 106, family: 'Transition Metal', hint: 'Synthetic element, named after Glenn T. Seaborg, used in research.', symbol: 'Sg' },
   { name: 'Bohrium', atomicNumber: 107, family: 'Transition Metal', hint: 'Synthetic element, named after Danish physicist.', symbol: 'Bh' },
   { name: 'Hassium', atomicNumber: 108, family: 'Transition Metal', hint: 'Synthetic element, named after the German state of Hesse.', symbol: 'Hs' },
-  { name: 'Meitnerium', atomicNumber: 109, family: 'Unknown', hint: 'Synthetic element, named after physicist Lise Meitner.', symbol: 'Mt' },
-  { name: 'Darmstadtium', atomicNumber: 110, family: 'Unknown', hint: 'Synthetic element, named after the city of Darmstadt in Germany.', symbol: 'Ds' },
-  { name: 'Roentgenium', atomicNumber: 111, family: 'Unknown', hint: 'Synthetic element, named after Wilhelm Conrad Roentgen.', symbol: 'Rg' },
-  { name: 'Copernicium', atomicNumber: 112, family: 'Unknown', hint: 'Synthetic element, named after astronomer Nicolaus Copernicus.', symbol: 'Cn' },
-  { name: 'Nihonium', atomicNumber: 113, family: 'Unknown', hint: 'Synthetic element, named after Japan.', symbol: 'Nh' },
+  { name: 'Meitnerium', atomicNumber: 109, family: 'Transition Metal', hint: 'Synthetic element, named after physicist Lise Meitner.', symbol: 'Mt' },
+  { name: 'Darmstadtium', atomicNumber: 110, family: 'Transition Metal', hint: 'Synthetic element, named after the city of Darmstadt in Germany.', symbol: 'Ds' },
+  { name: 'Roentgenium', atomicNumber: 111, family: 'Transition Metal', hint: 'Synthetic element, named after Wilhelm Conrad Roentgen.', symbol: 'Rg' },
+  { name: 'Copernicium', atomicNumber: 112, family: 'Transition Metal', hint: 'Synthetic element, named after astronomer Nicolaus Copernicus.', symbol: 'Cn' },
+  { name: 'Nihonium', atomicNumber: 113, family: 'Metal', hint: 'Synthetic element, named after Japan.', symbol: 'Nh' },
   { name: 'Flerovium', atomicNumber: 114, family: 'Unknown', hint: 'Synthetic element, named after physicist Georgy Flyorov.', symbol: 'Fl' },
-  { name: 'Moscovium', atomicNumber: 115, family: 'Unknown', hint: 'Synthetic element, named after the capital of Russia.', symbol: 'Mc' },
-  { name: 'Livermorium', atomicNumber: 116, family: 'Unknown', hint: 'Synthetic element, named after the Lawrence Livermore National Laboratory.', symbol: 'Lv' },
-  { name: 'Tennessine', atomicNumber: 117, family: 'Unknown', hint: 'Synthetic element, named after the state of Tennessee.', symbol: 'Ts' },
+  { name: 'Moscovium', atomicNumber: 115, family: 'Metal', hint: 'Synthetic element, named after the capital of Russia.', symbol: 'Mc' },
+  { name: 'Livermorium', atomicNumber: 116, family: 'Metal', hint: 'Synthetic element, named after the Lawrence Livermore National Laboratory.', symbol: 'Lv' },
+  { name: 'Tennessine', atomicNumber: 117, family: 'Metal', hint: 'Synthetic element, named after the state of Tennessee.', symbol: 'Ts' },
   { name: 'Oganesson', atomicNumber: 118, family: 'Unknown', hint: 'Synthetic element, named after physicist Yuri Oganessian.', symbol: 'Og' }  
 ];
 
