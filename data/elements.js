@@ -83,7 +83,7 @@ const elements = [
   {name: 'Lead', atomicNumber: 82, family: 'Metal', hint: 'Used in batteries, pipes, and as a shield against radiation.', symbol: 'Pb'},
   {name: 'Bismuth', atomicNumber: 83, family: 'Metal', hint: 'Used in pharmaceuticals and cosmetics.', symbol: 'Bi'},
   {name: 'Polonium', atomicNumber: 84, family: 'Metal', hint: 'Highly radioactive and toxic.', symbol: 'Po'},
-  {name: 'Astatine', atomicNumber: 85, family: 'Metal', hint: 'Radioactive and extremely rare in nature.', symbol: 'At'},
+  {name: 'Astatine', atomicNumber: 85, family: 'Halogen', hint: 'Radioactive and extremely rare in nature.', symbol: 'At'},
   {name: 'Radon', atomicNumber: 86, family: 'Noble Gas', hint: 'Radioactive and naturally occurring.', symbol: 'Rn'},
   {name: 'Francium', atomicNumber: 87, family: 'Alkali Metal', hint: 'Extremely rare and highly radioactive.', symbol: 'Fr'},
   {name: 'Radium', atomicNumber: 88, family: 'Alkaline Earth Metal', hint: 'Radioactive, once used in luminous paint.', symbol: 'Ra'},
