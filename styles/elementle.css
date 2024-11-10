@@ -437,7 +437,36 @@ footer {
 
 .footer-container {
   width: 100%;
-  padding: 30px 30px 20px;
+  padding: 10px 30px 20px;
+}
+
+.social-icons {
+  display: flex;
+  justify-content: center;
+}
+
+.social-icons a {
+  text-decoration: none;
+  padding: 10px;
+  background-color: white;
+  margin: 10px;
+  border-radius: 50%;
+}
+
+.social-icons a i {
+  font-size: 1em;
+  color: black;
+  opacity: 0.9;
+}
+
+.social-icons a:hover {
+  background-color: #111;
+  transition: 0.5s;
+}
+
+.social-icons a:hover i {
+  color: white;
+  transition: 0.5s;
 }
 
 .footer-nav ul {
