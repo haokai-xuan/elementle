@@ -112,11 +112,11 @@ const elements = [
   { name: 'Roentgenium', atomicNumber: 111, family: 'Transition Metal', hint: 'Synthetic element, named after Wilhelm Conrad Roentgen.', symbol: 'Rg' },
   { name: 'Copernicium', atomicNumber: 112, family: 'Transition Metal', hint: 'Synthetic element, named after astronomer Nicolaus Copernicus.', symbol: 'Cn' },
   { name: 'Nihonium', atomicNumber: 113, family: 'Metal', hint: 'Synthetic element, named after Japan.', symbol: 'Nh' },
-  { name: 'Flerovium', atomicNumber: 114, family: 'Unknown', hint: 'Synthetic element, named after physicist Georgy Flyorov.', symbol: 'Fl' },
+  { name: 'Flerovium', atomicNumber: 114, family: 'Metal', hint: 'Synthetic element, named after physicist Georgy Flyorov.', symbol: 'Fl' },
   { name: 'Moscovium', atomicNumber: 115, family: 'Metal', hint: 'Synthetic element, named after the capital of Russia.', symbol: 'Mc' },
   { name: 'Livermorium', atomicNumber: 116, family: 'Metal', hint: 'Synthetic element, named after the Lawrence Livermore National Laboratory.', symbol: 'Lv' },
-  { name: 'Tennessine', atomicNumber: 117, family: 'Metal', hint: 'Synthetic element, named after the state of Tennessee.', symbol: 'Ts' },
-  { name: 'Oganesson', atomicNumber: 118, family: 'Unknown', hint: 'Synthetic element, named after physicist Yuri Oganessian.', symbol: 'Og' }  
+  { name: 'Tennessine', atomicNumber: 117, family: 'Halogen', hint: 'Synthetic element, named after the state of Tennessee.', symbol: 'Ts' },
+  { name: 'Oganesson', atomicNumber: 118, family: 'Noble Gas', hint: 'Synthetic element, named after physicist Yuri Oganessian.', symbol: 'Og' }  
 ];
 
 elements.sort((a, b) => {
