@@ -79,6 +79,31 @@ function displayStats() {
   const currentStreak = localStorage.getItem('currentStreak') || 0;
   const maxWinStreak = localStorage.getItem('maxWinStreak') || 0;
 
+  // Get the guess distribution from localStorage
+  let distributionData = JSON.parse(localStorage.getItem('guessDistribution') || JSON.stringify({
+    1: 0, 2: 0, 3: 0, 4: 0, 
+    5: 0, 6: 0, 7: 0, 8: 0, 
+    'X': 0
+  }));
+
+  let totalGuesses = Object.values(distributionData).reduce((sum, value) => sum + value, 0);
+
+  const bars = Object.keys(distributionData).map((key) => {
+    let value = distributionData[key];
+    let percentage = totalGuesses > 0 ? (value / totalGuesses) * 100 : 0; // Normalize by the number of games
+  
+    return `
+      <div class="bar-container">
+        <p class="bar-label">${key}&nbsp;</p>
+        <div class="bar-background">
+          <div class="bar-foreground" style="width: ${percentage}%;"></div>
+        </div>
+        <p class="bar-count">&nbsp;${value}</p>
+      </div>
+    `;
+  }).join("");
+
+
   overlay.innerHTML = `
     <div class="stats-container">
       <h3>Statistics</h3>
@@ -103,9 +128,15 @@ function displayStats() {
         <div class="stat">
           <p class="number">${winRate}%</p>
           <p class="stat-name">Win Rate</p>
-
         </div>
       </div>
+      <br/>
+      <!-- Guess Distribution Bars -->
+        <div class="guess-distribution">
+          <div class="bars-container">
+            ${bars}
+          </div>
+        </div>
       <button class="back-button">Back</button>
     </div>
   `;
@@ -267,6 +298,22 @@ function renderGuess() {
 }
 
 
+function trackGuessDistribution(guessCount) {
+  let distributionData = JSON.parse(localStorage.getItem('guessDistribution') || JSON.stringify({
+    1: 0, 2: 0, 3: 0, 4: 0, 
+    5: 0, 6: 0, 7: 0, 8: 0, 
+    'X': 0
+  }));
+  
+  if (guessCount === 0) {
+    distributionData['X']++;
+  } else {
+    distributionData[guessCount]++;
+  }
+
+  localStorage.setItem('guessDistribution', JSON.stringify(distributionData));
+}
+
 
 function processGuess() {
   const inputValue = inputElement.value.trim();
@@ -298,6 +345,8 @@ function processGuess() {
     renderGuess();
 
     if (numberOfGuesses <= 8 && guessedElement.name.toLowerCase() === getMysteryElement().name.toLowerCase()) {
+      trackGuessDistribution(numberOfGuesses);
+
       localStorage.setItem('totalGames', +localStorage.getItem('totalGames') + 1);
       localStorage.setItem('totalWins', +localStorage.getItem('totalWins') + 1);
       localStorage.setItem('currentStreak', +localStorage.getItem('currentStreak') + 1);
@@ -311,6 +360,8 @@ function processGuess() {
       createPopup('Well done!');
       displayResults();
     } else if (numberOfGuesses >= 8) {
+      trackGuessDistribution(0);
+
       localStorage.setItem('totalGames', +localStorage.getItem('totalGames') + 1);
       localStorage.setItem('currentStreak', 0);
       
