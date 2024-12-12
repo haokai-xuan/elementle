@@ -8,6 +8,21 @@ const options = {
   hour12: false 
 };
 
+let defaultUsedElements = [
+  "Thorium", "Seaborgium", "Californium", "Bismuth", "Bohrium", "Praseodymium", 
+  "Gadolinium", "Iridium", "Flerovium", "Silver", "Tennessine", "Mercury", "Cadmium", 
+  "Mercury", "Lithium", "Sodium", "Strontium", "Radon", "Livermorium", "Indium", 
+  "Tungsten", "Helium", "Gadolinium", "Indium", "Promethium", "Nobelium", "Rhodium", 
+  "Berkelium", "Helium", "Neptunium", "Bismuth", "Ruthenium", "Cerium", "Aluminum", 
+  "Nitrogen", "Antimony", "Chromium", "Tellurium", "Antimony", "Hydrogen", "Nickel", 
+  "Yttrium", "Protactinium", "Niobium", "Sulfur", "Copper", "Rhodium", "Curium", 
+  "Thulium", "Neon", "Neodymium", "Manganese", "Phosphorus", "Protactinium", "Copper", 
+  "Neptunium", "Silicon", "Rutherfordium", "Tungsten", "Sulfur", "Scandium", "Berkelium", 
+  "Curium", "Helium", "Tantalum", "Aluminum", "Lanthanum", "Thulium", "Manganese", 
+  "Manganese", "Antimony", "Iron", "Hafnium", "Meitnerium", "Mercury", "Tungsten", 
+  "Hassium", "Fermium", "Antimony"
+];
+
 const changeModeEl = document.querySelector('.js-change-mode-button');
 changeModeEl.addEventListener('click', () => {
   window.location.href = '/free-play.html';
@@ -445,26 +460,51 @@ function onElementButtonClick(event) {
   removeAutocompleteDropdown();
 }
 
+
 function selectMysteryElement() {
+  let usedElements = JSON.parse(localStorage.getItem('usedElements')) || [...defaultUsedElements]; // Create a copy
   // Set a fixed seed value for the PRNG
   const currentDate = new Date();
-
   const localDateTime = currentDate.toLocaleString('en-US', options).slice(0, 10);
-
-
   const cleanedDate = localDateTime.replace(/\//g, '');
-
-  const seed = parseInt(cleanedDate, 10); // You can choose any integer value as the seed
+  let seed = parseInt(cleanedDate, 10); // You can choose any integer value as the seed
 
   // Initialize the PRNG with the seed
-  const randomGenerator = new Math.seedrandom(seed);
+  let randomGenerator = new Math.seedrandom(seed);
 
-  // Generate a random index using the PRNG
-  const randomIndex = Math.floor(randomGenerator() * elements.length);
+  let randomIndex;
+  let selectedElement;
 
-  // Return the element at the random index
+  randomGenerator = new Math.seedrandom(seed);
+  randomIndex = Math.floor(randomGenerator() * elements.length);
+  selectedElement = elements[randomIndex].name;
+
+  while (usedElements.includes(selectedElement)) {
+    seed -= 1;
+    randomGenerator = new Math.seedrandom(seed); // Reinitialize the PRNG with the new seed
+    randomIndex = Math.floor(randomGenerator() * elements.length);
+    selectedElement = elements[randomIndex].name;
+  }
+
+  // Update usedElements
+  usedElements.unshift(selectedElement);
+  if (usedElements.length > 80) {
+    usedElements.pop(); // Remove the oldest element if we have more than 80
+  }
+
+  // Update defaultUsedElements
+  if (!defaultUsedElements.includes(selectedElement)) {
+    defaultUsedElements.unshift(selectedElement);
+    if (defaultUsedElements.length > 80) {
+      defaultUsedElements.pop();
+    }
+  }
+
+  localStorage.setItem('usedElements', JSON.stringify(usedElements));
+
   return elements[randomIndex];
 }
+
 
 
 function storeMysteryElement(mysteryElement) {
