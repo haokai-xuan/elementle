@@ -8,20 +8,9 @@ const options = {
   hour12: false 
 };
 
-let defaultUsedElements = [
-  "Thorium", "Seaborgium", "Californium", "Bismuth", "Bohrium", "Praseodymium", 
-  "Gadolinium", "Iridium", "Flerovium", "Silver", "Tennessine", "Mercury", "Cadmium", 
-  "Mercury", "Lithium", "Sodium", "Strontium", "Radon", "Livermorium", "Indium", 
-  "Tungsten", "Helium", "Gadolinium", "Indium", "Promethium", "Nobelium", "Rhodium", 
-  "Berkelium", "Helium", "Neptunium", "Bismuth", "Ruthenium", "Cerium", "Aluminum", 
-  "Nitrogen", "Antimony", "Chromium", "Tellurium", "Antimony", "Hydrogen", "Nickel", 
-  "Yttrium", "Protactinium", "Niobium", "Sulfur", "Copper", "Rhodium", "Curium", 
-  "Thulium", "Neon", "Neodymium", "Manganese", "Phosphorus", "Protactinium", "Copper", 
-  "Neptunium", "Silicon", "Rutherfordium", "Tungsten", "Sulfur", "Scandium", "Berkelium", 
-  "Curium", "Helium", "Tantalum", "Aluminum", "Lanthanum", "Thulium", "Manganese", 
-  "Manganese", "Antimony", "Iron", "Hafnium", "Meitnerium", "Mercury", "Tungsten", 
-  "Hassium", "Fermium", "Antimony"
-];
+
+const defaultUsedElements = JSON.parse(localStorage.getItem('defaultUsedElements')) || []; // Load defaultUsedElements from localStorage
+
 
 const changeModeEl = document.querySelector('.js-change-mode-button');
 changeModeEl.addEventListener('click', () => {
@@ -492,15 +481,15 @@ function selectMysteryElement() {
     usedElements.pop(); // Remove the oldest element if we have more than 80
   }
 
-  // Update defaultUsedElements
-  if (!defaultUsedElements.includes(selectedElement)) {
-    defaultUsedElements.unshift(selectedElement);
-    if (defaultUsedElements.length > 80) {
-      defaultUsedElements.pop();
-    }
+  // Update defaultUsedElements (to retain it across different days)
+  defaultUsedElements.unshift(selectedElement);
+  if (defaultUsedElements.length > 80) {
+    defaultUsedElements.pop(); // Remove the oldest element if we have more than 80
   }
 
+  // Save updated arrays to localStorage
   localStorage.setItem('usedElements', JSON.stringify(usedElements));
+  localStorage.setItem('defaultUsedElements', JSON.stringify(defaultUsedElements));
 
   return elements[randomIndex];
 }
