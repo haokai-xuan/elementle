@@ -451,55 +451,24 @@ function onElementButtonClick(event) {
 
 
 function selectMysteryElement() {
-  let usedElements = JSON.parse(localStorage.getItem('usedElements')) || [...defaultUsedElements]; // Create a copy
-  // Set a fixed seed value for the PRNG
-  const currentDate = new Date();
-  const localDateTime = currentDate.toLocaleString('en-US', options).slice(0, 10);
-  const cleanedDate = localDateTime.replace(/\//g, '');
-  let seed = parseInt(cleanedDate, 10); // You can choose any integer value as the seed
+  fetch("https://daily-element-api.onrender.com/")
+      .then(response => response.json()) // Parse the JSON response
+      .then((data) => {
+          const currentDate = new Date();
+          const isoDate = currentDate.toISOString().split('T')[0].replace(/-/g, '');  // Get the current date in YYYYMMDD format
+          
+          // Get the mystery element for the current date
+          const mysteryElement = data[isoDate];
 
-  // Initialize the PRNG with the seed
-  let randomGenerator = new Math.seedrandom(seed);
-
-  let randomIndex;
-  let selectedElement;
-
-  randomGenerator = new Math.seedrandom(seed);
-  randomIndex = Math.floor(randomGenerator() * elements.length);
-  selectedElement = elements[randomIndex].name;
-
-  while (usedElements.includes(selectedElement)) {
-    seed -= 1;
-    randomGenerator = new Math.seedrandom(seed); // Reinitialize the PRNG with the new seed
-    randomIndex = Math.floor(randomGenerator() * elements.length);
-    selectedElement = elements[randomIndex].name;
-  }
-
-  // Update usedElements
-  usedElements.unshift(selectedElement);
-  if (usedElements.length > 80) {
-    usedElements.pop(); // Remove the oldest element if we have more than 80
-  }
-
-  // Update defaultUsedElements (to retain it across different days)
-  defaultUsedElements.unshift(selectedElement);
-  if (defaultUsedElements.length > 80) {
-    defaultUsedElements.pop(); // Remove the oldest element if we have more than 80
-  }
-
-  // Save updated arrays to localStorage
-  localStorage.setItem('usedElements', JSON.stringify(usedElements));
-  localStorage.setItem('defaultUsedElements', JSON.stringify(defaultUsedElements));
-
-  return elements[randomIndex];
+          // Store the mystery element and the date in localStorage
+          localStorage.setItem('mysteryElement', JSON.stringify(mysteryElement)); // Store the mystery element as a string
+          localStorage.setItem('mysteryElementDate', currentDate.toLocaleDateString('en-US')); // Store the date as MM/DD/YYYY format
+      })
+      .catch(error => {
+          console.log("Error fetching mystery element:", error);
+      });
 }
 
-
-
-function storeMysteryElement(mysteryElement) {
-  localStorage.setItem('mysteryElement', JSON.stringify(mysteryElement));
-  localStorage.setItem('mysteryElementDate', new Date().toLocaleDateString('en-US', options).slice(0, 10)); // store date as MM/DD/YYYY format
-}
 
 function getStoredMysteryElement() {
   const storedDate = localStorage.getItem('mysteryElementDate');
@@ -544,9 +513,7 @@ function setMysteryElementOfTheDay() {
   const currentDate = new Date().toLocaleDateString('en-US', options).slice(0, 10); // store date as MM/DD/YYYY format
   
   if (!storedMysteryElement || storedDate !== currentDate) {
-    // if no mystery element is stored for today or the stored mystery element is not from today
-    storedMysteryElement = selectMysteryElement();
-    storeMysteryElement(storedMysteryElement);
+    selectMysteryElement();
     numberOfGuesses = 0;
 
     inputElement.disabled = false;
