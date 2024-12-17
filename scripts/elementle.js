@@ -451,36 +451,25 @@ function onElementButtonClick(event) {
 
 
 function selectMysteryElement() {
-  const xhr = new XMLHttpRequest();
-  xhr.open("GET", "https://haokai.pythonanywhere.com/", true); // Open a GET request to the Flask server
-  xhr.setRequestHeader("Accept", "application/json"); // Ensure the response is JSON
+  fetch("https://haokai.pythonanywhere.com/")
+      .then(response => response.json()) // Parse the JSON response
+      .then((data) => {
+          const currentDate = new Date();
+          const isoDate = currentDate.toLocaleDateString();  // Get the current date in YYYYMMDD format
 
-  xhr.onreadystatechange = function() {
-      if (xhr.readyState === XMLHttpRequest.DONE) { // Request has completed
-          if (xhr.status === 200) { // Successful response
-              const data = JSON.parse(xhr.responseText); // Parse the JSON response
-              
-              const currentDate = new Date();
-              const isoDate = currentDate.toLocaleDateString();  // Get the current date in MM/DD/YYYY format
+          const [month, day, year] = isoDate.split('/'); // Split the date by '/'
+          const formattedDate = `${year}${month.padStart(2, '0')}${day.padStart(2, '0')}`;
+          
+          // Get the mystery element for the current date
+          const mysteryElement = data[formattedDate];
 
-              const [month, day, year] = isoDate.split('/'); // Split the date by '/'
-              const formattedDate = `${year}${month.padStart(2, '0')}${day.padStart(2, '0')}`; // Format as YYYYMMDD
-              
-              // Get the mystery element for the current date
-              const mysteryElement = data[formattedDate];
-
-              // Store the mystery element and the date in localStorage
-              localStorage.setItem('mysteryElement', JSON.stringify(mysteryElement)); // Store as string
-              localStorage.setItem('mysteryElementDate', currentDate.toLocaleDateString('en-US')); // Store as MM/DD/YYYY
-          } else {
-              console.log("Error fetching mystery element:", xhr.statusText); // Handle error
-          }
-      }
-  };
-  xhr.onerror = function() {
-      console.log("Error during the request.");
-  };
-  xhr.send(); // Send the request
+          // Store the mystery element and the date in localStorage
+          localStorage.setItem('mysteryElement', JSON.stringify(mysteryElement)); // Store the mystery element as a string
+          localStorage.setItem('mysteryElementDate', currentDate.toLocaleDateString('en-US')); // Store the date as MM/DD/YYYY format
+      })
+      .catch(error => {
+          console.log("Error fetching mystery element:", error);
+      });
 }
 
 
