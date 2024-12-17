@@ -458,7 +458,7 @@ function selectMysteryElement() {
           const isoDate = currentDate.toLocaleDateString();  // Get the current date in YYYYMMDD format
 
           const [month, day, year] = isoDate.split('/'); // Split the date by '/'
-          const formattedDate = `${year}${month.padStart(2, '0')}${day.padStart(2, '0')}`;
+          const formattedDate = `${year}${month}${day}`;
           
           // Get the mystery element for the current date
           const mysteryElement = data[formattedDate];
