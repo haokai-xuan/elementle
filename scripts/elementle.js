@@ -636,6 +636,13 @@ function displayResults() {
       } else {
         line += '⬜';
       }
+
+      if (guessedElement.atomicNumber === getMysteryElement().atomicNumber) {
+        line += '🟩';
+      }
+      else {
+        line += '⬜';
+      }
     }
 
       // Add the result of this guess to the shareText
