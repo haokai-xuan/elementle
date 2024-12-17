@@ -455,9 +455,11 @@ function selectMysteryElement() {
       .then(response => response.json()) // Parse the JSON response
       .then((data) => {
           const currentDate = new Date();
-          const isoDate = currentDate.toLocaleDateString();  // Get the current date in YYYYMMDD format
 
-          const [month, day, year] = isoDate.split('/'); // Split the date by '/'
+          const year = currentDate.getFullYear();
+          const month = String(currentDate.getMonth() + 1).padStart(2, '0'); // getMonth() is 0-based
+          const day = String(currentDate.getDate()).padStart(2, '0');
+          
           const formattedDate = `${year}${month}${day}`;
           
           // Get the mystery element for the current date
