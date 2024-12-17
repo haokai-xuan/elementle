@@ -451,14 +451,17 @@ function onElementButtonClick(event) {
 
 
 function selectMysteryElement() {
-  fetch("https://daily-element-api.onrender.com/")
+  fetch("https://haokai.pythonanywhere.com/")
       .then(response => response.json()) // Parse the JSON response
       .then((data) => {
           const currentDate = new Date();
-          const isoDate = currentDate.toISOString().split('T')[0].replace(/-/g, '');  // Get the current date in YYYYMMDD format
+          const isoDate = currentDate.toLocaleDateString();  // Get the current date in YYYYMMDD format
+
+          const [month, day, year] = isoDate.split('/'); // Split the date by '/'
+          const formattedDate = `${year}${month.padStart(2, '0')}${day.padStart(2, '0')}`;
           
           // Get the mystery element for the current date
-          const mysteryElement = data[isoDate];
+          const mysteryElement = data[formattedDate];
 
           // Store the mystery element and the date in localStorage
           localStorage.setItem('mysteryElement', JSON.stringify(mysteryElement)); // Store the mystery element as a string
