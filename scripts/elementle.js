@@ -337,8 +337,7 @@ function sendDistribution(nog) {
     },
     body: JSON.stringify({
       localDate: formattedDate,
-      guesses: guesses,
-      element: getMysteryElement().name
+      guesses: guesses
     })
   }).then(response => response.json()).then(data => {
     // console.log('Server res: ', data);
