@@ -319,6 +319,33 @@ function trackGuessDistribution(guessCount) {
 }
 
 
+function sendDistribution(nog) {
+  // Send data to backend
+  const currentDate = new Date();
+
+  const year = currentDate.getFullYear();
+  const month = String(currentDate.getMonth() + 1).padStart(2, '0'); // getMonth() is 0-based
+  const day = String(currentDate.getDate()).padStart(2, '0');
+  
+  const formattedDate = `${year}${month}${day}`;
+  const guesses = nog <= 8 ? nog : 9; // 9 represents failed
+
+  fetch('https://haokai.pythonanywhere.com/guess_distribution', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      localDate: formattedDate,
+      guesses: guesses
+    })
+  }).then(response => response.json()).then(data => {
+    // console.log('Server res: ', data);
+  }).catch(error => {
+    // console.log('Error sending guess data: ', error);
+  });
+}
+
 function processGuess() {
   const inputValue = inputElement.value.trim();
   const guessedElement = elements.find(element => element.name.toLowerCase() === inputValue.toLowerCase());
@@ -363,6 +390,7 @@ function processGuess() {
       });
       createPopup('Well done!');
       displayResults();
+      sendDistribution(numberOfGuesses);
     } else if (numberOfGuesses >= 8) {
       trackGuessDistribution(0);
 
@@ -372,6 +400,7 @@ function processGuess() {
       localStorage.setItem('guessedCorrectly', 'false');
       displayResults();
       createPopup('Thanks for playing!');
+      sendDistribution(9);
     } else {
       localStorage.setItem('guessedCorrectly', 'false');
     }
