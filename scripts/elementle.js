@@ -90,11 +90,11 @@ function displayStats() {
     'X': 0
   }));
 
-  let totalGuesses = Object.values(distributionData).reduce((sum, value) => sum + value, 0);
+  let maxValue = Math.max(...Object.values(distributionData));
 
   const bars = Object.keys(distributionData).map((key) => {
     let value = distributionData[key];
-    let percentage = totalGuesses > 0 ? (value / totalGuesses) * 100 : 0; // Normalize by the number of games
+    let percentage = maxValue > 0 ? (value / maxValue) * 100 : 0; // Normalize by the number of games
   
     return `
       <div class="bar-container">
