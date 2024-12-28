@@ -716,4 +716,9 @@ window.onload = function() {
   if (numberOfGuesses >= 8 || (numberOfGuesses <= 8 && guessedCorrectly === 'true')){
     displayResults();
   }
+
+  let totalGames = parseInt(localStorage.getItem("totalGames"), 10);
+  if (!totalGames) {
+    displayHelp();
+  }
 };
