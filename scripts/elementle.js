@@ -496,7 +496,7 @@ function selectMysteryElement() {
 
           // Store the mystery element and the date in localStorage
           localStorage.setItem('mysteryElement', JSON.stringify(mysteryElement)); // Store the mystery element as a string
-          localStorage.setItem('mysteryElementDate', currentDate.toLocaleDateString('en-US')); // Store the date as MM/DD/YYYY format
+          localStorage.setItem('mysteryElementDate', currentDate.toLocaleDateString('en-US', options).slice(0, 10)); // Store the date as MM/DD/YYYY format
       })
       .catch(error => {
           console.log("Error fetching mystery element:", error);
