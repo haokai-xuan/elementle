@@ -381,7 +381,7 @@ function processGuess() {
       localStorage.setItem('totalGames', +localStorage.getItem('totalGames') + 1);
       localStorage.setItem('totalWins', +localStorage.getItem('totalWins') + 1);
       localStorage.setItem('currentStreak', +localStorage.getItem('currentStreak') + 1);
-      localStorage.setItem('maxWinStreak', (localStorage.getItem("currentStreak") > localStorage.getItem("maxWinStreak")) ? localStorage.getItem("currentStreak"): localStorage.getItem("maxWinStreak"));
+      localStorage.setItem('maxWinStreak', (Number(localStorage.getItem("currentStreak")) > Number(localStorage.getItem("maxWinStreak"))) ? localStorage.getItem("currentStreak"): localStorage.getItem("maxWinStreak"));
 
       localStorage.setItem('guessedCorrectly', 'true');
       confetti({
