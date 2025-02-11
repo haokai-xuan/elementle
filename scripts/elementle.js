@@ -517,7 +517,8 @@ function getStoredMysteryElement() {
 }
 
 function updateLastPlayedDate() {
-  localStorage.setItem('lastPlayedDate', new Date().toLocaleDateString('en-US', options).slice(0, 10));
+  const date = new Date();
+  localStorage.setItem('lastPlayedDate', date.toISOString().slice(0,10).replace(/-/g,""));
 }
 
 function getLastPlayedDate() {
@@ -526,18 +527,16 @@ function getLastPlayedDate() {
 
 function resetStreakIfNeeded() {
   const lastPlayedDate = getLastPlayedDate();
+  
   if (lastPlayedDate) {
-    const lastPlayed = new Date(lastPlayedDate);
-    const currentDate = new Date();
-    const dayBeforeYesterday = new Date();
-    dayBeforeYesterday.setDate(currentDate.getDate() - 2);
-
-    if (lastPlayed.toDateString() === dayBeforeYesterday.toDateString()) {
+    const today = new Date();
+    const dayBeforeYesterday = new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString().slice(0,10).replace(/-/g,"");
+  
+    if (lastPlayedDate <= dayBeforeYesterday) {
       localStorage.setItem('currentStreak', 0);
     }
   }
 }
-
 
 function setMysteryElementOfTheDay() {
   resetStreakIfNeeded(); // Check and reset the streak if needed
