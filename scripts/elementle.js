@@ -750,6 +750,7 @@ function displayCountdown() {
     hours_container.innerHTML = "";
     minutes_container.innerHTML = "";
     seconds_container.innerHTML = "";
+    countdown_text_container.innerHTML = "";
     colon_containers.forEach(element => {
       element.innerHTML = "";
     })
