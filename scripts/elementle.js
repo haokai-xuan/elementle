@@ -689,6 +689,8 @@ function displayResults() {
     createPopup('Copied results to clipboard');
   });
   updateLastPlayedDate();
+  displayCountdown();
+  setInterval(displayCountdown, 1000);
 }
 
 
@@ -706,6 +708,53 @@ function createPopup(text) {
       }, 1000); // Adjust the delay for hiding the popup
     }, 2000); // Adjust the delay for showing the popup
   }, 100); // Adjust the delay for adding the popup to the DOM
+}
+
+function getNextMidnight() {
+  const now = new Date();
+  const nextMidnight = new Date(now);
+  nextMidnight.setHours(24, 0, 0, 0);
+  if (now.getTime() > nextMidnight.getTime()) {
+    nextMidnight.setDate(now.getDate() + 1);
+  }
+  return nextMidnight;
+}
+
+function displayCountdown() {
+  const hours_container = document.querySelector(".js-hours");
+  const minutes_container = document.querySelector(".js-minutes");
+  const seconds_container = document.querySelector(".js-seconds");
+  const countdown_text_container = document.querySelector(".countdown-text");
+  const colon_containers = document.querySelectorAll(".colon-text");
+
+  countdown_text_container.innerHTML = "Next Elementle in ";
+  colon_containers.forEach(element => {
+    element.innerHTML = ":";
+  })
+
+  const target_date = getNextMidnight();
+  const current_date = new Date().getTime();
+  const distance = target_date - current_date;
+
+  const hours = String(Math.floor(distance / 1000 / 60 / 60)).padStart(2, '0');
+  const minutes = String(Math.floor(distance / 1000 / 60) % 60).padStart(2, '0');
+  const seconds = String(Math.floor(distance / 1000) % 60).padStart(2, '0');
+
+  // console.log(hours + ":" + minutes + ":" + seconds);
+
+  hours_container.innerHTML = hours;
+  minutes_container.innerHTML = minutes;
+  seconds_container.innerHTML = seconds;
+
+  if (distance <= 0) {
+    hours_container.innerHTML = "";
+    minutes_container.innerHTML = "";
+    seconds_container.innerHTML = "";
+    colon_containers.forEach(element => {
+      element.innerHTML = "";
+    })
+    location.reload();
+  }
 }
 
 window.onload = function() {
