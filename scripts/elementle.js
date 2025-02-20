@@ -746,15 +746,17 @@ function displayCountdown() {
   minutes_container.innerHTML = minutes;
   seconds_container.innerHTML = seconds;
 
-  if (distance <= 0) {
-    hours_container.innerHTML = "";
-    minutes_container.innerHTML = "";
-    seconds_container.innerHTML = "";
-    countdown_text_container.innerHTML = "";
-    colon_containers.forEach(element => {
-      element.innerHTML = "";
-    })
-    location.reload();
+  if (hours == "00" && minutes == "00" && seconds == "00") {
+    setTimeout(() => {
+      hours_container.innerHTML = "";
+      minutes_container.innerHTML = "";
+      seconds_container.innerHTML = "";
+      countdown_text_container.innerHTML = "";
+      colon_containers.forEach(element => {
+        element.innerHTML = "";
+      })
+      window.location.reload();
+    }, 1000)
   }
 }
 
