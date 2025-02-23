@@ -112,7 +112,7 @@ const elements = [
   { name: 'Roentgenium', atomicNumber: 111, family: 'Transition Metal', hint: 'Named after German physicist who discovered X-rays.', symbol: 'Rg' },
   { name: 'Copernicium', atomicNumber: 112, family: 'Transition Metal', hint: 'Named after famous astronomer who developed the heliocentric theory.', symbol: 'Cn' },
   { name: 'Nihonium', atomicNumber: 113, family: 'Metal', hint: 'Synthetic element, named after Japan.', symbol: 'Nh' },
-  { name: 'Flerovium', atomicNumber: 114, family: 'Metal', hint: 'Named afater Soviet physicist known for spontaneous fission, crystallography and material science.', symbol: 'Fl' },
+  { name: 'Flerovium', atomicNumber: 114, family: 'Metal', hint: 'Named after Soviet physicist known for spontaneous fission, crystallography and material science.', symbol: 'Fl' },
   { name: 'Moscovium', atomicNumber: 115, family: 'Metal', hint: 'Synthetic element, named after the capital of Russia.', symbol: 'Mc' },
   { name: 'Livermorium', atomicNumber: 116, family: 'Metal', hint: 'Named after Californian city.', symbol: 'Lv' },
   { name: 'Tennessine', atomicNumber: 117, family: 'Halogen', hint: 'Named after US state known as the birthplace of blues.', symbol: 'Ts' },
