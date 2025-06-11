@@ -15,7 +15,7 @@ html, body {
 
 h1 {
   text-align: left; /* Left-justifies the heading */
-  margin-top: 30px; /* Adds some space below the heading */
+  margin-top: 20px; /* Adds some space below the heading */
   font-size: 34px;
   color: #ccc;
 }
@@ -42,6 +42,8 @@ p {
 
 .logo {
   margin-top: 30px;
+  transform: scale(0.5);
+  transform-origin: bottom left;
 }
 
 footer {
