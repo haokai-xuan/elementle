@@ -330,7 +330,7 @@ function sendDistribution(nog) {
   const formattedDate = `${year}${month}${day}`;
   const guesses = nog <= 8 ? nog : 9; // 9 represents failed
 
-  fetch('https://haokai.pythonanywhere.com/guess_distribution', {
+  fetch('https://daily-element-api-production.up.railway.app/guess_distribution', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -480,7 +480,7 @@ function onElementButtonClick(event) {
 
 
 function selectMysteryElement() {
-  fetch("https://haokai.pythonanywhere.com/")
+  fetch("https://daily-element-api-production.up.railway.app/")
       .then(response => response.json()) // Parse the JSON response
       .then((data) => {
           const currentDate = new Date();
