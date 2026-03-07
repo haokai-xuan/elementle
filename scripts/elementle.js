@@ -558,9 +558,9 @@ function setMysteryElementOfTheDay() {
     guessesList.length = 0;
     guessedCorrectly = false;
 
-    document.querySelector('.js-reveal-answer').remove();
-    document.querySelector('.js-additional-info').remove();
-    document.querySelector('.js-share-button').remove();
+    document.querySelector('.js-reveal-answer')?.remove();
+    document.querySelector('.js-additional-info')?.remove();
+    document.querySelector('.js-share-button')?.remove();
 
     renderGuess();
   }
