@@ -8,6 +8,31 @@ const options = {
   hour12: false 
 };
 
+// Frontend talks only to our Node proxy; secrets live in process.env on the server.
+const API_BASE = '/api';
+
+let mysteryElementCache = null;
+
+function getTodayDateInt() {
+  const d = new Date();
+  return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+}
+
+function getHintIndexForToday() {
+  const seed = String(getTodayDateInt());
+  const rng = (typeof Math.seedrandom === 'function') ? new Math.seedrandom(seed) : null;
+  const value = rng ? rng() : Math.random();
+  return Math.floor(value * 3) % 3;
+}
+
+async function fetchMysteryElementForDate(dateInt) {
+  const res = await fetch(`${API_BASE}/mystery_element/${dateInt}`);
+  if (!res.ok) return null;
+  const data = await res.json();
+  const atomicNumber = data.atomic_number != null ? parseInt(data.atomic_number, 10) : null;
+  if (atomicNumber == null) return null;
+  return elements.find((e) => e.atomicNumber === atomicNumber) || null;
+}
 
 const defaultUsedElements = JSON.parse(localStorage.getItem('defaultUsedElements')) || []; // Load defaultUsedElements from localStorage
 
@@ -55,9 +80,11 @@ const hintContainer = document.querySelector('.js-hint-container');
 
 // Add click event listener to the hint button
 hintButton.addEventListener('click', (event) => {
-  // Change the content of the hint container when the button is clicked
   event.preventDefault();
-  hintContainer.innerHTML = `${getMysteryElement().hint}`;
+  const mystery = getMysteryElement();
+  if (!mystery || !mystery.hints) return;
+  const idx = getHintIndexForToday();
+  hintContainer.innerHTML = mystery.hints[idx];
 });
 
 document.querySelector('.js-stats-button').addEventListener('click', (event) => {
@@ -194,11 +221,10 @@ function displayHelp() {
   });
 }
 
-setMysteryElementOfTheDay();
-
-
-renderGuess();
 function renderGuess() {
+  const mystery = getMysteryElement();
+  if (!mystery) return;
+
   const guessedList = JSON.parse(localStorage.getItem('guessesList'));
   const elementGrid = document.querySelector('.element-grid');
   elementGrid.innerHTML = '';
@@ -214,8 +240,8 @@ function renderGuess() {
     if (guessedList && guessedList.length > 0 && guessedList[i]) {
       elementDiv.classList.add('guessed-element');
       const guessedElement = guessedList[i];
-      const atomicSignal = (guessedElement.atomicNumber === getMysteryElement().atomicNumber) ? '&#127881;' : (guessedElement.atomicNumber < getMysteryElement().atomicNumber) ? '⬆️' : '⬇️';
-      const familyClass = (guessedElement.family === getMysteryElement().family) ? 'green' : 'family';
+      const atomicSignal = (guessedElement.atomicNumber === mystery.atomicNumber) ? '&#127881;' : (guessedElement.atomicNumber < mystery.atomicNumber) ? '⬆️' : '⬇️';
+      const familyClass = (guessedElement.family === mystery.family) ? 'green' : 'family';
 
       // Apply fade-in-text effect only to the text elements in the newly guessed element
       const applyFadeIn = !fadeInAppliedList[i] ? 'fade-in-text' : '';
@@ -239,10 +265,10 @@ function renderGuess() {
       });
       letterSpans.forEach((span, index) => {
         const guessedLetter = guessedElement.symbol.toLowerCase().charAt(index);
-        const mysteryLetter = getMysteryElement().symbol.toLowerCase().charAt(index);
+        const mysteryLetter = mystery.symbol.toLowerCase().charAt(index);
         if (guessedLetter === mysteryLetter) {
           span.style.color = 'rgb(83, 141, 78)';
-        } else if (getMysteryElement().symbol.toLowerCase().includes(guessedLetter)) {
+        } else if (mystery.symbol.toLowerCase().includes(guessedLetter)) {
           span.style.color = 'rgb(181, 159, 59)';
         }
       });
@@ -257,7 +283,7 @@ function renderGuess() {
       const nameSpan = document.createElement('span');
       nameSpan.classList.add('name');
       nameSpan.textContent = guessedElement.name;
-      if (guessedElement.name.toLowerCase() === getMysteryElement().name.toLowerCase()) {
+      if (guessedElement.name.toLowerCase() === mystery.name.toLowerCase()) {
         nameSpan.classList.add('green');
         atomicNumberSpan.classList.add('green');
       }
@@ -311,30 +337,19 @@ function trackGuessDistribution(guessCount) {
 
 
 function sendDistribution(nog) {
-  // Send data to backend
-  const currentDate = new Date();
+  const dateInt = getTodayDateInt();
+  const guesses = Math.max(1, Math.min(9, nog <= 8 ? nog : 9));
 
-  const year = currentDate.getFullYear();
-  const month = String(currentDate.getMonth() + 1).padStart(2, '0'); // getMonth() is 0-based
-  const day = String(currentDate.getDate()).padStart(2, '0');
-  
-  const formattedDate = `${year}${month}${day}`;
-  const guesses = nog <= 8 ? nog : 9; // 9 represents failed
-
-  fetch('https://daily-element-api-production.up.railway.app/guess_distribution', {
+  fetch(`${API_BASE}/guess_distribution`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      localDate: formattedDate,
+      localDate: dateInt,
       guesses: guesses
     })
-  }).then(response => response.json()).then(data => {
-    // console.log('Server res: ', data);
-  }).catch(error => {
-    // console.log('Error sending guess data: ', error);
-  });
+  })
+    .then((res) => (res.ok ? res.json() : Promise.reject(res)))
+    .catch((err) => console.warn('Guess distribution request failed', err));
 }
 
 function processGuess() {
@@ -355,7 +370,7 @@ function processGuess() {
       name: guessedElement.name,
       atomicNumber: guessedElement.atomicNumber,
       family: guessedElement.family,
-      hint: guessedElement.hint,
+      hint: (guessedElement.hints && guessedElement.hints[0]) || '',
       symbol: guessedElement.symbol
     });
 
@@ -470,42 +485,6 @@ function onElementButtonClick(event) {
 }
 
 
-function selectMysteryElement() {
-  fetch("https://daily-element-api-production.up.railway.app/")
-      .then(response => response.json()) // Parse the JSON response
-      .then((data) => {
-          const currentDate = new Date();
-
-          const year = currentDate.getFullYear();
-          const month = String(currentDate.getMonth() + 1).padStart(2, '0'); // getMonth() is 0-based
-          const day = String(currentDate.getDate()).padStart(2, '0');
-          
-          const formattedDate = `${year}${month}${day}`;
-          
-          // Get the mystery element for the current date
-          const mysteryElement = data[formattedDate];
-
-          // Store the mystery element and the date in localStorage
-          localStorage.setItem('mysteryElement', JSON.stringify(mysteryElement)); // Store the mystery element as a string
-          localStorage.setItem('mysteryElementDate', currentDate.toLocaleDateString('en-US', options).slice(0, 10)); // Store the date as MM/DD/YYYY format
-      })
-      .catch(error => {
-          console.log("Error fetching mystery element:", error);
-      });
-}
-
-
-function getStoredMysteryElement() {
-  const storedDate = localStorage.getItem('mysteryElementDate');
-  const currentDate = new Date().toLocaleDateString('en-US', options).slice(0, 10); // store date as MM/DD/YYYY format
-  if (storedDate === currentDate) {
-    // mystery element was selected today, return it
-    return JSON.parse(localStorage.getItem('mysteryElement'));
-  } else {
-    // mystery element was not selected, return null
-    return null;
-  }
-}
 
 function updateLastPlayedDate() {
   const date = new Date();
@@ -529,39 +508,42 @@ function resetStreakIfNeeded() {
   }
 }
 
-function setMysteryElementOfTheDay() {
-  resetStreakIfNeeded(); // Check and reset the streak if needed
+async function setMysteryElementOfTheDay() {
+  resetStreakIfNeeded();
 
-  let storedMysteryElement = getStoredMysteryElement();
-  const storedDate = localStorage.getItem('mysteryElementDate');
-  const currentDate = new Date().toLocaleDateString('en-US', options).slice(0, 10); // store date as MM/DD/YYYY format
-  
-  if (!storedMysteryElement || storedDate !== currentDate) {
-    selectMysteryElement();
+  const todayInt = getTodayDateInt();
+  const todayStr = String(todayInt);
+  const gameDate = localStorage.getItem('gameDate');
+
+  mysteryElementCache = await fetchMysteryElementForDate(todayInt);
+  if (!mysteryElementCache) {
+    console.error('Could not load mystery element for today');
+    return;
+  }
+
+  if (gameDate !== todayStr) {
     numberOfGuesses = 0;
-
     inputElement.disabled = false;
     guessButtonElement.disabled = false;
     localStorage.setItem('guessedCorrectly', 'false');
     localStorage.setItem('numberOfGuesses', '0');
     localStorage.setItem('guessesList', JSON.stringify([]));
     localStorage.setItem('fadeInAppliedList', JSON.stringify([]));
+    localStorage.setItem('gameDate', todayStr);
     guessesList.length = 0;
-    guessedCorrectly = false;
+    guessedCorrectly = 'false';
 
     document.querySelector('.js-reveal-answer')?.remove();
     document.querySelector('.js-additional-info')?.remove();
     document.querySelector('.js-share-button')?.remove();
-
-    renderGuess();
   }
+
+  renderGuess();
   inputElement.focus();
 }
 
-
-
 function getMysteryElement() {
-  return JSON.parse(localStorage.getItem('mysteryElement'));
+  return mysteryElementCache;
 }
 
 function displayResults() {
@@ -751,9 +733,9 @@ function displayCountdown() {
   }
 }
 
-window.onload = function() {
+window.onload = async function() {
   inputElement.focus();
-  setMysteryElementOfTheDay();
+  await setMysteryElementOfTheDay();
 
   if (numberOfGuesses >= 8 || (numberOfGuesses <= 8 && guessedCorrectly === 'true')){
     displayResults();
