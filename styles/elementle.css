@@ -237,13 +237,18 @@ a.additional-info:hover {
   height: 100%;
   top: 0;
   left: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.7);
   z-index: 999;
-  color: black;
+  color: white;
   font-size: 20px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.5s ease;
+  transition: opacity 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
 }
 .overlay.show {
   opacity: 1;
@@ -345,131 +350,244 @@ a.additional-info:hover {
   box-shadow: 0 0 10px red;
 }
 
-/*Game info styles*/
-.stats-container {
-  background-color: #2a2a2a;
-  border: 2px solid rgb(97, 97, 97);
-  border-radius: 5px;
-  padding: 20px;
-  width: 300px;
-  margin: 20px auto;
+/* Modal popups (Statistics & How to Play) */
+.modal-card {
+  background: linear-gradient(165deg, #2d2d2d 0%, #1f1f1f 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 28px 32px;
+  max-width: 420px;
+  width: 100%;
   text-align: center;
   color: white;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  animation: modalAppear 0.25s ease-out;
+  margin: auto;
 }
 
-.stats {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 20px;
+@keyframes modalAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
-.stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 100px;
-}
-
-.number {
-  font-size: 1.5em;
-  font-weight: bold;
-  margin: 0;
-}
-
-.stat-name {
-  margin: 0;
-  font-size: 0.75em;
-  color: #666;
-}
-
-.guess-distribution {
-  text-align: center;
-}
-
-.bars-container {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.bar-container {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  width: 100%;
-}
-
-.bar-background {
-  background-color: #e2e8f0;
-  height: 10px;
-  border-radius: 5px;
-  width: 100%;
-  position: relative;
-}
-
-.bar-foreground {
-  background-color: #4A90E2;
-  height: 100%;
-  border-radius: 5px;
-}
-
-.bar-label, .bar-count  {
-  font-size: 16px;
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 24px 0;
+  letter-spacing: 0.02em;
   color: #fff;
-  font-weight: bold;
 }
 
-.back-button {
-  font-size: 20px;
-  padding: 10px;
-  background-color: green;
+.modal-back-button {
+  font-size: 1rem;
+  padding: 12px 28px;
+  background-color: rgb(83, 141, 78);
   color: white;
-  width: 100px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
   border: none;
-  margin-top: 30px;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-top: 24px;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  font-family: inherit;
 }
 
-.back-button:hover {
-  background-color: rgb(0, 155, 0);
+.modal-back-button:hover {
+  background-color: rgb(98, 165, 92);
 }
 
-.help-container {
-  background-color: #2a2a2a;
-  border: 2px solid rgb(97, 97, 97);
-  border-radius: 5px;
-  padding: 20px;
-  width: 800px;
-  margin: 20px auto;
-  text-align: center;
-  color: white;
+.modal-back-button:active {
+  transform: scale(0.98);
 }
 
-.help-container ul {
-  list-style-type: disc;
-  padding-left: 20px;
+/* Statistics modal */
+.stats-modal .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stats-modal .stat-item {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.stats-modal .stat-item-wide {
+  grid-column: span 2;
+}
+
+.stats-modal .stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.stats-modal .stat-label {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.65);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stats-modal .guess-distribution {
+  text-align: left;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stats-modal .distribution-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.stats-modal .bars-container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 10px;
+  min-height: 120px;
+}
+
+.stats-modal .bar-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.stats-modal .bar-count {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 6px;
+  min-height: 1.2em;
+}
+
+.stats-modal .bar-track {
+  width: 100%;
+  height: 100px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px 6px 0 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.stats-modal .bar-fill {
+  width: 100%;
+  min-height: 4px;
+  background: linear-gradient(180deg, rgb(98, 165, 92), rgb(83, 141, 78));
+  border-radius: 6px 6px 0 0;
+  transition: height 0.35s ease;
+}
+
+.stats-modal .bar-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 6px;
+}
+
+/* How to Play modal */
+.help-modal {
+  max-width: 480px;
   text-align: left;
 }
 
-.help-container li {
-  margin: 10px 0;
+.help-modal .modal-title {
+  text-align: center;
 }
 
-.help-container a {
-  display: inline-block;
-  margin-top: 20px;
-  padding: 10px 20px;
-  background-color: green;
-  color: white;
-  text-decoration: none;
-  border-radius: 4px;
-  transition: all 0.3s;
+.help-modal .help-content {
+  margin-bottom: 8px;
 }
 
-.help-container a:hover {
-  background-color: rgb(0, 155, 0);
+.help-modal .help-intro {
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
+}
+
+.help-modal .help-section {
+  margin-bottom: 20px;
+}
+
+.help-modal .help-section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 10px 0;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.help-modal .help-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.help-modal .help-list li {
+  padding: 8px 0;
+  padding-left: 28px;
+  position: relative;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.95rem;
+}
+
+.help-modal .help-list li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: rgb(83, 141, 78);
+  font-weight: bold;
+}
+
+.help-modal .help-icon {
+  margin-right: 6px;
+}
+
+.help-modal .help-letter.green {
+  color: rgb(83, 141, 78);
+  font-weight: 600;
+}
+
+.help-modal .help-letter.yellow {
+  color: rgb(181, 159, 59);
+  font-weight: 600;
+}
+
+.help-modal .help-tip {
+  margin: 0;
+  padding: 12px 14px;
+  background: rgba(83, 141, 78, 0.15);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.help-modal .modal-back-button {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Timebox */
@@ -635,8 +753,9 @@ footer {
     padding: 10px;
   }
 
-  .help-container {
-    width: 90%;
+  .modal-card {
+    max-width: 95%;
+    padding: 24px 20px;
   }
 
   a.additional-info {
@@ -729,13 +848,17 @@ footer {
     transition: 0.3s;
   }
 
-  .stats {
-    flex-direction: column;
-    align-items: center;
+  .stats-modal .stats-grid {
+    gap: 12px;
   }
   
-  .stats-container {
-    width: 90%;
+  .stats-modal .stat-value {
+    font-size: 1.5rem;
+  }
+  
+  .modal-card {
+    max-width: 95%;
+    padding: 20px 16px;
   }
 
   .navbar {

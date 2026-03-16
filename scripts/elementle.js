@@ -12,11 +12,6 @@ const options = {
 const defaultUsedElements = JSON.parse(localStorage.getItem('defaultUsedElements')) || []; // Load defaultUsedElements from localStorage
 
 
-const changeModeEl = document.querySelector('.js-change-mode-button');
-changeModeEl.addEventListener('click', () => {
-  window.location.href = '/free-play.html';
-});
-
 const inputElement = document.querySelector('.js-guess-input');
 inputElement.addEventListener('input', onInputChange);
 
@@ -72,7 +67,7 @@ document.querySelector('.js-stats-button').addEventListener('click', (event) => 
 
 function displayStats() {
   const overlay = document.querySelector('.js-overlay');
-  overlay.style.display = 'block'; // Ensure the overlay is displayed
+  overlay.style.display = 'flex';
   setTimeout(() => {
     overlay.classList.add('show'); // Add the show class to trigger fade-in
   }, 10); // Short delay to ensure the display property is applied first
@@ -94,63 +89,60 @@ function displayStats() {
 
   const bars = Object.keys(distributionData).map((key) => {
     let value = distributionData[key];
-    let percentage = maxValue > 0 ? (value / maxValue) * 100 : 0; // Normalize by the number of games
-  
+    let percentage = maxValue > 0 ? (value / maxValue) * 100 : 0;
     return `
-      <div class="bar-container">
-        <p class="bar-label">${key}&nbsp;</p>
-        <div class="bar-background">
-          <div class="bar-foreground" style="width: ${percentage}%;"></div>
+      <div class="bar-col">
+        <span class="bar-count">${value}</span>
+        <div class="bar-track">
+          <div class="bar-fill" style="height: ${percentage}%;"></div>
         </div>
-        <p class="bar-count">&nbsp;${value}</p>
+        <span class="bar-label">${key}</span>
       </div>
     `;
   }).join("");
 
 
   overlay.innerHTML = `
-    <div class="stats-container">
-      <h3>Statistics</h3>
-      <br/>
-      <div class="stats">
-        <div class="stat">
-          <p class="number">${totalWins}</p>
-          <p class="stat-name">Total Wins</p>
+    <div class="modal-card stats-modal">
+      <h2 class="modal-title">Statistics</h2>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <span class="stat-value">${totalWins}</span>
+          <span class="stat-label">Wins</span>
         </div>
-        <div class="stat">
-          <p class="number">${totalGames}</p>
-          <p class="stat-name">Games Played</p>
+        <div class="stat-item">
+          <span class="stat-value">${totalGames}</span>
+          <span class="stat-label">Played</span>
         </div>
-        <div class="stat">
-          <p class="number">${currentStreak}</p>
-          <p class="stat-name">Current Streak</p>
+        <div class="stat-item">
+          <span class="stat-value">${currentStreak}</span>
+          <span class="stat-label">Current streak</span>
         </div>
-        <div class="stat">
-          <p class="number">${maxWinStreak}</p>
-          <p class="stat-name">Max Streak</p>
+        <div class="stat-item">
+          <span class="stat-value">${maxWinStreak}</span>
+          <span class="stat-label">Best streak</span>
         </div>
-        <div class="stat">
-          <p class="number">${winRate}%</p>
-          <p class="stat-name">Win Rate</p>
+        <div class="stat-item stat-item-wide">
+          <span class="stat-value">${winRate}%</span>
+          <span class="stat-label">Win rate</span>
         </div>
       </div>
-      <br/>
-      <!-- Guess Distribution Bars -->
-        <div class="guess-distribution">
-          <div class="bars-container">
-            ${bars}
-          </div>
+      <div class="guess-distribution">
+        <h3 class="distribution-title">Guess distribution</h3>
+        <div class="bars-container">
+          ${bars}
         </div>
-      <button class="back-button">Back</button>
+      </div>
+      <button class="modal-back-button">Back</button>
     </div>
   `;
 
-  document.querySelector('.back-button').addEventListener('click', (event) => {
+  document.querySelector('.modal-back-button').addEventListener('click', (event) => {
     event.preventDefault();
-    overlay.classList.remove('show'); // Remove the show class to trigger fade-out
+    overlay.classList.remove('show');
     overlay.addEventListener('transitionend', () => {
       if (!overlay.classList.contains('show')) {
-        overlay.style.display = 'none'; // Hide overlay after transition ends
+        overlay.style.display = 'none';
       }
     }, { once: true });
   });
@@ -164,34 +156,34 @@ document.querySelector('.js-help-button').addEventListener('click', (event) => {
 });
 
 function displayHelp() {
-  document.querySelector('.js-overlay').style.display = 'block';
   const overlay = document.querySelector('.js-overlay');
+  overlay.style.display = 'flex';
 
   setTimeout(() => {
-    overlay.classList.add('show'); // Add the show class to trigger fade-in
-  }, 10); // Short delay to ensure the display property is applied first
+    overlay.classList.add('show');
+  }, 10);
 
   overlay.innerHTML = `
-    <div class="help-container">
-    <h2>How to Play</h2>
-    <br/>
-    <ul>
-      <li>New game available at 00:00 local time.</li>
-      <li>Indications are provided after each guess:
-        <ul>
-          <li><span>⬆️</span> means the mystery element number is higher.</li>
-          <li><span>⬇️</span> means the mystery element number is lower.</li>
-          <li><span style="color: rgb(83, 141, 78)">Green symbol letter</span> means the letter is correct and in the right spot.</li>
-          <li><span style="color: rgb(181, 159, 59)">Yellow symbol letter</span> means the letter is correct but in the wrong spot.</li>
-          <li><span style="color: rgb(83, 141, 78)">Green family name</span> means the element belongs to the correct family.</li>
-        </ul>
-      </li>
-      <li>Click HINT if you're stuck.</li>
-    </ul>
-    <button class="back-button">Back</a>
-  </div>`;
+    <div class="modal-card help-modal">
+      <h2 class="modal-title">How to Play</h2>
+      <div class="help-content">
+        <p class="help-intro">Guess the daily element in 8 tries. A new game is available at midnight (00:00) local time.</p>
+        <div class="help-section">
+          <h3 class="help-section-title">After each guess you'll see:</h3>
+          <ul class="help-list">
+            <li><span class="help-icon">⬆️</span> Mystery element's atomic number is <strong>higher</strong></li>
+            <li><span class="help-icon">⬇️</span> Mystery element's atomic number is <strong>lower</strong></li>
+            <li><span class="help-letter green">Green</span> symbol letter — correct letter, correct position</li>
+            <li><span class="help-letter yellow">Yellow</span> symbol letter — correct letter, wrong position</li>
+            <li><span class="help-letter green">Green</span> family name — element is in the correct family</li>
+          </ul>
+        </div>
+        <p class="help-tip">Use the <strong>HINT</strong> button if you're stuck.</p>
+      </div>
+      <button class="modal-back-button">Back</button>
+    </div>`;
 
-  document.querySelector('.back-button').addEventListener('click', (event) => {
+  document.querySelector('.modal-back-button').addEventListener('click', (event) => {
     event.preventDefault();
     overlay.classList.remove('show'); // Remove the show class to trigger fade-out
     overlay.addEventListener('transitionend', () => {
@@ -200,7 +192,6 @@ function displayHelp() {
       }
     }, { once: true });
   });
-  overlay.style.display = 'block';
 }
 
 setMysteryElementOfTheDay();
