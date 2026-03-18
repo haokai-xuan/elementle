@@ -10,6 +10,27 @@ const options = {
 
 // Frontend talks only to our Node proxy; secrets live in process.env on the server.
 const API_BASE = '/api';
+
+(function idleNFlicker() {
+  var el = document.querySelector('.green-letter');
+  if (!el) return;
+  var classes = ['n-flicker-1', 'n-flicker-2', 'n-flicker-3'];
+  function scheduleFlicker() {
+    var delay = 4000 + Math.random() * 10000;
+    setTimeout(function () {
+      if (el.closest('.nav-text:hover')) return scheduleFlicker();
+      var cls = classes[Math.floor(Math.random() * classes.length)];
+      classes.forEach(function (c) { el.classList.remove(c); });
+      void el.offsetWidth;
+      el.classList.add(cls);
+      el.addEventListener('animationend', function () {
+        el.classList.remove(cls);
+      }, { once: true });
+      scheduleFlicker();
+    }, delay);
+  }
+  scheduleFlicker();
+})();
 const AUTH_TOKEN_KEY = 'elementle_token';
 
 function getAuthToken() {
@@ -53,6 +74,20 @@ const defaultUsedElements = JSON.parse(localStorage.getItem('defaultUsedElements
 const inputElement = document.querySelector('.js-guess-input');
 inputElement.addEventListener('input', onInputChange);
 
+const clearBtn = document.querySelector('.js-input-clear');
+function updateClearBtn() {
+  clearBtn.classList.toggle('visible', inputElement.value.length > 0);
+}
+inputElement.addEventListener('input', updateClearBtn);
+inputElement.addEventListener('focus', updateClearBtn);
+inputElement.addEventListener('blur', () => setTimeout(() => clearBtn.classList.remove('visible'), 150));
+clearBtn.addEventListener('click', () => {
+  inputElement.value = '';
+  removeAutocompleteDropdown();
+  clearBtn.classList.remove('visible');
+  inputElement.focus();
+});
+
 const guessButtonElement = document.querySelector('.js-guess-button');
 guessButtonElement.addEventListener('click', (event) => {
   event.preventDefault();
@@ -60,6 +95,84 @@ guessButtonElement.addEventListener('click', (event) => {
 });
 
 const shareButtonElement = document.querySelector('.js-share-button');
+
+(function initAnimatedPlaceholder() {
+  const sampleNames = ['Oxygen', 'Gold', 'Neon', 'Iron', 'Helium', 'Carbon', 'Silver', 'Zinc', 'Radon', 'Copper'];
+  let wordIdx = 0, charIdx = 0, deleting = false, timeout;
+  const typeSpeed = 100, deleteSpeed = 50, pauseBefore = 1600, pauseAfter = 800;
+
+  var cursorVisible = true, blinkInterval;
+
+  function startBlink() {
+    clearInterval(blinkInterval);
+    cursorVisible = true;
+    blinkInterval = setInterval(function () { cursorVisible = !cursorVisible; updatePlaceholder(); }, 530);
+  }
+
+  function stopBlink() {
+    clearInterval(blinkInterval);
+    cursorVisible = true;
+  }
+
+  function updatePlaceholder() {
+    var word = sampleNames[wordIdx];
+    var text = word.slice(0, charIdx);
+    inputElement.setAttribute('placeholder', text + (cursorVisible ? '|' : '\u00A0'));
+  }
+
+  function tick() {
+    if (inputElement.disabled || document.activeElement === inputElement || inputElement.value) {
+      stopBlink();
+      inputElement.setAttribute('placeholder', 'Element');
+      return;
+    }
+    var word = sampleNames[wordIdx];
+    if (!deleting) {
+      charIdx++;
+      stopBlink();
+      cursorVisible = true;
+      updatePlaceholder();
+      if (charIdx === word.length) {
+        deleting = true;
+        startBlink();
+        timeout = setTimeout(function () { stopBlink(); tick(); }, pauseBefore);
+        return;
+      }
+      timeout = setTimeout(tick, typeSpeed);
+    } else {
+      charIdx--;
+      cursorVisible = true;
+      updatePlaceholder();
+      if (charIdx === 0) {
+        deleting = false;
+        wordIdx = (wordIdx + 1) % sampleNames.length;
+        startBlink();
+        timeout = setTimeout(function () { stopBlink(); tick(); }, pauseAfter);
+        return;
+      }
+      timeout = setTimeout(tick, deleteSpeed);
+    }
+  }
+
+  function startIfIdle() {
+    clearTimeout(timeout);
+    stopBlink();
+    if (!inputElement.disabled && !inputElement.value && document.activeElement !== inputElement) {
+      tick();
+    } else {
+      inputElement.setAttribute('placeholder', 'Element');
+    }
+  }
+
+  inputElement.addEventListener('focus', () => {
+    clearTimeout(timeout);
+    stopBlink();
+    inputElement.setAttribute('placeholder', 'Element');
+  });
+  inputElement.addEventListener('blur', () => setTimeout(startIfIdle, 300));
+
+  setTimeout(tick, 1200);
+})();
 
 document.body.addEventListener('click', () => {
   removeAutocompleteDropdown();
@@ -97,7 +210,9 @@ hintButton.addEventListener('click', (event) => {
   const mystery = getMysteryElement();
   if (!mystery || !mystery.hints) return;
   const idx = getHintIndexForToday();
+  hintContainer.classList.remove('hint-visible');
   hintContainer.innerHTML = mystery.hints[idx];
+  requestAnimationFrame(() => hintContainer.classList.add('hint-visible'));
 });
 
 document.querySelectorAll('.js-stats-button').forEach((btn) => btn.addEventListener('click', (event) => {
@@ -149,16 +264,17 @@ function displayStats() {
 }
 
 function updateStatValues(overlay, vals) {
-  var el = overlay.querySelector('[data-stat="wins"]');
-  if (el) el.textContent = vals.wins;
-  el = overlay.querySelector('[data-stat="played"]');
-  if (el) el.textContent = vals.played;
-  el = overlay.querySelector('[data-stat="streak"]');
-  if (el) el.textContent = vals.streak;
-  el = overlay.querySelector('[data-stat="best"]');
-  if (el) el.textContent = vals.best;
-  el = overlay.querySelector('[data-stat="rate"]');
-  if (el) el.textContent = vals.rate;
+  ['wins', 'played', 'streak', 'best', 'rate'].forEach(function (key) {
+    var el = overlay.querySelector('[data-stat="' + key + '"]');
+    if (!el) return;
+    var prev = el.textContent;
+    el.textContent = vals[key];
+    if (prev !== String(vals[key])) {
+      el.classList.remove('stat-pop');
+      void el.offsetWidth;
+      el.classList.add('stat-pop');
+    }
+  });
 }
 
 function updateDistributionBars(overlay, dist) {
@@ -203,14 +319,15 @@ function renderStatsModal(overlay, loading) {
 
   let maxValue = Math.max(...Object.values(distributionData), 1);
 
-  const bars = Object.keys(distributionData).map((key) => {
+  const bars = Object.keys(distributionData).map((key, idx) => {
     let value = distributionData[key];
     let percentage = maxValue > 0 ? (value / maxValue) * 100 : 0;
+    let delay = (0.5 + idx * 0.06).toFixed(2);
     return `
       <div class="bar-col" data-bar="${key}">
         <span class="bar-count">${value}</span>
         <div class="bar-track">
-          <div class="bar-fill" style="height: ${percentage}%;"></div>
+          <div class="bar-fill" style="height: ${percentage}%; animation-delay: ${delay}s;"></div>
         </div>
         <span class="bar-label">${key}</span>
       </div>
@@ -254,16 +371,31 @@ function renderStatsModal(overlay, loading) {
 
   document.querySelector('.modal-back-button').addEventListener('click', (event) => {
     event.preventDefault();
-    overlay.classList.remove('show');
-    overlay.addEventListener('transitionend', () => {
-      if (!overlay.classList.contains('show')) {
-        overlay.style.display = 'none';
-      }
-    }, { once: true });
+    closeModal(overlay);
   });
 }
 
-
+function closeModal(overlay) {
+  var card = overlay.querySelector('.modal-card');
+  if (card) {
+    card.classList.add('modal-closing');
+    card.addEventListener('animationend', function () {
+      overlay.classList.remove('show');
+      overlay.addEventListener('transitionend', function () {
+        if (!overlay.classList.contains('show')) {
+          overlay.style.display = 'none';
+          card.classList.remove('modal-closing');
+        }
+      }, { once: true });
+    }, { once: true });
+  } else {
+    overlay.classList.remove('show');
+    overlay.addEventListener('transitionend', function () {
+      if (!overlay.classList.contains('show')) overlay.style.display = 'none';
+    }, { once: true });
+  }
+}
+window.closeModal = closeModal;
 
 document.querySelectorAll('.js-help-button').forEach((btn) => btn.addEventListener('click', (event) => {
   event.preventDefault();
@@ -301,16 +433,28 @@ function displayHelp() {
 
   document.querySelector('.modal-back-button').addEventListener('click', (event) => {
     event.preventDefault();
-    overlay.classList.remove('show'); // Remove the show class to trigger fade-out
-    overlay.addEventListener('transitionend', () => {
-      if (!overlay.classList.contains('show')) {
-        overlay.style.display = 'none'; // Hide overlay after transition ends
-      }
-    }, { once: true });
+    closeModal(overlay);
   });
 }
 
-function renderGuess() {
+var _initialRenderDone = false;
+
+function renderShimmerGrid() {
+  const elementGrid = document.querySelector('.element-grid');
+  elementGrid.innerHTML = '';
+  for (let i = 0; i < 8; i++) {
+    const div = document.createElement('div');
+    div.classList.add('element', 'shimmer');
+    const slotNum = document.createElement('span');
+    slotNum.classList.add('element-slot-number');
+    slotNum.textContent = i + 1;
+    div.appendChild(slotNum);
+    elementGrid.appendChild(div);
+  }
+}
+
+function renderGuess(options) {
+  const animate = options && options.animate;
   const mystery = getMysteryElement();
   if (!mystery) return;
 
@@ -318,10 +462,13 @@ function renderGuess() {
   const elementGrid = document.querySelector('.element-grid');
   elementGrid.innerHTML = '';
 
-  // Retrieve the fade-in applied state from localStorage
   const fadeInAppliedList = JSON.parse(localStorage.getItem('fadeInAppliedList')) || [];
+  const guessCount = (guessedList && guessedList.length) || 0;
+  const lastGuess = guessCount > 0 ? guessedList[guessCount - 1] : null;
+  const lastGuessCorrect = lastGuess && lastGuess.name && lastGuess.name.toLowerCase() === mystery.name.toLowerCase();
+  const gameOver = guessedCorrectly === 'true' || lastGuessCorrect || guessCount >= 8;
+  let nextSlotMarked = false;
 
-  // Loop through the elements to render each grid
   for (let i = 0; i < 8; i++) {
     const elementDiv = document.createElement('div');
     elementDiv.classList.add('element');
@@ -332,16 +479,39 @@ function renderGuess() {
       const atomicSignal = (guessedElement.atomicNumber === mystery.atomicNumber) ? '&#127881;' : (guessedElement.atomicNumber < mystery.atomicNumber) ? '⬆️' : '⬇️';
       const familyClass = (guessedElement.family === mystery.family) ? 'green' : 'family';
 
-      // Apply fade-in-text effect only to the text elements in the newly guessed element
-      const applyFadeIn = !fadeInAppliedList[i] ? 'fade-in-text' : '';
+      const isNew = !fadeInAppliedList[i] && animate;
+      const applyFadeIn = isNew ? 'fade-in-text' : '';
+      if (isNew) elementDiv.classList.add('card-flip');
 
-      // Render the guessed element information
       const atomicNumberSpan = document.createElement('span');
       atomicNumberSpan.classList.add('atomic-number');
-      atomicNumberSpan.innerHTML = guessedElement.atomicNumber + ` ${atomicSignal}`;
-      if (applyFadeIn) {
-        atomicNumberSpan.classList.add(applyFadeIn);
+      const signalSpan = `<span class="atomic-signal">${atomicSignal}</span>`;
+      if (isNew) {
+        atomicNumberSpan.innerHTML = `0 ${signalSpan}`;
+        const target = guessedElement.atomicNumber;
+        const duration = 1000;
+        const startDelay = 400;
+        setTimeout(() => {
+          const startTime = performance.now();
+          const tick = (now) => {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            const current = Math.round(eased * target);
+            atomicNumberSpan.innerHTML = `${current} ${signalSpan}`;
+            if (progress < 1) {
+              requestAnimationFrame(tick);
+            } else {
+              const sig = atomicNumberSpan.querySelector('.atomic-signal');
+              if (sig) sig.classList.add('signal-bounce');
+            }
+          };
+          requestAnimationFrame(tick);
+        }, startDelay);
+      } else {
+        atomicNumberSpan.innerHTML = guessedElement.atomicNumber + ` ${signalSpan}`;
       }
+      if (applyFadeIn) atomicNumberSpan.classList.add(applyFadeIn);
       elementDiv.appendChild(atomicNumberSpan);
 
       const symbolSpan = document.createElement('span');
@@ -361,12 +531,8 @@ function renderGuess() {
           span.style.color = 'rgb(181, 159, 59)';
         }
       });
-      letterSpans.forEach(span => {
-        symbolSpan.appendChild(span);
-      });
-      if (applyFadeIn) {
-        symbolSpan.classList.add(applyFadeIn);
-      }
+      letterSpans.forEach(span => symbolSpan.appendChild(span));
+      if (applyFadeIn) symbolSpan.classList.add(applyFadeIn);
       elementDiv.appendChild(symbolSpan);
 
       const nameSpan = document.createElement('span');
@@ -375,35 +541,36 @@ function renderGuess() {
       if (guessedElement.name.toLowerCase() === mystery.name.toLowerCase()) {
         nameSpan.classList.add('green');
         atomicNumberSpan.classList.add('green');
+        elementDiv.classList.add('correct-card');
       }
-      if (applyFadeIn) {
-        nameSpan.classList.add(applyFadeIn);
-      }
+      if (applyFadeIn) nameSpan.classList.add(applyFadeIn);
       elementDiv.appendChild(nameSpan);
 
       const familySpan = document.createElement('span');
       familySpan.classList.add('family');
       familySpan.textContent = guessedElement.family;
       familySpan.classList.add(familyClass);
-      if (applyFadeIn) {
-        familySpan.classList.add(applyFadeIn);
-      }
+      if (isNew && familyClass === 'green') familySpan.classList.add('family-flash');
+      if (applyFadeIn) familySpan.classList.add(applyFadeIn);
       elementDiv.appendChild(familySpan);
 
-      // Mark fade-in as applied
+      if (!_initialRenderDone) elementDiv.classList.add('shimmer-done');
       fadeInAppliedList[i] = true;
     } else {
-      // Render empty boxes for elements that have not been guessed yet
-      const emptyDiv = document.createElement('div');
-      emptyDiv.classList.add('empty-box');
-      elementDiv.appendChild(emptyDiv);
+      const slotNum = document.createElement('span');
+      slotNum.classList.add('element-slot-number');
+      slotNum.textContent = i + 1;
+      elementDiv.appendChild(slotNum);
+      if (!nextSlotMarked && !gameOver) {
+        elementDiv.classList.add('next-slot');
+        nextSlotMarked = true;
+      }
     }
 
-    // Append the grid to the element grid container
     elementGrid.appendChild(elementDiv);
   }
 
-  // Update the fadeInAppliedList in localStorage
+  _initialRenderDone = true;
   localStorage.setItem('fadeInAppliedList', JSON.stringify(fadeInAppliedList));
 }
 
@@ -483,7 +650,7 @@ async function processGuess() {
   localStorage.setItem('guessesList', JSON.stringify(guessesList));
   localStorage.setItem('numberOfGuesses', numberOfGuesses);
   removeAutocompleteDropdown();
-  renderGuess();
+  renderGuess({ animate: true });
 
   const isCorrect = guessedElement.name.toLowerCase() === getMysteryElement().name.toLowerCase();
   const isGameOver = numberOfGuesses >= 8;
@@ -557,10 +724,12 @@ function invalidGuess() {
 }
 
 function shakeInputBar() {
+  inputElement.classList.remove('shake', 'glow-red');
+  void inputElement.offsetWidth;
   inputElement.classList.add('shake', 'glow-red');
   setTimeout(() => {
     inputElement.classList.remove('shake', 'glow-red');
-  }, 500);
+  }, 650);
 }
 
 function alreadyGuessedPopup() {
@@ -570,38 +739,89 @@ function alreadyGuessedPopup() {
 
 
 function onInputChange() {
-  removeAutocompleteDropdown();
   const value = inputElement.value.toLowerCase();
 
-  if (value.length === 0) return;
+  if (value.length === 0) {
+    removeAutocompleteDropdown();
+    return;
+  }
 
-  const filteredNames = [];
-
-  elements.forEach((elementObject) => {
-    elementName = elementObject.name;
-    if (elementName.substr(0, value.length).toLowerCase() === value){
-      filteredNames.push(elementName.toUpperCase());
+  const filtered = [];
+  elements.forEach((el) => {
+    if (el.name.substring(0, value.length).toLowerCase() === value) {
+      filtered.push({ name: el.name, symbol: el.symbol });
     }
   });
-  createAutocompleteDropdown(filteredNames);
+  filtered.sort((a, b) => a.name.localeCompare(b.name));
+  updateAutocompleteDropdown(filtered, value.length);
 }
 
-function createAutocompleteDropdown(list) {
-  const listElement = document.createElement('ul');
-  listElement.className = 'autocomplete-list';
+let _acIndex = -1;
 
-  list.forEach((element) => {
+function updateAutocompleteDropdown(list, matchLen) {
+  _acIndex = -1;
+  let listElement = document.querySelector('.autocomplete-list');
+  const isNew = !listElement;
+
+  if (!list.length) {
+    if (listElement) listElement.remove();
+    return;
+  }
+
+  if (isNew) {
+    listElement = document.createElement('ul');
+    listElement.className = 'autocomplete-list';
+  } else {
+    listElement.innerHTML = '';
+  }
+
+  list.forEach((el) => {
     const listItem = document.createElement('li');
     const elementButton = document.createElement('button');
-    elementButton.innerHTML = element;
+    const matched = el.name.substring(0, matchLen);
+    const rest = el.name.substring(matchLen);
+    elementButton.innerHTML = '<span class="ac-name"><span class="ac-match">' + matched + '</span>' + rest + '</span>';
+    elementButton.setAttribute('data-name', el.name);
     elementButton.addEventListener('click', onElementButtonClick);
     listItem.appendChild(elementButton);
-
     listElement.append(listItem);
   });
 
-  document.querySelector('.js-autocomplete-wrapper').appendChild(listElement);
+  if (isNew) {
+    document.querySelector('.js-autocomplete-wrapper').appendChild(listElement);
+  }
 }
+
+function updateAcHighlight() {
+  const btns = document.querySelectorAll('.autocomplete-list button');
+  btns.forEach((b, i) => {
+    b.classList.toggle('ac-active', i === _acIndex);
+    if (i === _acIndex) b.scrollIntoView({ block: 'nearest' });
+  });
+}
+
+inputElement.addEventListener('keydown', (e) => {
+  const listEl = document.querySelector('.autocomplete-list');
+  if (!listEl) return;
+  const btns = listEl.querySelectorAll('button');
+  if (!btns.length) return;
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    _acIndex = (_acIndex + 1) % btns.length;
+    updateAcHighlight();
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    _acIndex = (_acIndex - 1 + btns.length) % btns.length;
+    updateAcHighlight();
+  } else if (e.key === 'Enter' && _acIndex >= 0) {
+    e.preventDefault();
+    e.stopPropagation();
+    inputElement.value = btns[_acIndex].getAttribute('data-name') || '';
+    removeAutocompleteDropdown();
+    inputElement.focus();
+  }
+});
 
 function removeAutocompleteDropdown() {
   const listElement = document.querySelector('.autocomplete-list');
@@ -612,9 +832,9 @@ function removeAutocompleteDropdown() {
 
 function onElementButtonClick(event) {
   event.preventDefault();
-
-  const buttonElement = event.target;
-  inputElement.value = buttonElement.innerHTML;
+  const btn = event.target.closest('button');
+  if (!btn) return;
+  inputElement.value = btn.getAttribute('data-name') || '';
   removeAutocompleteDropdown();
 }
 
@@ -699,6 +919,27 @@ async function setMysteryElementOfTheDay() {
   syncGameStateFromServer();
 }
 
+function clearEndOfGameUI() {
+  var el;
+  el = document.querySelector('.js-reveal-answer');
+  if (el) el.innerHTML = '';
+  el = document.querySelector('.js-additional-info');
+  if (el) el.innerHTML = '';
+  el = document.querySelector('.js-share-button');
+  if (el) el.innerHTML = '';
+
+  if (window._countdownInterval) {
+    clearInterval(window._countdownInterval);
+    window._countdownInterval = null;
+  }
+  var timebox = document.querySelector('.timebox');
+  if (timebox) timebox.style.display = 'none';
+
+  inputElement.disabled = false;
+  guessButtonElement.disabled = false;
+}
+window.clearEndOfGameUI = clearEndOfGameUI;
+
 async function syncGameStateFromServer() {
   const token = getAuthToken();
   if (!token) return;
@@ -712,6 +953,7 @@ async function syncGameStateFromServer() {
     const data = await res.json();
     applyGameStateFromApi(data.guesses || [], data.numGuesses, data.won);
     localStorage.setItem('gameDate', String(todayInt));
+    clearEndOfGameUI();
     renderGuess();
     if (data.won || data.numGuesses >= 8) {
       displayResults();
@@ -766,7 +1008,17 @@ function displayResults() {
   guessedCorrectly = localStorage.getItem('guessedCorrectly');
 
   if (guessedCorrectly === 'false') {
-    revealAnswerElement.innerHTML = `<p class="reveal-answer">Element: ${getMysteryElement().name}</p>`;
+    const m = getMysteryElement();
+    revealAnswerElement.innerHTML = `<div class="reveal-answer">
+      <div class="reveal-answer-badge">
+        <span class="reveal-answer-badge-symbol">${m.symbol}</span>
+        <span class="reveal-answer-badge-num">${m.atomicNumber}</span>
+      </div>
+      <div>
+        <div class="reveal-answer-name">${m.name}</div>
+        <div class="reveal-answer-label">${m.family}</div>
+      </div>
+    </div>`;
   }
 
   shareButtonElement.addEventListener('click', () => {
@@ -843,7 +1095,8 @@ function displayResults() {
   });
   updateLastPlayedDate();
   displayCountdown();
-  setInterval(displayCountdown, 1000);
+  if (window._countdownInterval) clearInterval(window._countdownInterval);
+  window._countdownInterval = setInterval(displayCountdown, 1000);
 }
 
 
@@ -875,6 +1128,8 @@ function getNextMidnight() {
 }
 
 function displayCountdown() {
+  const timebox = document.querySelector('.timebox');
+  if (timebox) timebox.style.display = 'flex';
   const hours_container = document.querySelector(".js-hours");
   const minutes_container = document.querySelector(".js-minutes");
   const seconds_container = document.querySelector(".js-seconds");
@@ -929,10 +1184,16 @@ function displayCountdown() {
 })();
 
 window.onload = async function() {
-  inputElement.focus();
+  if (numberOfGuesses >= 8 || guessedCorrectly === 'true') {
+    inputElement.disabled = true;
+    guessButtonElement.disabled = true;
+  } else {
+    inputElement.focus();
+  }
+
   await setMysteryElementOfTheDay();
 
-  if (numberOfGuesses >= 8 || (numberOfGuesses <= 8 && guessedCorrectly === 'true')){
+  if (numberOfGuesses >= 8 || guessedCorrectly === 'true') {
     displayResults();
   }
 

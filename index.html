@@ -26,6 +26,8 @@
   </head>
 
   <body>
+    <div class="bg-particles" aria-hidden="true"></div>
+    <script>!function(n){for(var c=document.querySelector('.bg-particles'),i=0;i<n;i++){var s=document.createElement('span'),sz=(2+Math.random()*5).toFixed(1)+'px';s.style.width=sz;s.style.height=sz;s.style.left=Math.random()*100+'%';s.style.animationDuration=(18+Math.random()*20).toFixed(1)+'s';s.style.animationDelay='-'+(Math.random()*30).toFixed(1)+'s';c.appendChild(s)}}(100)</script>
     <main>
       <nav class="navbar">
         <div class="nav-left nav-desktop-only">
@@ -71,27 +73,18 @@
         </div>
       </nav>
       <div class="container">
-        <form action="" autocomplete="off">
-          <div class="autocomplete-wrapper js-autocomplete-wrapper">
-            <input id="guess-input" placeholder="Element" class="guess-input js-guess-input">
-            <!-- <ul class="autocomplete-list">
-              <li>
-                <button>
-                  USA
-                </button>
-              </li>
-              <li>
-                <button>
-                  UK
-                </button>
-              </li>
-            </ul> -->
+        <form action="" autocomplete="off" class="guess-form">
+          <div class="guess-row">
+            <div class="autocomplete-wrapper js-autocomplete-wrapper">
+              <input id="guess-input" placeholder="Element" class="guess-input js-guess-input">
+              <button type="button" class="input-clear-btn js-input-clear" aria-label="Clear input">&times;</button>
+            </div>
+            <button class="guess-button js-guess-button">GUESS</button>
+            <button class="hint-button js-hint-button" type="button" aria-label="Hint">
+              <svg xmlns="http://www.w3.org/2000/svg" height="22px" viewBox="0 -960 960 960" width="22px" fill="currentColor"><path d="M480-80q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-200v-80h320v80H320ZM322-360q-47-32-74.5-80T220-560q0-108 76-184t184-76q108 0 184 76t76 184q0 72-27.5 120T638-360H322Z"/></svg>
+            </button>
           </div>
-          <button class="guess-button js-guess-button">GUESS</button>
-          <button class="hint-button js-hint-button">HINT</button>
-          
           <div class="js-overlay overlay"></div>
-          
           <div class="hint-container js-hint-container"></div>
         </form>
         
@@ -101,14 +94,14 @@
           
         <div class="grid-container">
           <div class="element-grid">
-            <div class="element js-1"></div>
-            <div class="element js-2"></div>
-            <div class="element js-3"></div>
-            <div class="element js-4"></div>
-            <div class="element js-5"></div>
-            <div class="element js-6"></div>
-            <div class="element js-7"></div>
-            <div class="element js-8"></div>
+            <div class="element shimmer"><span class="element-slot-number">1</span></div>
+            <div class="element shimmer"><span class="element-slot-number">2</span></div>
+            <div class="element shimmer"><span class="element-slot-number">3</span></div>
+            <div class="element shimmer"><span class="element-slot-number">4</span></div>
+            <div class="element shimmer"><span class="element-slot-number">5</span></div>
+            <div class="element shimmer"><span class="element-slot-number">6</span></div>
+            <div class="element shimmer"><span class="element-slot-number">7</span></div>
+            <div class="element shimmer"><span class="element-slot-number">8</span></div>
           </div>
         </div>
   
@@ -147,7 +140,7 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <p>&copy; 2024 Elementle</p>
+        <p>&copy; <script>document.write(new Date().getFullYear())</script> Elementle</p>
       </div>
     </footer>
 

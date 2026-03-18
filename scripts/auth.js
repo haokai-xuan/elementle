@@ -59,15 +59,14 @@
   function closeAuth() {
     const el = document.querySelector('.js-auth-overlay');
     if (!el) return;
-    el.classList.remove('show');
-    el.addEventListener(
-      'transitionend',
-      function hide() {
+    if (window.closeModal) {
+      window.closeModal(el);
+    } else {
+      el.classList.remove('show');
+      el.addEventListener('transitionend', function () {
         if (!el.classList.contains('show')) el.style.display = 'none';
-        el.removeEventListener('transitionend', hide);
-      },
-      { once: true }
-    );
+      }, { once: true });
+    }
   }
 
   function showAuth() {
@@ -213,6 +212,9 @@
           setToken(data.token);
           updateProfileButton();
           closeAuth();
+          if (typeof window.clearEndOfGameUI === 'function') {
+            window.clearEndOfGameUI();
+          }
           if (typeof window.syncGameStateFromServer === 'function') {
             window.syncGameStateFromServer();
           }
