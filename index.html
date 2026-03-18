@@ -28,18 +28,46 @@
   <body>
     <main>
       <nav class="navbar">
-        <div class="nav-left">
-          <button class="nav-button js-help-button">
-            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="M478-240q21 0 35.5-14.5T528-290q0-21-14.5-35.5T478-340q-21 0-35.5 14.5T428-290q0 21 14.5 35.5T478-240Zm-36-154h74q0-33 7.5-52t42.5-52q26-26 41-49.5t15-56.5q0-56-41-86t-97-30q-57 0-92.5 30T342-618l66 26q5-18 22.5-39t53.5-21q32 0 48 17.5t16 38.5q0 20-12 37.5T506-526q-44 39-54 59t-10 73Zm38 314q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg>
+        <div class="nav-left nav-desktop-only">
+          <button class="nav-icon-btn js-help-button" type="button" aria-label="How to play">
+            <span class="nav-icon-circle" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" height="22px" viewBox="0 -960 960 960" width="22px" fill="currentColor"><path d="M478-240q21 0 35.5-14.5T528-290q0-21-14.5-35.5T478-340q-21 0-35.5 14.5T428-290q0 21 14.5 35.5T478-240Zm-36-154h74q0-33 7.5-52t42.5-52q26-26 41-49.5t15-56.5q0-56-41-86t-97-30q-57 0-92.5 30T342-618l66 26q5-18 22.5-39t53.5-21q32 0 48 17.5t16 38.5q0 20-12 37.5T506-526q-44 39-54 59t-10 73Zm38 314q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg>
+            </span>
           </button>
         </div>
         <div class="nav-center">
           <span class="nav-text">ELEME<span class="green-letter">N</span>TLE</span>
         </div>
-        <div class="nav-right">
-          <button class="nav-button js-stats-button">
-            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="M160-200h160v-320H160v320Zm240 0h160v-560H400v560Zm240 0h160v-240H640v240ZM80-120v-480h240v-240h320v320h240v400H80Z"/></svg>
+        <div class="nav-right nav-desktop-only">
+          <button class="nav-icon-btn js-stats-button" type="button" aria-label="Statistics">
+            <span class="nav-icon-circle" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" height="22px" viewBox="0 -960 960 960" width="22px" fill="currentColor"><path d="M160-200h160v-320H160v320Zm240 0h160v-560H400v560Zm240 0h160v-240H640v240ZM80-120v-480h240v-240h320v320h240v400H80Z"/></svg>
+            </span>
           </button>
+          <button class="nav-icon-btn js-profile-button" type="button" aria-label="Account">
+            <span class="js-profile-avatar nav-icon-circle" aria-hidden="true">
+              <i class="fa-regular fa-user"></i>
+            </span>
+          </button>
+        </div>
+        <div class="nav-mobile-menu nav-mobile-only">
+          <button type="button" class="nav-icon-btn js-nav-menu-toggle" aria-label="Menu" aria-expanded="false" aria-haspopup="true">
+            <span class="nav-icon-circle" aria-hidden="true"><i class="fa-solid fa-bars"></i></span>
+          </button>
+          <div class="nav-dropdown js-nav-dropdown" id="nav-dropdown" hidden>
+            <button type="button" class="nav-dropdown-item js-help-button">
+              <span class="nav-dropdown-item-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M478-240q21 0 35.5-14.5T528-290q0-21-14.5-35.5T478-340q-21 0-35.5 14.5T428-290q0 21 14.5 35.5T478-240Zm-36-154h74q0-33 7.5-52t42.5-52q26-26 41-49.5t15-56.5q0-56-41-86t-97-30q-57 0-92.5 30T342-618l66 26q5-18 22.5-39t53.5-21q32 0 48 17.5t16 38.5q0 20-12 37.5T506-526q-44 39-54 59t-10 73Zm38 314q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg></span>
+              How to play
+            </button>
+            <button type="button" class="nav-dropdown-item js-stats-button">
+              <span class="nav-dropdown-item-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M160-200h160v-320H160v320Zm240 0h160v-560H400v560Zm240 0h160v-240H640v240ZM80-120v-480h240v-240h320v320h240v400H80Z"/></svg></span>
+              Statistics
+            </button>
+            <button type="button" class="nav-dropdown-item js-profile-button">
+              <span class="js-mobile-profile-avatar nav-dropdown-item-icon nav-dropdown-profile-avatar" aria-hidden="true"><i class="fa-regular fa-user"></i></span>
+              Account
+            </button>
+          </div>
         </div>
       </nav>
       <div class="container">
@@ -127,5 +155,6 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script> 
     <script src="scripts/elementle.js"></script>
+    <script src="scripts/auth.js"></script>
   </body>
 </html>

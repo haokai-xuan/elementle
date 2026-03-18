@@ -11,6 +11,14 @@ const options = {
 // Frontend talks only to our Node proxy; secrets live in process.env on the server.
 const API_BASE = '/api';
 
+function closeMobileNavMenu() {
+  const dropdown = document.querySelector('.js-nav-dropdown');
+  const toggle = document.querySelector('.js-nav-menu-toggle');
+  if (dropdown) dropdown.hidden = true;
+  if (toggle) toggle.setAttribute('aria-expanded', 'false');
+}
+window.closeMobileNavMenu = closeMobileNavMenu;
+
 let mysteryElementCache = null;
 
 function getTodayDateInt() {
@@ -87,10 +95,11 @@ hintButton.addEventListener('click', (event) => {
   hintContainer.innerHTML = mystery.hints[idx];
 });
 
-document.querySelector('.js-stats-button').addEventListener('click', (event) => {
+document.querySelectorAll('.js-stats-button').forEach((btn) => btn.addEventListener('click', (event) => {
   event.preventDefault();
+  closeMobileNavMenu();
   displayStats();
-});
+}));
 
 function displayStats() {
   const overlay = document.querySelector('.js-overlay');
@@ -177,10 +186,11 @@ function displayStats() {
 
 
 
-document.querySelector('.js-help-button').addEventListener('click', (event) => {
+document.querySelectorAll('.js-help-button').forEach((btn) => btn.addEventListener('click', (event) => {
   event.preventDefault();
+  closeMobileNavMenu();
   displayHelp();
-});
+}));
 
 function displayHelp() {
   const overlay = document.querySelector('.js-overlay');
@@ -732,6 +742,20 @@ function displayCountdown() {
     }, 1000)
   }
 }
+
+(function initMobileNavMenu() {
+  const toggle = document.querySelector('.js-nav-menu-toggle');
+  const dropdown = document.querySelector('.js-nav-dropdown');
+  if (!toggle || !dropdown) return;
+  toggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const willOpen = dropdown.hidden;
+    dropdown.hidden = !willOpen;
+    toggle.setAttribute('aria-expanded', String(willOpen));
+  });
+  document.addEventListener('click', () => closeMobileNavMenu());
+  dropdown.addEventListener('click', (e) => e.stopPropagation());
+})();
 
 window.onload = async function() {
   inputElement.focus();

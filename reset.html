@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Reset password - Elementle</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="styles/elementle.css" />
+    <link rel="icon" type="image/x-icon" href="images/favicon.png" />
+  </head>
+  <body>
+    <main>
+      <div class="overlay show auth-overlay reset-overlay">
+        <div class="modal-card auth-modal auth-modal-wide" id="reset-card">
+          <h2 class="modal-title auth-modal-brand">Reset password</h2>
+          <p class="auth-help-text">
+            Choose a new password for your Elementle account.
+          </p>
+          <form id="reset-form" autocomplete="off">
+            <label class="auth-label">New password</label>
+            <input
+              class="auth-input"
+              type="password"
+              name="password"
+              minlength="6"
+              required
+              placeholder="At least 6 characters"
+              autocomplete="new-password"
+            />
+            <p class="auth-error js-reset-error" role="alert"></p>
+            <button type="submit" class="auth-btn auth-btn-primary">
+              Update password
+            </button>
+          </form>
+          <button type="button" class="modal-back-button auth-close-muted" id="reset-back">
+            Back to game
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <script src="scripts/reset.js"></script>
+  </body>
+</html>
+

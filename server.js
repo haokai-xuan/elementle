@@ -57,6 +57,30 @@ app.post('/api/guess_distribution', async (req, res) => {
   }
 });
 
+async function proxyAuthPost(path, req, res) {
+  try {
+    const upstream = await fetch(`${API_BASE_URL}${path}`, {
+      method: 'POST',
+      headers: upstreamHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(req.body)
+    });
+    const data = await upstream.json().catch(() => ({}));
+    res.status(upstream.status).json(data);
+  } catch (err) {
+    console.error(`[proxy] ${path}:`, err.message);
+    res.status(502).json({ error: 'Upstream error' });
+  }
+}
+
+app.post('/api/auth/signup', (req, res) => proxyAuthPost('/auth/signup', req, res));
+app.post('/api/auth/login', (req, res) => proxyAuthPost('/auth/login', req, res));
+app.post('/api/auth/request-password-reset', (req, res) =>
+  proxyAuthPost('/auth/request-password-reset', req, res)
+);
+app.post('/api/auth/reset-password', (req, res) =>
+  proxyAuthPost('/auth/reset-password', req, res)
+);
+
 app.listen(port, () => {
   console.log(`Elementle server listening on http://localhost:${port}`);
   console.log(`Proxying API to: ${API_BASE_URL}`);
