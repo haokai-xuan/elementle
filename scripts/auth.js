@@ -156,8 +156,20 @@
     if (loggedIn) {
       root.querySelector('.js-auth-logout')?.addEventListener('click', () => {
         setToken(null);
+        localStorage.removeItem('guessesList');
+        localStorage.removeItem('numberOfGuesses');
+        localStorage.removeItem('guessedCorrectly');
+        localStorage.removeItem('gameDate');
+        localStorage.removeItem('fadeInAppliedList');
+        localStorage.removeItem('totalGames');
+        localStorage.removeItem('totalWins');
+        localStorage.removeItem('currentStreak');
+        localStorage.removeItem('maxWinStreak');
+        localStorage.removeItem('guessDistribution');
+        localStorage.removeItem('lastPlayedDate');
         updateProfileButton();
         closeAuth();
+        window.location.reload();
       });
       return;
     }
@@ -201,6 +213,9 @@
           setToken(data.token);
           updateProfileButton();
           closeAuth();
+          if (typeof window.syncGameStateFromServer === 'function') {
+            window.syncGameStateFromServer();
+          }
         }
       } catch {
         errEl.textContent = 'Network error';

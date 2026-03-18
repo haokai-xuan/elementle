@@ -81,6 +81,64 @@ app.post('/api/auth/reset-password', (req, res) =>
   proxyAuthPost('/auth/reset-password', req, res)
 );
 
+function gameHeaders(req, extra = {}) {
+  const headers = { ...upstreamHeaders(), ...extra };
+  const auth = req.headers.authorization;
+  if (auth) headers['Authorization'] = auth;
+  return headers;
+}
+
+app.get('/api/user/stats', async (req, res) => {
+  const localDate = req.query.localDate || '';
+  const url = `${API_BASE_URL}/user/stats?localDate=${encodeURIComponent(localDate)}`;
+  try {
+    const upstream = await fetch(url, {
+      method: 'GET',
+      headers: gameHeaders(req)
+    });
+    const data = await upstream.json().catch(() => ({}));
+    res.status(upstream.status).json(data);
+  } catch (err) {
+    console.error('[proxy] /api/user/stats:', err.message);
+    res.status(502).json({ error: 'Upstream error', detail: err.message });
+  }
+});
+
+app.get('/api/game/state', async (req, res) => {
+  const localDate = req.query.localDate;
+  if (!localDate) {
+    return res.status(400).json({ error: 'localDate required (query param YYYYMMDD)' });
+  }
+  const url = `${API_BASE_URL}/game/state?localDate=${encodeURIComponent(localDate)}`;
+  try {
+    const upstream = await fetch(url, {
+      method: 'GET',
+      headers: gameHeaders(req)
+    });
+    const data = await upstream.json().catch(() => ({}));
+    res.status(upstream.status).json(data);
+  } catch (err) {
+    console.error('[proxy] /api/game/state:', err.message);
+    res.status(502).json({ error: 'Upstream error', detail: err.message });
+  }
+});
+
+app.post('/api/game/guess', async (req, res) => {
+  const url = `${API_BASE_URL}/game/guess`;
+  try {
+    const upstream = await fetch(url, {
+      method: 'POST',
+      headers: gameHeaders(req, { 'Content-Type': 'application/json' }),
+      body: JSON.stringify(req.body)
+    });
+    const data = await upstream.json().catch(() => ({}));
+    res.status(upstream.status).json(data);
+  } catch (err) {
+    console.error('[proxy] /api/game/guess:', err.message);
+    res.status(502).json({ error: 'Upstream error', detail: err.message });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Elementle server listening on http://localhost:${port}`);
   console.log(`Proxying API to: ${API_BASE_URL}`);

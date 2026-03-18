@@ -10,6 +10,11 @@ const options = {
 
 // Frontend talks only to our Node proxy; secrets live in process.env on the server.
 const API_BASE = '/api';
+const AUTH_TOKEN_KEY = 'elementle_token';
+
+function getAuthToken() {
+  return localStorage.getItem(AUTH_TOKEN_KEY) || '';
+}
 
 function closeMobileNavMenu() {
   const dropdown = document.querySelector('.js-nav-dropdown');
@@ -105,29 +110,104 @@ function displayStats() {
   const overlay = document.querySelector('.js-overlay');
   overlay.style.display = 'flex';
   setTimeout(() => {
-    overlay.classList.add('show'); // Add the show class to trigger fade-in
-  }, 10); // Short delay to ensure the display property is applied first
+    overlay.classList.add('show');
+  }, 10);
 
-  const totalGames = localStorage.getItem('totalGames') || 0;
-  const totalWins = localStorage.getItem('totalWins') || 0;
-  const winRate = totalGames > 0 ? Math.round((totalWins / totalGames) * 100) : 0;
-  const currentStreak = localStorage.getItem('currentStreak') || 0;
-  const maxWinStreak = localStorage.getItem('maxWinStreak') || 0;
+  const token = getAuthToken();
+  const isLoggedIn = !!token;
 
-  // Get the guess distribution from localStorage
-  let distributionData = JSON.parse(localStorage.getItem('guessDistribution') || JSON.stringify({
-    1: 0, 2: 0, 3: 0, 4: 0, 
-    5: 0, 6: 0, 7: 0, 8: 0, 
-    'X': 0
-  }));
+  renderStatsModal(overlay, isLoggedIn);
 
-  let maxValue = Math.max(...Object.values(distributionData));
+  if (isLoggedIn) {
+    var fetchStats = function () {
+      return fetch(API_BASE + '/user/stats?localDate=' + encodeURIComponent(getTodayDateInt()), {
+        headers: { Authorization: 'Bearer ' + token }
+      })
+        .then(function (res) { return res.ok ? res.json() : null; })
+        .then(function (data) {
+          if (!data) return;
+          updateStatValues(overlay, {
+            wins: data.totalWins || 0,
+            played: data.totalGamesPlayed || 0,
+            streak: data.currentStreak || 0,
+            best: data.maxStreak || 0,
+            rate: (data.winRate != null ? data.winRate : 0) + '%'
+          });
+          if (data.guessDistribution) {
+            updateDistributionBars(overlay, data.guessDistribution);
+          }
+        })
+        .catch(function () {});
+    };
+
+    if (_pendingGuessPromise) {
+      _pendingGuessPromise.then(fetchStats);
+    } else {
+      fetchStats();
+    }
+  }
+}
+
+function updateStatValues(overlay, vals) {
+  var el = overlay.querySelector('[data-stat="wins"]');
+  if (el) el.textContent = vals.wins;
+  el = overlay.querySelector('[data-stat="played"]');
+  if (el) el.textContent = vals.played;
+  el = overlay.querySelector('[data-stat="streak"]');
+  if (el) el.textContent = vals.streak;
+  el = overlay.querySelector('[data-stat="best"]');
+  if (el) el.textContent = vals.best;
+  el = overlay.querySelector('[data-stat="rate"]');
+  if (el) el.textContent = vals.rate;
+}
+
+function updateDistributionBars(overlay, dist) {
+  var mapped = {};
+  for (var i = 1; i <= 8; i++) mapped[String(i)] = dist[String(i)] || 0;
+  mapped['X'] = dist['failed'] || 0;
+  var maxVal = Math.max(...Object.values(mapped), 1);
+  Object.keys(mapped).forEach(function (key) {
+    var col = overlay.querySelector('[data-bar="' + key + '"]');
+    if (!col) return;
+    var count = col.querySelector('.bar-count');
+    var fill = col.querySelector('.bar-fill');
+    if (count) count.textContent = mapped[key];
+    if (fill) fill.style.height = (mapped[key] / maxVal * 100) + '%';
+  });
+}
+
+function renderStatsModal(overlay, loading) {
+  var totalWins, totalGames, currentStreak, maxWinStreak, winRateDisplay;
+
+  if (loading) {
+    totalWins = totalGames = currentStreak = maxWinStreak = winRateDisplay = '—';
+  } else {
+    totalGames = localStorage.getItem('totalGames') || 0;
+    totalWins = localStorage.getItem('totalWins') || 0;
+    var winRate = totalGames > 0 ? Math.round((totalWins / totalGames) * 100) : 0;
+    currentStreak = localStorage.getItem('currentStreak') || 0;
+    maxWinStreak = localStorage.getItem('maxWinStreak') || 0;
+    winRateDisplay = winRate + '%';
+  }
+
+  let distributionData;
+  if (loading) {
+    distributionData = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 'X': 0 };
+  } else {
+    distributionData = JSON.parse(localStorage.getItem('guessDistribution') || JSON.stringify({
+      1: 0, 2: 0, 3: 0, 4: 0,
+      5: 0, 6: 0, 7: 0, 8: 0,
+      'X': 0
+    }));
+  }
+
+  let maxValue = Math.max(...Object.values(distributionData), 1);
 
   const bars = Object.keys(distributionData).map((key) => {
     let value = distributionData[key];
     let percentage = maxValue > 0 ? (value / maxValue) * 100 : 0;
     return `
-      <div class="bar-col">
+      <div class="bar-col" data-bar="${key}">
         <span class="bar-count">${value}</span>
         <div class="bar-track">
           <div class="bar-fill" style="height: ${percentage}%;"></div>
@@ -137,29 +217,28 @@ function displayStats() {
     `;
   }).join("");
 
-
   overlay.innerHTML = `
     <div class="modal-card stats-modal">
       <h2 class="modal-title">Statistics</h2>
       <div class="stats-grid">
         <div class="stat-item">
-          <span class="stat-value">${totalWins}</span>
+          <span class="stat-value" data-stat="wins">${totalWins}</span>
           <span class="stat-label">Wins</span>
         </div>
         <div class="stat-item">
-          <span class="stat-value">${totalGames}</span>
+          <span class="stat-value" data-stat="played">${totalGames}</span>
           <span class="stat-label">Played</span>
         </div>
         <div class="stat-item">
-          <span class="stat-value">${currentStreak}</span>
+          <span class="stat-value" data-stat="streak">${currentStreak}</span>
           <span class="stat-label">Current streak</span>
         </div>
         <div class="stat-item">
-          <span class="stat-value">${maxWinStreak}</span>
+          <span class="stat-value" data-stat="best">${maxWinStreak}</span>
           <span class="stat-label">Best streak</span>
         </div>
         <div class="stat-item stat-item-wide">
-          <span class="stat-value">${winRate}%</span>
+          <span class="stat-value" data-stat="rate">${winRateDisplay}</span>
           <span class="stat-label">Win rate</span>
         </div>
       </div>
@@ -362,67 +441,112 @@ function sendDistribution(nog) {
     .catch((err) => console.warn('Guess distribution request failed', err));
 }
 
-function processGuess() {
+let _guessInFlight = false;
+let _pendingGuessPromise = null;
+
+async function processGuess() {
+  if (_guessInFlight) return;
+
   const inputValue = inputElement.value.trim();
   const guessedElement = elements.find(element => element.name.toLowerCase() === inputValue.toLowerCase());
 
-  if (guessedElement || inputValue === '') {
-    inputElement.value = '';
+  if (!guessedElement && inputValue !== '') {
+    invalidGuess();
+    inputElement.focus();
+    return;
+  }
 
-    const alreadyGuessed = guessesList.some(guess => guess.name.toLowerCase() === guessedElement.name.toLowerCase());
+  if (inputValue === '') {
+    inputElement.focus();
+    return;
+  }
 
-    if (alreadyGuessed) {
-      alreadyGuessedPopup();
-      return;
-    }
+  inputElement.value = '';
 
-    guessesList.push({
-      name: guessedElement.name,
-      atomicNumber: guessedElement.atomicNumber,
-      family: guessedElement.family,
-      hint: (guessedElement.hints && guessedElement.hints[0]) || '',
-      symbol: guessedElement.symbol
-    });
+  const alreadyGuessed = guessesList.some(guess => guess.name.toLowerCase() === guessedElement.name.toLowerCase());
+  if (alreadyGuessed) {
+    alreadyGuessedPopup();
+    inputElement.focus();
+    return;
+  }
 
-    numberOfGuesses = +numberOfGuesses + 1;
+  _guessInFlight = true;
 
-    localStorage.setItem('guessesList', JSON.stringify(guessesList));
-    localStorage.setItem('numberOfGuesses', numberOfGuesses);
-    removeAutocompleteDropdown();
-    renderGuess();
+  guessesList.push({
+    name: guessedElement.name,
+    atomicNumber: guessedElement.atomicNumber,
+    family: guessedElement.family,
+    hint: (guessedElement.hints && guessedElement.hints[0]) || '',
+    symbol: guessedElement.symbol
+  });
+  numberOfGuesses = +numberOfGuesses + 1;
+  localStorage.setItem('guessesList', JSON.stringify(guessesList));
+  localStorage.setItem('numberOfGuesses', numberOfGuesses);
+  removeAutocompleteDropdown();
+  renderGuess();
 
-    if (numberOfGuesses <= 8 && guessedElement.name.toLowerCase() === getMysteryElement().name.toLowerCase()) {
-      trackGuessDistribution(numberOfGuesses);
+  const isCorrect = guessedElement.name.toLowerCase() === getMysteryElement().name.toLowerCase();
+  const isGameOver = numberOfGuesses >= 8;
 
-      localStorage.setItem('totalGames', +localStorage.getItem('totalGames') + 1);
-      localStorage.setItem('totalWins', +localStorage.getItem('totalWins') + 1);
-      localStorage.setItem('currentStreak', +localStorage.getItem('currentStreak') + 1);
-      localStorage.setItem('maxWinStreak', (Number(localStorage.getItem("currentStreak")) > Number(localStorage.getItem("maxWinStreak"))) ? localStorage.getItem("currentStreak"): localStorage.getItem("maxWinStreak"));
+  const token = getAuthToken();
 
-      localStorage.setItem('guessedCorrectly', 'true');
-      confetti({
-        particleCount: 150,
-        spread: 200
+  if (token) {
+    _pendingGuessPromise = fetch(API_BASE + '/game/guess', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ localDate: getTodayDateInt(), guess: guessedElement.atomicNumber })
+    })
+      .then(function (res) { return res.json().catch(function () { return {}; }); })
+      .catch(function (e) { console.warn('Game guess sync failed', e); })
+      .finally(function () {
+        _guessInFlight = false;
+        _pendingGuessPromise = null;
       });
+
+    if (isCorrect) {
+      localStorage.setItem('guessedCorrectly', 'true');
+      guessedCorrectly = 'true';
+      confetti({ particleCount: 150, spread: 200 });
       createPopup('Well done!');
       displayResults();
-      sendDistribution(numberOfGuesses);
-    } else if (numberOfGuesses >= 8) {
-      trackGuessDistribution(0);
-
-      localStorage.setItem('totalGames', +localStorage.getItem('totalGames') + 1);
-      localStorage.setItem('currentStreak', 0);
-      
+    } else if (isGameOver) {
       localStorage.setItem('guessedCorrectly', 'false');
-      displayResults();
+      guessedCorrectly = 'false';
       createPopup('Thanks for playing!');
-      sendDistribution(9);
+      displayResults();
     } else {
-      localStorage.setItem('guessedCorrectly', 'false');
+      _guessInFlight = false;
     }
+    inputElement.focus();
+    return;
   }
-  else {
-    invalidGuess();
+
+  _guessInFlight = false;
+
+  if (isCorrect) {
+    trackGuessDistribution(numberOfGuesses);
+    localStorage.setItem('totalGames', +localStorage.getItem('totalGames') + 1);
+    localStorage.setItem('totalWins', +localStorage.getItem('totalWins') + 1);
+    localStorage.setItem('currentStreak', +localStorage.getItem('currentStreak') + 1);
+    localStorage.setItem('maxWinStreak', (Number(localStorage.getItem("currentStreak")) > Number(localStorage.getItem("maxWinStreak"))) ? localStorage.getItem("currentStreak"): localStorage.getItem("maxWinStreak"));
+    localStorage.setItem('guessedCorrectly', 'true');
+    guessedCorrectly = 'true';
+    confetti({ particleCount: 150, spread: 200 });
+    createPopup('Well done!');
+    displayResults();
+    sendDistribution(numberOfGuesses);
+  } else if (isGameOver) {
+    trackGuessDistribution(0);
+    localStorage.setItem('totalGames', +localStorage.getItem('totalGames') + 1);
+    localStorage.setItem('currentStreak', 0);
+    localStorage.setItem('guessedCorrectly', 'false');
+    guessedCorrectly = 'false';
+    displayResults();
+    createPopup('Thanks for playing!');
+    sendDistribution(9);
+  } else {
+    localStorage.setItem('guessedCorrectly', 'false');
+    guessedCorrectly = 'false';
   }
   inputElement.focus();
 }
@@ -518,18 +642,33 @@ function resetStreakIfNeeded() {
   }
 }
 
+function applyGameStateFromApi(apiGuesses, numGuesses, won) {
+  guessesList.length = 0;
+  (apiGuesses || []).forEach(function (atomicNum) {
+    const el = elements.find(function (e) { return e.atomicNumber === atomicNum; });
+    if (el) {
+      guessesList.push({
+        name: el.name,
+        atomicNumber: el.atomicNumber,
+        family: el.family,
+        hint: (el.hints && el.hints[0]) || '',
+        symbol: el.symbol
+      });
+    }
+  });
+  numberOfGuesses = guessesList.length;
+  guessedCorrectly = won ? 'true' : 'false';
+  localStorage.setItem('guessesList', JSON.stringify(guessesList));
+  localStorage.setItem('numberOfGuesses', String(numberOfGuesses));
+  localStorage.setItem('guessedCorrectly', guessedCorrectly);
+}
+
 async function setMysteryElementOfTheDay() {
   resetStreakIfNeeded();
 
   const todayInt = getTodayDateInt();
   const todayStr = String(todayInt);
   const gameDate = localStorage.getItem('gameDate');
-
-  mysteryElementCache = await fetchMysteryElementForDate(todayInt);
-  if (!mysteryElementCache) {
-    console.error('Could not load mystery element for today');
-    return;
-  }
 
   if (gameDate !== todayStr) {
     numberOfGuesses = 0;
@@ -548,9 +687,40 @@ async function setMysteryElementOfTheDay() {
     document.querySelector('.js-share-button')?.remove();
   }
 
+  mysteryElementCache = await fetchMysteryElementForDate(todayInt);
+  if (!mysteryElementCache) {
+    console.error('Could not load mystery element for today');
+    return;
+  }
+
   renderGuess();
   inputElement.focus();
+
+  syncGameStateFromServer();
 }
+
+async function syncGameStateFromServer() {
+  const token = getAuthToken();
+  if (!token) return;
+  const todayInt = getTodayDateInt();
+  try {
+    const res = await fetch(
+      API_BASE + '/game/state?localDate=' + encodeURIComponent(todayInt),
+      { headers: { Authorization: 'Bearer ' + token } }
+    );
+    if (!res.ok) return;
+    const data = await res.json();
+    applyGameStateFromApi(data.guesses || [], data.numGuesses, data.won);
+    localStorage.setItem('gameDate', String(todayInt));
+    renderGuess();
+    if (data.won || data.numGuesses >= 8) {
+      displayResults();
+    }
+  } catch (e) {
+    console.warn('Failed to load game state from server', e);
+  }
+}
+window.syncGameStateFromServer = syncGameStateFromServer;
 
 function getMysteryElement() {
   return mysteryElementCache;
@@ -680,17 +850,18 @@ function displayResults() {
 function createPopup(text) {
   const popupElement = document.createElement('div');
   popupElement.classList.add('popup');
-  popupElement.textContent = text
+  popupElement.textContent = text;
   document.body.appendChild(popupElement);
-  setTimeout(() => {
-    popupElement.style.opacity = '1';
+  requestAnimationFrame(() => {
+    popupElement.classList.add('popup-visible');
     setTimeout(() => {
-      popupElement.style.opacity = '0';
-      setTimeout(() => {
-        document.body.removeChild(popupElement);
-      }, 1000); // Adjust the delay for hiding the popup
-    }, 2000); // Adjust the delay for showing the popup
-  }, 100); // Adjust the delay for adding the popup to the DOM
+      popupElement.classList.remove('popup-visible');
+      popupElement.classList.add('popup-exit');
+      popupElement.addEventListener('transitionend', () => {
+        popupElement.remove();
+      }, { once: true });
+    }, 2200);
+  });
 }
 
 function getNextMidnight() {
@@ -766,7 +937,7 @@ window.onload = async function() {
   }
 
   let totalGames = parseInt(localStorage.getItem("totalGames"), 10);
-  if (!totalGames) {
+  if (!totalGames && !getAuthToken()) {
     displayHelp();
   }
 };
