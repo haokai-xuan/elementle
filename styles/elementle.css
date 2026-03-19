@@ -967,6 +967,10 @@ body.modal-open {
   animation: winGlow 2s ease-in-out infinite alternate;
 }
 
+.element.correct-card.card-flip {
+  animation: cardFlip 0.5s ease-out, winGlow 2s ease-in-out 0.5s infinite alternate;
+}
+
 @keyframes winGlow {
   from {
     box-shadow: 0 0 12px rgba(83, 141, 78, 0.4),
@@ -1799,19 +1803,19 @@ footer {
 
 .auth-input:-webkit-autofill,
 .auth-input:-webkit-autofill:hover,
-.auth-input:-webkit-autofill:focus,
 .auth-input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0 1000px rgb(42, 42, 42) inset !important;
   box-shadow: 0 0 0 1000px rgb(42, 42, 42) inset !important;
   -webkit-text-fill-color: #fff !important;
   caret-color: #fff;
-  border-color: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
+  transition: background-color 9999s ease-in-out 0s;
 }
 
 .auth-input:-webkit-autofill:focus {
-  border-color: rgb(83, 141, 78);
   -webkit-box-shadow: 0 0 0 1000px rgb(42, 42, 42) inset, 0 0 0 3px rgba(83, 141, 78, 0.2) !important;
   box-shadow: 0 0 0 1000px rgb(42, 42, 42) inset, 0 0 0 3px rgba(83, 141, 78, 0.2) !important;
+  border: 2px solid rgb(83, 141, 78) !important;
 }
 
 .auth-input:autofill {

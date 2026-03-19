@@ -1009,6 +1009,7 @@ window.clearEndOfGameUI = clearEndOfGameUI;
 async function syncGameStateFromServer() {
   const token = getAuthToken();
   if (!token) return;
+  renderShimmerGrid();
   const todayInt = getTodayDateInt();
   try {
     const res = await fetch(
@@ -1235,18 +1236,6 @@ function displayCountdown() {
   minutes_container.innerHTML = minutes;
   seconds_container.innerHTML = seconds;
 
-  if (hours == "00" && minutes == "00" && seconds == "00") {
-    setTimeout(() => {
-      hours_container.innerHTML = "";
-      minutes_container.innerHTML = "";
-      seconds_container.innerHTML = "";
-      countdown_text_container.innerHTML = "";
-      colon_containers.forEach(element => {
-        element.innerHTML = "";
-      })
-      window.location.reload();
-    }, 1000)
-  }
 }
 
 (function initMobileNavMenu() {
@@ -1263,11 +1252,22 @@ function displayCountdown() {
   dropdown.addEventListener('click', (e) => e.stopPropagation());
 })();
 
+function scheduleMidnightReload() {
+  var now = new Date();
+  var tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  var msUntilMidnight = tomorrow - now;
+  setTimeout(function() {
+    window.location.reload();
+  }, msUntilMidnight);
+}
+
 window.onload = async function() {
   inputElement.disabled = true;
   guessButtonElement.disabled = true;
 
   await setMysteryElementOfTheDay();
+
+  scheduleMidnightReload();
 
   if (numberOfGuesses >= 8 || guessedCorrectly === 'true') {
     displayResults();
