@@ -373,9 +373,59 @@ function renderStatsModal(overlay, loading) {
     event.preventDefault();
     closeModal(overlay);
   });
+
+  lockBodyScroll();
+  setTimeout(function () { setupFocusTrap(overlay); }, 20);
+}
+
+var _focusTrapContainer = null;
+var _focusTrapHandler = null;
+
+function lockBodyScroll() {
+  document.body.classList.add('modal-open');
+}
+
+function unlockBodyScroll() {
+  document.body.classList.remove('modal-open');
+}
+
+function getFocusableElements(container) {
+  var sel = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+  return Array.prototype.filter.call(container.querySelectorAll(sel), function (el) {
+    return !el.disabled && el.offsetParent !== null;
+  });
+}
+
+function setupFocusTrap(container) {
+  if (_focusTrapContainer) return;
+  var focusables = getFocusableElements(container);
+  if (focusables.length === 0) return;
+  focusables[0].focus();
+  _focusTrapContainer = container;
+  _focusTrapHandler = function (e) {
+    if (e.key !== 'Tab') return;
+    var list = getFocusableElements(container);
+    if (list.length === 0) return;
+    var idx = list.indexOf(document.activeElement);
+    if (idx === -1) idx = 0;
+    var next = e.shiftKey ? (idx - 1 + list.length) % list.length : (idx + 1) % list.length;
+    list[next].focus();
+    e.preventDefault();
+  };
+  container.addEventListener('keydown', _focusTrapHandler);
+}
+
+function removeFocusTrap() {
+  if (_focusTrapContainer && _focusTrapHandler) {
+    _focusTrapContainer.removeEventListener('keydown', _focusTrapHandler);
+    _focusTrapContainer = null;
+    _focusTrapHandler = null;
+  }
 }
 
 function closeModal(overlay) {
+  unlockBodyScroll();
+  removeFocusTrap();
   var card = overlay.querySelector('.modal-card');
   if (card) {
     card.classList.add('modal-closing');
@@ -396,6 +446,8 @@ function closeModal(overlay) {
   }
 }
 window.closeModal = closeModal;
+window.lockBodyScroll = lockBodyScroll;
+window.setupFocusTrap = setupFocusTrap;
 
 document.querySelectorAll('.js-help-button').forEach((btn) => btn.addEventListener('click', (event) => {
   event.preventDefault();
@@ -435,6 +487,9 @@ function displayHelp() {
     event.preventDefault();
     closeModal(overlay);
   });
+
+  lockBodyScroll();
+  setTimeout(function () { setupFocusTrap(overlay); }, 20);
 }
 
 var _initialRenderDone = false;
@@ -651,6 +706,12 @@ async function processGuess() {
   localStorage.setItem('numberOfGuesses', numberOfGuesses);
   removeAutocompleteDropdown();
   renderGuess({ animate: true });
+
+  if (window.innerWidth < 768) {
+    var grid = document.querySelector('.element-grid');
+    var latestCard = grid && grid.children[numberOfGuesses - 1];
+    if (latestCard) latestCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 
   const isCorrect = guessedElement.name.toLowerCase() === getMysteryElement().name.toLowerCase();
   const isGameOver = numberOfGuesses >= 8;
@@ -913,10 +974,12 @@ async function setMysteryElementOfTheDay() {
     return;
   }
 
-  renderGuess();
+  if (getAuthToken()) {
+    await syncGameStateFromServer();
+  } else {
+    renderGuess();
+  }
   inputElement.focus();
-
-  syncGameStateFromServer();
 }
 
 function clearEndOfGameUI() {
@@ -954,12 +1017,26 @@ async function syncGameStateFromServer() {
     applyGameStateFromApi(data.guesses || [], data.numGuesses, data.won);
     localStorage.setItem('gameDate', String(todayInt));
     clearEndOfGameUI();
-    renderGuess();
-    if (data.won || data.numGuesses >= 8) {
-      displayResults();
+
+    const hasGuesses = (data.guesses && data.guesses.length) > 0;
+    if (hasGuesses) {
+      _initialRenderDone = false;
+      renderShimmerGrid();
+      setTimeout(function () {
+        renderGuess();
+        if (data.won || data.numGuesses >= 8) {
+          displayResults();
+        }
+      }, 500);
+    } else {
+      renderGuess();
+      if (data.won || data.numGuesses >= 8) {
+        displayResults();
+      }
     }
   } catch (e) {
     console.warn('Failed to load game state from server', e);
+    renderGuess();
   }
 }
 window.syncGameStateFromServer = syncGameStateFromServer;

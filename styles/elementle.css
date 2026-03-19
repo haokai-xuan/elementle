@@ -777,6 +777,10 @@ a.additional-info:active,
   pointer-events: auto;
 }
 
+body.modal-open {
+  overflow: hidden;
+}
+
 /*Display guesses section*/
 .grid-container {
   margin-top: 55px;
@@ -913,12 +917,12 @@ a.additional-info:active,
     transparent 75%
   );
   background-size: 300% 100%;
-  animation: shimmerSlide 1.8s ease-in-out infinite;
+  animation: shimmerSlide 2s linear infinite;
 }
 
 @keyframes shimmerSlide {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% { background-position: 0% 0; }
+  100% { background-position: 300% 0; }
 }
 
 .element.shimmer-done {
@@ -941,7 +945,7 @@ a.additional-info:active,
 }
 
 .element.card-flip {
-  animation: cardFlip 1s ease-out;
+  animation: cardFlip 0.5s ease-out;
 }
 
 @keyframes cardFlip {

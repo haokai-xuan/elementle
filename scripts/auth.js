@@ -74,7 +74,11 @@
     const user = getUser();
     el.style.display = 'flex';
     el.innerHTML = user ? renderAccountPanel(user) : renderAuthForms('login');
-    requestAnimationFrame(() => el.classList.add('show'));
+    requestAnimationFrame(() => {
+      el.classList.add('show');
+      if (typeof window.lockBodyScroll === 'function') window.lockBodyScroll();
+      if (typeof window.setupFocusTrap === 'function') setTimeout(() => window.setupFocusTrap(el), 20);
+    });
     bindAuthEvents(el, user);
   }
 
