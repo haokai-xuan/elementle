@@ -234,22 +234,38 @@ function displayStats() {
   renderStatsModal(overlay, isLoggedIn);
 
   if (isLoggedIn) {
+    var STATS_INTRO_DURATION = 1500;
+    var statsData = null;
+    var introDone = false;
+
+    var maybeApplyStats = function () {
+      if (!statsData || !introDone) return;
+      updateStatValues(overlay, {
+        wins: statsData.totalWins || 0,
+        played: statsData.totalGamesPlayed || 0,
+        streak: statsData.currentStreak || 0,
+        best: statsData.maxStreak || 0,
+        rate: (statsData.winRate != null ? statsData.winRate : 0) + '%'
+      });
+      if (statsData.guessDistribution) {
+        updateDistributionBars(overlay, statsData.guessDistribution);
+      }
+    };
+
+    setTimeout(function () {
+      introDone = true;
+      maybeApplyStats();
+    }, STATS_INTRO_DURATION);
+
     var fetchStats = function () {
       return fetch(API_BASE + '/user/stats?localDate=' + encodeURIComponent(getTodayDateInt()), {
         headers: { Authorization: 'Bearer ' + token }
       })
         .then(function (res) { return res.ok ? res.json() : null; })
         .then(function (data) {
-          if (!data) return;
-          updateStatValues(overlay, {
-            wins: data.totalWins || 0,
-            played: data.totalGamesPlayed || 0,
-            streak: data.currentStreak || 0,
-            best: data.maxStreak || 0,
-            rate: (data.winRate != null ? data.winRate : 0) + '%'
-          });
-          if (data.guessDistribution) {
-            updateDistributionBars(overlay, data.guessDistribution);
+          if (data) {
+            statsData = data;
+            maybeApplyStats();
           }
         })
         .catch(function () {});
@@ -264,15 +280,21 @@ function displayStats() {
 }
 
 function updateStatValues(overlay, vals) {
-  ['wins', 'played', 'streak', 'best', 'rate'].forEach(function (key) {
+  var keys = ['wins', 'played', 'streak', 'best', 'rate'];
+  keys.forEach(function (key, idx) {
     var el = overlay.querySelector('[data-stat="' + key + '"]');
     if (!el) return;
     var prev = el.textContent;
     el.textContent = vals[key];
     if (prev !== String(vals[key])) {
-      el.classList.remove('stat-pop');
-      void el.offsetWidth;
-      el.classList.add('stat-pop');
+      var delay = idx * 80;
+      setTimeout(function () {
+        el.classList.remove('stat-pop');
+        el.classList.add('stat-pop-reset');
+        void el.offsetWidth;
+        el.classList.remove('stat-pop-reset');
+        el.classList.add('stat-pop');
+      }, delay);
     }
   });
 }
@@ -282,13 +304,22 @@ function updateDistributionBars(overlay, dist) {
   for (var i = 1; i <= 8; i++) mapped[String(i)] = dist[String(i)] || 0;
   mapped['X'] = dist['failed'] || 0;
   var maxVal = Math.max(...Object.values(mapped), 1);
-  Object.keys(mapped).forEach(function (key) {
+  var keys = Object.keys(mapped);
+  keys.forEach(function (key, idx) {
     var col = overlay.querySelector('[data-bar="' + key + '"]');
     if (!col) return;
     var count = col.querySelector('.bar-count');
     var fill = col.querySelector('.bar-fill');
     if (count) count.textContent = mapped[key];
-    if (fill) fill.style.height = (mapped[key] / maxVal * 100) + '%';
+    if (fill) {
+      var pct = (mapped[key] / maxVal * 100);
+      fill.style.height = pct + '%';
+      fill.style.animation = 'none';
+      fill.style.transform = 'scaleY(0)';
+      void fill.offsetWidth;
+      fill.style.animation = 'barGrow 0.5s ease-out forwards';
+      fill.style.animationDelay = (0.5 + idx * 0.06) + 's';
+    }
   });
 }
 
@@ -496,6 +527,7 @@ var _initialRenderDone = false;
 
 function renderShimmerGrid() {
   const elementGrid = document.querySelector('.element-grid');
+  if (elementGrid.querySelector('.element.shimmer')) return;
   elementGrid.innerHTML = '';
   for (let i = 0; i < 8; i++) {
     const div = document.createElement('div');
@@ -981,7 +1013,14 @@ async function setMysteryElementOfTheDay() {
   if (getAuthToken()) {
     await syncGameStateFromServer();
   } else {
-    renderGuess();
+    var guestGuesses = JSON.parse(localStorage.getItem('guessesList') || '[]');
+    if (guestGuesses && guestGuesses.length > 0) {
+      _initialRenderDone = false;
+      localStorage.setItem('fadeInAppliedList', JSON.stringify([]));
+      renderGuess({ animate: true, stagger: true });
+    } else {
+      renderGuess();
+    }
   }
 }
 

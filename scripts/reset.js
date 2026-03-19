@@ -30,6 +30,7 @@
     showError('');
     const fd = new FormData(form);
     const password = (fd.get('password') || '').toString();
+    const btn = form.querySelector('button[type="submit"]');
 
     if (!token) {
       showError('Invalid or expired reset link.');
@@ -40,6 +41,12 @@
       return;
     }
 
+    const originalText = btn?.textContent || 'Update password';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="auth-spinner" aria-hidden="true"></span>Updating…';
+    }
+
     try {
       const res = await fetch(`${AUTH_API}/reset-password`, {
         method: 'POST',
@@ -48,6 +55,7 @@
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
+        if (btn) { btn.disabled = false; btn.textContent = originalText; }
         showError(data.error || 'Could not reset password.');
         return;
       }
@@ -55,8 +63,12 @@
         data.message || 'Password updated. You can log in with your new password.',
         true
       );
-      form.querySelector('button[type=\"submit\"]').disabled = true;
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Update password';
+      }
     } catch {
+      if (btn) { btn.disabled = false; btn.textContent = originalText; }
       showError('Network error. Please try again.');
     }
   });

@@ -198,9 +198,15 @@
     loginForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const errEl = root.querySelector('.js-auth-error-login');
+      const btn = loginForm.querySelector('button[type="submit"]');
       errEl.textContent = '';
       const fd = new FormData(loginForm);
       const body = { email: (fd.get('email') || '').trim(), password: fd.get('password') || '' };
+      const originalText = btn?.textContent || 'Log in';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="auth-spinner" aria-hidden="true"></span>Logging in…';
+      }
       try {
         const res = await fetch(`${AUTH_API}/login`, {
           method: 'POST',
@@ -210,6 +216,7 @@
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
           errEl.textContent = data.error || 'Login failed';
+          if (btn) { btn.disabled = false; btn.textContent = originalText; }
           return;
         }
         if (data.token) {
@@ -225,12 +232,14 @@
         }
       } catch {
         errEl.textContent = 'Network error';
+        if (btn) { btn.disabled = false; btn.textContent = originalText; }
       }
     });
 
     signupForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const errEl = root.querySelector('.js-auth-error-signup');
+      const btn = signupForm.querySelector('button[type="submit"]');
       errEl.textContent = '';
       const fd = new FormData(signupForm);
       const body = {
@@ -238,6 +247,11 @@
         email: (fd.get('email') || '').trim(),
         password: fd.get('password') || ''
       };
+      const originalText = btn?.textContent || 'Create account';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="auth-spinner" aria-hidden="true"></span>Creating account…';
+      }
       try {
         const res = await fetch(`${AUTH_API}/signup`, {
           method: 'POST',
@@ -247,6 +261,7 @@
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
           errEl.textContent = data.error || 'Sign up failed';
+          if (btn) { btn.disabled = false; btn.textContent = originalText; }
           return;
         }
         root.querySelectorAll('.auth-tab').forEach((t) =>
@@ -259,9 +274,11 @@
         loginForm.querySelector('[name="email"]').value = body.email;
         const loginErr = root.querySelector('.js-auth-error-login');
         loginErr.classList.add('auth-success');
-        loginErr.textContent = 'Account created. Log in with your email and password.';
+        loginErr.textContent = data.message || 'Check your email to verify your account.';
+        if (btn) { btn.disabled = false; btn.textContent = originalText; }
       } catch {
         errEl.textContent = 'Network error';
+        if (btn) { btn.disabled = false; btn.textContent = originalText; }
       }
     });
 
@@ -282,14 +299,16 @@
     resetRequestBtn?.addEventListener('click', async () => {
       if (!resetForm) return;
       resetErrorEl.classList.remove('auth-success');
-      resetErrorEl.classList.add('auth-error-loading');
-      resetErrorEl.innerHTML =
-        '<span class="auth-spinner" aria-hidden="true"></span><span>Sending reset email…</span>';
+      resetErrorEl.textContent = '';
+      const originalText = resetRequestBtn.textContent || 'Send reset email';
+      resetRequestBtn.disabled = true;
+      resetRequestBtn.innerHTML = '<span class="auth-spinner" aria-hidden="true"></span>Sending…';
 
       const fd = new FormData(resetForm);
       const email = (fd.get('resetEmail') || '').toString().trim();
       if (!email) {
-        resetErrorEl.classList.remove('auth-error-loading');
+        resetRequestBtn.disabled = false;
+        resetRequestBtn.textContent = originalText;
         resetErrorEl.textContent = 'Enter your email first.';
         return;
       }
@@ -301,18 +320,21 @@
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          resetErrorEl.classList.remove('auth-error-loading');
+          resetRequestBtn.disabled = false;
+          resetRequestBtn.textContent = originalText;
           resetErrorEl.textContent = data.error || 'Could not request reset.';
           return;
         }
         const msg =
           data.message ||
           'If an account exists for that email, reset instructions have been sent.';
-        resetErrorEl.classList.remove('auth-error-loading');
+        resetRequestBtn.disabled = false;
+        resetRequestBtn.textContent = originalText;
         resetErrorEl.classList.add('auth-success');
         resetErrorEl.textContent = msg;
       } catch {
-        resetErrorEl.classList.remove('auth-error-loading');
+        resetRequestBtn.disabled = false;
+        resetRequestBtn.textContent = originalText;
         resetErrorEl.textContent = 'Network error';
       }
     });
@@ -327,4 +349,15 @@
   });
 
   updateProfileButton();
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('verified') === '1') {
+    history.replaceState(null, '', window.location.pathname);
+    showAuth();
+    const loginErr = document.querySelector('.js-auth-error-login');
+    if (loginErr) {
+      loginErr.classList.add('auth-success');
+      loginErr.textContent = 'Email verified. You can now log in.';
+    }
+  }
 })();

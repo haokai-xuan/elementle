@@ -945,7 +945,9 @@ body.modal-open {
 }
 
 .element.card-flip {
-  animation: cardFlip 0.5s ease-out;
+  opacity: 0;
+  transform: rotateX(90deg) scale(0.95);
+  animation: cardFlip 0.65s ease-out forwards;
 }
 
 @keyframes cardFlip {
@@ -968,7 +970,9 @@ body.modal-open {
 }
 
 .element.correct-card.card-flip {
-  animation: cardFlip 0.5s ease-out, winGlow 2s ease-in-out 0.5s infinite alternate;
+  opacity: 0;
+  transform: rotateX(90deg) scale(0.95);
+  animation: cardFlip 0.65s ease-out forwards, winGlow 2s ease-in-out 0.65s infinite alternate;
 }
 
 @keyframes winGlow {
@@ -1211,6 +1215,12 @@ body.modal-open {
 .stats-modal .stat-item:nth-child(3) .stat-value { animation-delay: 0.36s; }
 .stats-modal .stat-item:nth-child(4) .stat-value { animation-delay: 0.44s; }
 .stats-modal .stat-item:nth-child(5) .stat-value { animation-delay: 0.52s; }
+
+.stats-modal .stat-value.stat-pop-reset {
+  animation: none;
+  transform: scale(0.7);
+  opacity: 0.4;
+}
 
 .stats-modal .stat-value.stat-pop {
   opacity: 1;
@@ -1894,6 +1904,34 @@ footer {
 .auth-btn-primary:active {
   transform: scale(0.96);
   transition-duration: 0.05s;
+}
+
+.auth-btn-primary:disabled {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+.auth-spinner {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: authSpinner 0.7s linear infinite;
+  vertical-align: -0.15em;
+  margin-right: 6px;
+}
+
+@keyframes authSpinner {
+  to { transform: rotate(360deg); }
+}
+
+.auth-error-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .auth-btn-outline {

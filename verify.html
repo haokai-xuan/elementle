@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Verify email - Elementle</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="styles/elementle.css" />
+    <link rel="icon" type="image/x-icon" href="images/favicon.png" />
+  </head>
+  <body>
+    <main>
+      <div class="overlay show auth-overlay reset-overlay">
+        <div class="modal-card auth-modal auth-modal-wide" id="verify-card">
+          <h2 class="modal-title auth-modal-brand">Verify your email</h2>
+          <p class="auth-help-text js-verify-status">
+            Verifying your email…
+          </p>
+          <p class="auth-error js-verify-error" role="alert"></p>
+          <button type="button" class="modal-back-button auth-close-muted js-verify-back" style="display: none;">
+            Back to game
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <script src="scripts/verify.js"></script>
+  </body>
+</html>

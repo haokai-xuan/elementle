@@ -80,6 +80,12 @@ app.post('/api/auth/request-password-reset', (req, res) =>
 app.post('/api/auth/reset-password', (req, res) =>
   proxyAuthPost('/auth/reset-password', req, res)
 );
+app.post('/api/auth/verify-email', (req, res) =>
+  proxyAuthPost('/auth/verify-email', req, res)
+);
+app.post('/api/auth/resend-verification', (req, res) =>
+  proxyAuthPost('/auth/resend-verification', req, res)
+);
 
 function gameHeaders(req, extra = {}) {
   const headers = { ...upstreamHeaders(), ...extra };
