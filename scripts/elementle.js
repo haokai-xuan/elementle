@@ -510,6 +510,7 @@ function renderShimmerGrid() {
 
 function renderGuess(options) {
   const animate = options && options.animate;
+  const stagger = options && options.stagger;
   const mystery = getMysteryElement();
   if (!mystery) return;
 
@@ -536,7 +537,10 @@ function renderGuess(options) {
 
       const isNew = !fadeInAppliedList[i] && animate;
       const applyFadeIn = isNew ? 'fade-in-text' : '';
-      if (isNew) elementDiv.classList.add('card-flip');
+      if (isNew) {
+        elementDiv.classList.add('card-flip');
+        if (stagger) elementDiv.style.animationDelay = (i * 0.08) + 's';
+      }
 
       const atomicNumberSpan = document.createElement('span');
       atomicNumberSpan.classList.add('atomic-number');
@@ -545,7 +549,7 @@ function renderGuess(options) {
         atomicNumberSpan.innerHTML = `0 ${signalSpan}`;
         const target = guessedElement.atomicNumber;
         const duration = 1000;
-        const startDelay = 400;
+        const startDelay = stagger ? 400 + (i * 80) : 400;
         setTimeout(() => {
           const startTime = performance.now();
           const tick = (now) => {
@@ -979,7 +983,6 @@ async function setMysteryElementOfTheDay() {
   } else {
     renderGuess();
   }
-  inputElement.focus();
 }
 
 function clearEndOfGameUI() {
@@ -1021,15 +1024,15 @@ async function syncGameStateFromServer() {
     const hasGuesses = (data.guesses && data.guesses.length) > 0;
     if (hasGuesses) {
       _initialRenderDone = false;
-      renderShimmerGrid();
+      localStorage.setItem('fadeInAppliedList', JSON.stringify([]));
       setTimeout(function () {
-        renderGuess();
+        renderGuess({ animate: true, stagger: true });
         if (data.won || data.numGuesses >= 8) {
           displayResults();
         }
       }, 500);
     } else {
-      renderGuess();
+      renderGuess({ animate: true, stagger: false });
       if (data.won || data.numGuesses >= 8) {
         displayResults();
       }
@@ -1261,17 +1264,17 @@ function displayCountdown() {
 })();
 
 window.onload = async function() {
-  if (numberOfGuesses >= 8 || guessedCorrectly === 'true') {
-    inputElement.disabled = true;
-    guessButtonElement.disabled = true;
-  } else {
-    inputElement.focus();
-  }
+  inputElement.disabled = true;
+  guessButtonElement.disabled = true;
 
   await setMysteryElementOfTheDay();
 
   if (numberOfGuesses >= 8 || guessedCorrectly === 'true') {
     displayResults();
+  } else {
+    inputElement.disabled = false;
+    guessButtonElement.disabled = false;
+    inputElement.focus();
   }
 
   let totalGames = parseInt(localStorage.getItem("totalGames"), 10);
