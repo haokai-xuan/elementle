@@ -517,6 +517,213 @@ button {
   opacity: 1;
 }
 
+@keyframes signupPromptRipple {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+@keyframes signupPromptGlow {
+  0%, 100% {
+    border-color: rgba(245, 158, 11, 0.5);
+    box-shadow: 0 0 24px rgba(245, 158, 11, 0.2),
+                0 0 48px rgba(245, 158, 11, 0.1),
+                0 12px 40px rgba(0, 0, 0, 0.4);
+  }
+  50% {
+    border-color: rgba(251, 191, 36, 0.75);
+    box-shadow: 0 0 32px rgba(245, 158, 11, 0.35),
+                0 0 64px rgba(245, 158, 11, 0.15),
+                0 12px 40px rgba(0, 0, 0, 0.4);
+  }
+}
+
+@keyframes signupPromptShimmer {
+  0% { background-position: -100% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes signupPromptFadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes signupPromptCardIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Signup prompt popover – near profile/menu button, non-blocking */
+.signup-prompt-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 20px;
+  z-index: 200;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+
+.signup-prompt-popover.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.signup-prompt-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: linear-gradient(145deg, rgba(35, 32, 28, 0.98) 0%, rgba(28, 25, 22, 0.98) 100%);
+  border: 2px solid rgba(245, 158, 11, 0.5);
+  border-radius: 12px;
+  max-width: min(320px, calc(100vw - 40px));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  overflow: visible;
+}
+
+.signup-prompt-card::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  right: 24px;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid rgba(245, 158, 11, 0.5);
+}
+
+.signup-prompt-popover.is-visible .signup-prompt-card {
+  animation: signupPromptCardIn 0.35s ease-out forwards,
+             signupPromptGlow 2.5s ease-in-out 0.35s infinite,
+             signupPromptRipple 3s ease-in-out 0.35s infinite;
+}
+
+.signup-prompt-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    transparent 40%,
+    rgba(251, 191, 36, 0.08) 50%,
+    transparent 60%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: signupPromptShimmer 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.signup-prompt-text {
+  font-size: clamp(0.95rem, 2.5vw, 1.08rem);
+  color: rgba(255, 255, 255, 0.95);
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+  line-height: 1.4;
+}
+
+.signup-prompt-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.signup-prompt-btn {
+  font-family: inherit;
+  font-size: clamp(0.95rem, 2.2vw, 1rem);
+  padding: 10px 20px;
+  min-height: 44px;
+  min-width: 44px;
+  background: linear-gradient(180deg, rgb(251, 191, 36), rgb(245, 158, 11));
+  color: rgb(25, 25, 25);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+.signup-prompt-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 24px rgba(245, 158, 11, 0.5);
+  filter: brightness(1.1);
+}
+
+.signup-prompt-btn:active {
+  transform: translateY(0) scale(1);
+}
+
+.signup-prompt-dismiss {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.5);
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.signup-prompt-dismiss:hover {
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 599px) {
+  .signup-prompt-popover {
+    right: 12px;
+    top: calc(100% + 8px);
+  }
+
+  .signup-prompt-card::after {
+    right: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .signup-prompt-card {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+
+  .signup-prompt-actions {
+    justify-content: center;
+  }
+
+  .signup-prompt-text {
+    min-width: 0;
+  }
+}
+
 .guess-button:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 16px rgba(83, 141, 78, 0.45);

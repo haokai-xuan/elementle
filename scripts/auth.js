@@ -1,6 +1,7 @@
 (function () {
   const AUTH_API = '/api/auth';
   const TOKEN_KEY = 'elementle_token';
+  const SIGNUP_PROMPT_DISMISS_KEY = 'elementle_signup_prompt_dismissed';
 
   function getToken() {
     return localStorage.getItem(TOKEN_KEY);
@@ -43,6 +44,17 @@
         avatar.classList.remove('nav-profile-initial-wrap');
       }
     });
+    updateSignupPromptVisibility();
+  }
+
+  function updateSignupPromptVisibility() {
+    const prompt = document.querySelector('.js-signup-prompt');
+    if (!prompt) return;
+    const user = getUser();
+    const dismissed = sessionStorage.getItem(SIGNUP_PROMPT_DISMISS_KEY) === '1';
+    const shouldShow = !user && !dismissed;
+    prompt.hidden = !shouldShow;
+    prompt.classList.toggle('is-visible', shouldShow);
   }
 
   let authOverlayEl = null;
@@ -69,11 +81,12 @@
     }
   }
 
-  function showAuth() {
+  function showAuth(activeTab) {
     const el = ensureAuthOverlay();
     const user = getUser();
+    const tab = activeTab === 'signup' ? 'signup' : 'login';
     el.style.display = 'flex';
-    el.innerHTML = user ? renderAccountPanel(user) : renderAuthForms('login');
+    el.innerHTML = user ? renderAccountPanel(user) : renderAuthForms(tab);
     requestAnimationFrame(() => {
       el.classList.add('show');
       if (typeof window.lockBodyScroll === 'function') window.lockBodyScroll();
@@ -215,6 +228,7 @@
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
+          errEl.classList.remove('auth-success');
           errEl.textContent = data.error || 'Login failed';
           if (btn) { btn.disabled = false; btn.textContent = originalText; }
           return;
@@ -231,6 +245,7 @@
           }
         }
       } catch {
+        errEl.classList.remove('auth-success');
         errEl.textContent = 'Network error';
         if (btn) { btn.disabled = false; btn.textContent = originalText; }
       }
@@ -260,6 +275,7 @@
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
+          errEl.classList.remove('auth-success');
           errEl.textContent = data.error || 'Sign up failed';
           if (btn) { btn.disabled = false; btn.textContent = originalText; }
           return;
@@ -277,6 +293,7 @@
         loginErr.textContent = data.message || 'Check your email to verify your account.';
         if (btn) { btn.disabled = false; btn.textContent = originalText; }
       } catch {
+        errEl.classList.remove('auth-success');
         errEl.textContent = 'Network error';
         if (btn) { btn.disabled = false; btn.textContent = originalText; }
       }
@@ -309,6 +326,7 @@
       if (!email) {
         resetRequestBtn.disabled = false;
         resetRequestBtn.textContent = originalText;
+        resetErrorEl.classList.remove('auth-success');
         resetErrorEl.textContent = 'Enter your email first.';
         return;
       }
@@ -322,6 +340,7 @@
         if (!res.ok) {
           resetRequestBtn.disabled = false;
           resetRequestBtn.textContent = originalText;
+          resetErrorEl.classList.remove('auth-success');
           resetErrorEl.textContent = data.error || 'Could not request reset.';
           return;
         }
@@ -335,6 +354,7 @@
       } catch {
         resetRequestBtn.disabled = false;
         resetRequestBtn.textContent = originalText;
+        resetErrorEl.classList.remove('auth-success');
         resetErrorEl.textContent = 'Network error';
       }
     });
@@ -346,6 +366,17 @@
       if (typeof window.closeMobileNavMenu === 'function') window.closeMobileNavMenu();
       showAuth();
     });
+  });
+
+  const signupPromptCta = document.querySelector('.js-signup-prompt-cta');
+  const signupPromptDismiss = document.querySelector('.js-signup-prompt-dismiss');
+  signupPromptCta?.addEventListener('click', () => {
+    if (typeof window.closeMobileNavMenu === 'function') window.closeMobileNavMenu();
+    showAuth('signup');
+  });
+  signupPromptDismiss?.addEventListener('click', () => {
+    sessionStorage.setItem(SIGNUP_PROMPT_DISMISS_KEY, '1');
+    updateSignupPromptVisibility();
   });
 
   updateProfileButton();
