@@ -40,8 +40,15 @@ function getAuthToken() {
 function closeMobileNavMenu() {
   const dropdown = document.querySelector('.js-nav-dropdown');
   const toggle = document.querySelector('.js-nav-menu-toggle');
-  if (dropdown) dropdown.hidden = true;
-  if (toggle) toggle.setAttribute('aria-expanded', 'false');
+  if (!dropdown || !toggle) return;
+  if (dropdown.hidden || dropdown.classList.contains('nav-dropdown-closing')) return;
+  dropdown.classList.add('nav-dropdown-closing');
+  dropdown.addEventListener('animationend', function onCloseEnd() {
+    dropdown.removeEventListener('animationend', onCloseEnd);
+    dropdown.classList.remove('nav-dropdown-closing');
+    dropdown.hidden = true;
+    toggle.setAttribute('aria-expanded', 'false');
+  }, { once: true });
 }
 window.closeMobileNavMenu = closeMobileNavMenu;
 
@@ -1283,9 +1290,12 @@ function displayCountdown() {
   if (!toggle || !dropdown) return;
   toggle.addEventListener('click', (e) => {
     e.stopPropagation();
-    const willOpen = dropdown.hidden;
-    dropdown.hidden = !willOpen;
-    toggle.setAttribute('aria-expanded', String(willOpen));
+    if (dropdown.hidden) {
+      dropdown.hidden = false;
+      toggle.setAttribute('aria-expanded', 'true');
+    } else {
+      closeMobileNavMenu();
+    }
   });
   document.addEventListener('click', () => closeMobileNavMenu());
   dropdown.addEventListener('click', (e) => e.stopPropagation());
