@@ -1655,6 +1655,34 @@ footer {
   }
 }
 
+/* Wikipedia and Share buttons on mobile */
+@media (max-width: 599px) {
+  .correct-guess-container {
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .js-additional-info,
+  .js-share-button {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+  }
+
+  a.additional-info,
+  .share-button {
+    flex: 1;
+    min-width: 0;
+    min-height: 44px;
+    padding: 12px 16px;
+    font-size: 0.9rem;
+  }
+
+  .share-button {
+    width: 100%;
+  }
+}
+
 /*Adjusting for screens under 451px wide*/
 @media (max-width: 450px) {
   .guess-form {
