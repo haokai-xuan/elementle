@@ -120,8 +120,8 @@
         </div>
         <div class="auth-panels">
           <form class="auth-panel ${loginActive ? '' : 'is-hidden'}" data-panel="login" autocomplete="on">
-            <label class="auth-label">Email</label>
-            <input class="auth-input" type="email" name="email" required placeholder="you@example.com" autocomplete="email">
+            <label class="auth-label">Email or username</label>
+            <input class="auth-input" type="text" name="emailOrUsername" required placeholder="you@example.com or username" autocomplete="username">
             <label class="auth-label">Password</label>
             <input class="auth-input" type="password" name="password" required placeholder="••••••••" autocomplete="current-password">
             <div class="auth-row-between">
@@ -214,7 +214,11 @@
       const btn = loginForm.querySelector('button[type="submit"]');
       errEl.textContent = '';
       const fd = new FormData(loginForm);
-      const body = { email: (fd.get('email') || '').trim(), password: fd.get('password') || '' };
+      const emailOrUsername = (fd.get('emailOrUsername') || '').trim();
+      const password = fd.get('password') || '';
+      const body = emailOrUsername.includes('@')
+        ? { email: emailOrUsername, password }
+        : { username: emailOrUsername, password };
       const originalText = btn?.textContent || 'Log in';
       if (btn) {
         btn.disabled = true;
@@ -287,7 +291,8 @@
           p.classList.toggle('is-hidden', p.getAttribute('data-panel') !== 'login')
         );
         signupForm.reset();
-        loginForm.querySelector('[name="email"]').value = body.email;
+        const loginInput = loginForm.querySelector('[name="emailOrUsername"]');
+        if (loginInput && body.email) loginInput.value = body.email;
         const loginErr = root.querySelector('.js-auth-error-login');
         loginErr.classList.add('auth-success');
         loginErr.textContent = data.message || 'Check your email to verify your account.';
