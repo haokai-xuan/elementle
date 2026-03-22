@@ -996,8 +996,6 @@ async function setMysteryElementOfTheDay() {
 
   if (gameDate !== todayStr) {
     numberOfGuesses = 0;
-    inputElement.disabled = false;
-    guessButtonElement.disabled = false;
     localStorage.setItem('guessedCorrectly', 'false');
     localStorage.setItem('numberOfGuesses', '0');
     localStorage.setItem('guessesList', JSON.stringify([]));
