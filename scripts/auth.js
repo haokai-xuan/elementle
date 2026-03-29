@@ -161,6 +161,10 @@
     return d.innerHTML;
   }
 
+  function looksLikeEmail(s) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+  }
+
   function bindAuthEvents(root, loggedIn) {
     root.querySelectorAll('.js-auth-close').forEach((btn) => {
       btn.addEventListener('click', closeAuth);
@@ -214,11 +218,12 @@
       const btn = loginForm.querySelector('button[type="submit"]');
       errEl.textContent = '';
       const fd = new FormData(loginForm);
-      const emailOrUsername = (fd.get('emailOrUsername') || '').trim();
+      const raw = (fd.get('emailOrUsername') || '').trim();
       const password = fd.get('password') || '';
-      const body = emailOrUsername.includes('@')
-        ? { email: emailOrUsername, password }
-        : { username: emailOrUsername, password };
+      // Flask login: email is lowercased server-side; username is case-sensitive (matches DB).
+      const body = looksLikeEmail(raw)
+        ? { email: raw.toLowerCase(), password }
+        : { username: raw, password };
       const originalText = btn?.textContent || 'Log in';
       if (btn) {
         btn.disabled = true;

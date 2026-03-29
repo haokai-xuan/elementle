@@ -57,11 +57,22 @@ app.post('/api/guess_distribution', async (req, res) => {
   }
 });
 
+/**
+ * Flask `require_api_key` expects X-API-Key to match API_KEY (no Bearer on /auth/*).
+ * Login body is JSON with either { email, password } or { username, password }, not both.
+ */
+function authProxyHeaders() {
+  const headers = { 'Content-Type': 'application/json' };
+  const key = API_KEY && API_KEY.trim();
+  if (key) headers['X-API-Key'] = key;
+  return headers;
+}
+
 async function proxyAuthPost(path, req, res) {
   try {
     const upstream = await fetch(`${API_BASE_URL}${path}`, {
       method: 'POST',
-      headers: upstreamHeaders({ 'Content-Type': 'application/json' }),
+      headers: authProxyHeaders(),
       body: JSON.stringify(req.body)
     });
     const data = await upstream.json().catch(() => ({}));
