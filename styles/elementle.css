@@ -936,6 +936,11 @@ button {
   margin-top: 20px;
 }
 
+.js-additional-info,
+.js-share-button {
+  display: flex;
+}
+
 a.additional-info,
 .share-button {
   display: inline-flex;
