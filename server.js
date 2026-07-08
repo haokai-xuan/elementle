@@ -156,6 +156,24 @@ app.post('/api/game/guess', async (req, res) => {
   }
 });
 
+app.get('/api/leaderboard/current_streaks', async (req, res) => {
+  const url = `${API_BASE_URL}/leaderboard/current_streaks`;
+  try {
+    const upstream = await fetch(url, {
+      method: 'GET',
+      headers: upstreamHeaders()
+    });
+    const data = await upstream.json().catch(() => ({}));
+    res.status(upstream.status).json(data);
+    if (!upstream.ok) {
+      console.warn(`[proxy] ${upstream.status} from ${url}`, data);
+    }
+  } catch (err) {
+    console.error(`[proxy] Failed to reach ${url}:`, err.message);
+    res.status(502).json({ error: 'Upstream error', detail: err.message });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Elementle server listening on http://localhost:${port}`);
   console.log(`Proxying API to: ${API_BASE_URL}`);

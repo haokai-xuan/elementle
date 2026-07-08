@@ -330,6 +330,8 @@ function updateDistributionBars(overlay, dist) {
   });
 }
 
+var _leaderboardLoaded = false;
+
 function renderStatsModal(overlay, loading) {
   var totalWins, totalGames, currentStreak, maxWinStreak, winRateDisplay;
 
@@ -374,35 +376,62 @@ function renderStatsModal(overlay, loading) {
 
   overlay.innerHTML = `
     <div class="modal-card stats-modal">
-      <h2 class="modal-title">Statistics</h2>
-      <div class="stats-grid">
-        <div class="stat-item">
-          <span class="stat-value" data-stat="wins">${totalWins}</span>
-          <span class="stat-label">Wins</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-value" data-stat="played">${totalGames}</span>
-          <span class="stat-label">Played</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-value" data-stat="streak">${currentStreak}</span>
-          <span class="stat-label">Current streak</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-value" data-stat="best">${maxWinStreak}</span>
-          <span class="stat-label">Best streak</span>
-        </div>
-        <div class="stat-item stat-item-wide">
-          <span class="stat-value" data-stat="rate">${winRateDisplay}</span>
-          <span class="stat-label">Win rate</span>
+      <div class="stats-modal-header">
+        <h2 class="modal-title">Statistics</h2>
+        <button type="button" class="stats-fire-btn js-leaderboard-toggle" aria-label="View streak leaderboard">
+          <i class="fa-solid fa-fire"></i>
+        </button>
+      </div>
+
+      <div class="stats-swipe-viewport">
+        <div class="stats-swipe-track js-stats-swipe-track">
+
+          <div class="stats-swipe-panel stats-panel-view">
+            <div class="stats-grid">
+              <div class="stat-item">
+                <span class="stat-value" data-stat="wins">${totalWins}</span>
+                <span class="stat-label">Wins</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" data-stat="played">${totalGames}</span>
+                <span class="stat-label">Played</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" data-stat="streak">${currentStreak}</span>
+                <span class="stat-label">Current streak</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" data-stat="best">${maxWinStreak}</span>
+                <span class="stat-label">Best streak</span>
+              </div>
+              <div class="stat-item stat-item-wide">
+                <span class="stat-value" data-stat="rate">${winRateDisplay}</span>
+                <span class="stat-label">Win rate</span>
+              </div>
+            </div>
+            <div class="guess-distribution">
+              <h3 class="distribution-title">Guess distribution</h3>
+              <div class="bars-container">
+                ${bars}
+              </div>
+            </div>
+          </div>
+
+          <div class="stats-swipe-panel leaderboard-panel-view">
+            <div class="leaderboard-header">
+              <button type="button" class="leaderboard-back-btn js-leaderboard-back" aria-label="Back to your stats">
+                <i class="fa-solid fa-arrow-left"></i>
+              </button>
+              <h3 class="leaderboard-title"><i class="fa-solid fa-fire"></i> Top Current Streaks</h3>
+            </div>
+            <ul class="leaderboard-list js-leaderboard-list">
+              <li class="leaderboard-loading">Loading<span class="loading-dots"></span></li>
+            </ul>
+          </div>
+
         </div>
       </div>
-      <div class="guess-distribution">
-        <h3 class="distribution-title">Guess distribution</h3>
-        <div class="bars-container">
-          ${bars}
-        </div>
-      </div>
+
       <button class="modal-back-button">Back</button>
     </div>
   `;
@@ -412,8 +441,96 @@ function renderStatsModal(overlay, loading) {
     closeModal(overlay);
   });
 
+  _leaderboardLoaded = false;
+  bindLeaderboardToggle(overlay);
+  syncStatsSwipeViewportHeight(overlay);
+
   lockBodyScroll();
   setTimeout(function () { setupFocusTrap(overlay); }, 20);
+}
+
+function syncStatsSwipeViewportHeight(overlay) {
+  var viewport = overlay.querySelector('.stats-swipe-viewport');
+  var statsPanel = overlay.querySelector('.stats-panel-view');
+  if (!viewport || !statsPanel) return;
+
+  viewport.style.height = 'auto';
+  viewport.style.height = statsPanel.offsetHeight + 'px';
+}
+
+function bindLeaderboardToggle(overlay) {
+  const fireBtn = overlay.querySelector('.js-leaderboard-toggle');
+  const backBtn = overlay.querySelector('.js-leaderboard-back');
+  const track = overlay.querySelector('.js-stats-swipe-track');
+  if (!fireBtn || !backBtn || !track) return;
+
+  fireBtn.addEventListener('click', () => {
+    syncStatsSwipeViewportHeight(overlay);
+    track.classList.add('is-leaderboard-view');
+    fireBtn.classList.add('is-active');
+    if (!_leaderboardLoaded) loadLeaderboard(overlay);
+  });
+
+  backBtn.addEventListener('click', () => {
+    track.classList.remove('is-leaderboard-view');
+    fireBtn.classList.remove('is-active');
+  });
+}
+
+async function loadLeaderboard(overlay) {
+  const list = overlay.querySelector('.js-leaderboard-list');
+  if (!list) return;
+
+  list.innerHTML = '<li class="leaderboard-loading">Loading<span class="loading-dots"></span></li>';
+
+  try {
+    const res = await fetch(API_BASE + '/leaderboard/current_streaks');
+    if (!res.ok) throw new Error('Failed to load leaderboard');
+    const data = await res.json(); // [["avsangelschick",42], ["gmeowser",27], ["LucaGiordano",27], ...]
+
+    if (!Array.isArray(data) || data.length === 0) {
+      list.innerHTML = '<li class="leaderboard-empty">No active streaks yet</li>';
+      _leaderboardLoaded = true;
+      return;
+    }
+
+    let lastStreak = null;
+    let lastRank = 0;
+    const currentUsername = typeof window.getAuthUser === 'function'
+      ? window.getAuthUser()?.username
+      : null;
+
+    list.innerHTML = data.map(([username, streak], index) => {
+      // Dense ranking: ties share a rank; next distinct streak value increments by 1 (no skipping)
+      if (streak !== lastStreak) {
+        lastRank += 1;
+        lastStreak = streak;
+      }
+      const rank = lastRank;
+      const rankClass = rank <= 3 ? ' rank-' + rank : '';
+      const isCurrentUser = currentUsername && username === currentUsername;
+      const currentUserClass = isCurrentUser ? ' is-current-user' : '';
+
+      return `
+        <li class="leaderboard-row${rankClass}${currentUserClass}" style="--row-i: ${index}"${isCurrentUser ? ' aria-current="true"' : ''}>
+          <div class="leaderboard-rank">${rank}</div>
+          <div class="leaderboard-username">${escapeHtmlText(username)}</div>
+          <div class="leaderboard-streak"><i class="fa-solid fa-fire"></i>${streak}</div>
+        </li>
+      `;
+    }).join('');
+
+    _leaderboardLoaded = true;
+  } catch (err) {
+    list.innerHTML = '<li class="leaderboard-error">Couldn\'t load leaderboard. Try again later.</li>';
+    console.warn('Leaderboard fetch failed', err);
+  }
+}
+
+function escapeHtmlText(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
 }
 
 var _focusTrapContainer = null;

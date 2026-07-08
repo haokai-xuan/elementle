@@ -401,4 +401,6 @@
       loginErr.textContent = 'Email verified. You can now log in.';
     }
   }
+
+  window.getAuthUser = getUser;
 })();

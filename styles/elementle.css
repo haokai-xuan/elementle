@@ -2284,3 +2284,364 @@ footer {
   color: rgba(255, 255, 255, 0.6);
   word-break: break-all;
 }
+
+
+/* Leaderboard */
+.stats-modal {
+  display: flex;
+  flex-direction: column;
+}
+
+.stats-modal .modal-back-button {
+  flex-shrink: 0;
+}
+
+/* Stats modal header w/ fire toggle */
+.stats-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+
+.stats-modal-header .modal-title {
+  margin: 0;
+}
+
+.stats-fire-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background 0.25s ease, color 0.25s ease, transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.stats-fire-btn:hover {
+  background: rgba(249, 115, 22, 0.25);
+  color: rgb(251, 146, 60);
+  transform: scale(1.08);
+}
+
+.stats-fire-btn:active {
+  transform: scale(0.92);
+  transition-duration: 0.05s;
+}
+
+.stats-fire-btn.is-active {
+  background: linear-gradient(180deg, rgb(249, 115, 22), rgb(194, 65, 12));
+  color: #fff;
+  animation: fireBtnGlow 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes fireBtnGlow {
+  from { box-shadow: 0 0 8px rgba(249, 115, 22, 0.4); }
+  to   { box-shadow: 0 0 18px rgba(249, 115, 22, 0.7), 0 0 32px rgba(249, 115, 22, 0.25); }
+}
+
+/* Swipe mechanism */
+.stats-swipe-viewport {
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.stats-swipe-track {
+  display: flex;
+  width: 200%;
+  height: 100%;
+  transition: transform 0.4s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.stats-swipe-track.is-leaderboard-view {
+  transform: translateX(-50%);
+}
+
+.stats-swipe-panel {
+  width: 50%;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  padding-right: 4px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.leaderboard-panel-view {
+  overflow: hidden;
+}
+
+.leaderboard-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.leaderboard-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.leaderboard-back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.leaderboard-back-btn:hover {
+  background: rgba(83, 141, 78, 0.25);
+  color: #fff;
+}
+
+.leaderboard-back-btn:active {
+  transform: scale(0.9);
+}
+
+.leaderboard-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+}
+
+.leaderboard-title i {
+  color: rgb(251, 146, 60);
+}
+
+.leaderboard-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  flex-shrink: 0;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: leaderboardRowIn 0.35s ease-out forwards;
+  animation-delay: calc(var(--row-i, 0) * 0.05s + 0.05s);
+}
+
+@keyframes leaderboardRowIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.leaderboard-row.is-current-user {
+  background: rgba(83, 141, 78, 0.16);
+  border-color: rgba(98, 165, 92, 0.45);
+  box-shadow: 0 0 0 1px rgba(83, 141, 78, 0.15);
+}
+
+.leaderboard-row.is-current-user .leaderboard-username {
+  color: rgb(186, 230, 182);
+}
+
+.leaderboard-rank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 0.95rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.leaderboard-row.rank-1 .leaderboard-rank {
+  background: linear-gradient(145deg, #ffd76a, #d69b1f);
+  color: #1a1a1a;
+}
+.leaderboard-row.rank-2 .leaderboard-rank {
+  background: linear-gradient(145deg, #e2e2e2, #a3a3a3);
+  color: #1a1a1a;
+}
+.leaderboard-row.rank-3 .leaderboard-rank {
+  background: linear-gradient(145deg, #d38a54, #9c5a2c);
+  color: #1a1a1a;
+}
+
+.leaderboard-username {
+  flex: 1;
+  min-width: 0;
+  font-size: 1rem;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leaderboard-streak {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 700;
+  font-size: 1rem;
+  color: rgb(251, 146, 60);
+  flex-shrink: 0;
+}
+
+.leaderboard-streak i {
+  font-size: 0.9rem;
+}
+
+.leaderboard-loading,
+.leaderboard-empty,
+.leaderboard-error {
+  text-align: center;
+  padding: 24px 0;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.95rem;
+}
+
+.loading-dots::after {
+  content: '';
+  animation: loadingDots 1.2s steps(4, end) infinite;
+}
+
+/* Fire icon flicker + ember sparks */
+.stats-fire-btn {
+  position: relative;
+  overflow: visible; /* let sparks escape the button bounds */
+}
+
+.stats-fire-btn i {
+  position: relative;
+  z-index: 2;
+  animation: fireIconFlicker 2.4s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+@keyframes fireIconFlicker {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    filter: brightness(1);
+  }
+  20% {
+    transform: scale(1.05) rotate(-2deg);
+    filter: brightness(1.15);
+  }
+  45% {
+    transform: scale(0.96) rotate(1deg);
+    filter: brightness(0.95);
+  }
+  70% {
+    transform: scale(1.04) rotate(-1deg);
+    filter: brightness(1.1);
+  }
+}
+
+/* Ember sparks: small glowing dots drifting upward off the icon */
+.stats-fire-btn::before,
+.stats-fire-btn::after {
+  content: '';
+  position: absolute;
+  bottom: 55%;
+  left: 50%;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgb(251, 146, 60);
+  box-shadow: 0 0 4px 1px rgba(251, 146, 60, 0.8);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.stats-fire-btn::before {
+  animation: emberRise1 1.8s ease-out infinite;
+  animation-delay: 0.2s;
+}
+
+.stats-fire-btn::after {
+  animation: emberRise2 2.2s ease-out infinite;
+  animation-delay: 1s;
+}
+
+@keyframes emberRise1 {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0) scale(0.6);
+  }
+  15% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-140%, -34px) scale(0.3);
+  }
+}
+
+@keyframes emberRise2 {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0) scale(0.5);
+  }
+  15% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(60%, -30px) scale(0.25);
+  }
+}
+
+/* Extra spark using a span we can inject, OR simulate with a radial glow pulse instead */
+.stats-fire-btn.is-active {
+  animation: fireBtnGlow 1.8s ease-in-out infinite alternate;
+}
+
+.stats-fire-btn.is-active i {
+  animation: fireIconFlicker 1.4s ease-in-out infinite;
+}
+
+@keyframes loadingDots {
+  0%   { content: ''; }
+  25%  { content: '.'; }
+  50%  { content: '..'; }
+  75%  { content: '...'; }
+  100% { content: ''; }
+}
