@@ -23,8 +23,16 @@ function upstreamHeaders(extra = {}) {
   return headers;
 }
 
+const mysteryElementCache = new Map();
+
 app.get('/api/mystery_element/:date', async (req, res) => {
   const { date } = req.params;
+  const cached = mysteryElementCache.get(date);
+  if (cached) {
+    res.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
+    return res.status(200).json(cached);
+  }
+
   const url = `${API_BASE_URL}/mystery_element/${date}`;
   try {
     const upstream = await fetch(url, {
@@ -32,6 +40,10 @@ app.get('/api/mystery_element/:date', async (req, res) => {
       headers: upstreamHeaders()
     });
     const data = await upstream.json().catch(() => ({}));
+    if (upstream.ok) {
+      mysteryElementCache.set(date, data);
+      res.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
+    }
     res.status(upstream.status).json(data);
     if (!upstream.ok) {
       console.warn(`[proxy] ${upstream.status} from ${url}`, data);
@@ -140,6 +152,25 @@ app.get('/api/game/state', async (req, res) => {
   }
 });
 
+app.get('/api/game/bootstrap', async (req, res) => {
+  const localDate = req.query.localDate;
+  if (!localDate) {
+    return res.status(400).json({ error: 'localDate required (query param YYYYMMDD)' });
+  }
+  const url = `${API_BASE_URL}/game/bootstrap?localDate=${encodeURIComponent(localDate)}`;
+  try {
+    const upstream = await fetch(url, {
+      method: 'GET',
+      headers: gameHeaders(req)
+    });
+    const data = await upstream.json().catch(() => ({}));
+    res.status(upstream.status).json(data);
+  } catch (err) {
+    console.error('[proxy] /api/game/bootstrap:', err.message);
+    res.status(502).json({ error: 'Upstream error', detail: err.message });
+  }
+});
+
 app.post('/api/game/guess', async (req, res) => {
   const url = `${API_BASE_URL}/game/guess`;
   try {
@@ -178,4 +209,3 @@ app.listen(port, () => {
   console.log(`Elementle server listening on http://localhost:${port}`);
   console.log(`Proxying API to: ${API_BASE_URL}`);
 });
-

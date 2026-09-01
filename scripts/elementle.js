@@ -32,6 +32,7 @@ const API_BASE = '/api';
   scheduleFlicker();
 })();
 const AUTH_TOKEN_KEY = 'elementle_token';
+const MYSTERY_ELEMENT_STORAGE_KEY = 'elementle_mystery_element';
 
 function getAuthToken() {
   return localStorage.getItem(AUTH_TOKEN_KEY) || '';
@@ -70,9 +71,31 @@ async function fetchMysteryElementForDate(dateInt) {
   const res = await fetch(`${API_BASE}/mystery_element/${dateInt}`);
   if (!res.ok) return null;
   const data = await res.json();
-  const atomicNumber = data.atomic_number != null ? parseInt(data.atomic_number, 10) : null;
-  if (atomicNumber == null) return null;
-  return elements.find((e) => e.atomicNumber === atomicNumber) || null;
+  return getElementFromAtomicNumber(data.atomic_number);
+}
+
+function getElementFromAtomicNumber(atomicNumber) {
+  const parsedAtomicNumber = atomicNumber != null ? parseInt(atomicNumber, 10) : null;
+  if (parsedAtomicNumber == null || Number.isNaN(parsedAtomicNumber)) return null;
+  return elements.find((e) => e.atomicNumber === parsedAtomicNumber) || null;
+}
+
+function getCachedMysteryElement(dateInt) {
+  try {
+    const cached = JSON.parse(localStorage.getItem(MYSTERY_ELEMENT_STORAGE_KEY) || 'null');
+    if (!cached || String(cached.date) !== String(dateInt)) return null;
+    return getElementFromAtomicNumber(cached.atomicNumber);
+  } catch {
+    return null;
+  }
+}
+
+function cacheMysteryElement(dateInt, element) {
+  if (!element) return;
+  localStorage.setItem(MYSTERY_ELEMENT_STORAGE_KEY, JSON.stringify({
+    date: String(dateInt),
+    atomicNumber: element.atomicNumber
+  }));
 }
 
 const defaultUsedElements = JSON.parse(localStorage.getItem('defaultUsedElements')) || []; // Load defaultUsedElements from localStorage
@@ -280,6 +303,8 @@ function displayStats() {
 
     if (_pendingGuessPromise) {
       _pendingGuessPromise.then(fetchStats);
+    } else if (_gameStateSyncPromise) {
+      _gameStateSyncPromise.then(fetchStats);
     } else {
       fetchStats();
     }
@@ -825,6 +850,7 @@ function sendDistribution(nog) {
 
 let _guessInFlight = false;
 let _pendingGuessPromise = null;
+let _gameStateSyncPromise = null;
 
 async function processGuess() {
   if (_guessInFlight) return;
@@ -1104,6 +1130,81 @@ function applyGameStateFromApi(apiGuesses, numGuesses, won) {
   localStorage.setItem('guessedCorrectly', guessedCorrectly);
 }
 
+function localGuessesMatchServer(apiGuesses, numGuesses, won) {
+  const local = JSON.parse(localStorage.getItem('guessesList') || '[]');
+  const serverAtomic = (apiGuesses || []).map(Number);
+  const localAtomic = local.map(function (g) { return g.atomicNumber; });
+  if (localAtomic.length !== serverAtomic.length) return false;
+  for (var i = 0; i < localAtomic.length; i++) {
+    if (localAtomic[i] !== serverAtomic[i]) return false;
+  }
+  const localWon = localStorage.getItem('guessedCorrectly') === 'true';
+  return localWon === !!won && local.length === (numGuesses || 0);
+}
+
+async function fetchGameState(todayInt, token) {
+  const res = await fetch(
+    API_BASE + '/game/state?localDate=' + encodeURIComponent(todayInt),
+    { headers: { Authorization: 'Bearer ' + token } }
+  );
+  if (!res.ok) return null;
+  return res.json();
+}
+
+async function fetchGameBootstrap(todayInt, token) {
+  const res = await fetch(
+    API_BASE + '/game/bootstrap?localDate=' + encodeURIComponent(todayInt),
+    { headers: { Authorization: 'Bearer ' + token } }
+  );
+  // Allows a safe rolling deploy: a newly deployed frontend can still work
+  // against an origin that has not received the bootstrap route yet.
+  if (res.status === 404) return { useLegacyEndpoints: true };
+  if (!res.ok) return null;
+  return res.json();
+}
+
+function renderFromLocalCache() {
+  var cachedGuesses = JSON.parse(localStorage.getItem('guessesList') || '[]');
+  if (cachedGuesses && cachedGuesses.length > 0) {
+    _initialRenderDone = false;
+    localStorage.setItem('fadeInAppliedList', JSON.stringify([]));
+    renderGuess({ animate: true, stagger: true });
+  } else {
+    renderGuess();
+  }
+}
+
+function applyServerGameState(data, options) {
+  options = options || {};
+  const apiGuesses = data.guesses || [];
+  const numGuesses = data.numGuesses;
+  const won = data.won;
+  const gameOver = won || numGuesses >= 8;
+  const unchanged = !options.forceRender && localGuessesMatchServer(apiGuesses, numGuesses, won);
+
+  applyGameStateFromApi(apiGuesses, numGuesses, won);
+  localStorage.setItem('gameDate', String(getTodayDateInt()));
+
+  if (options.fromLogin) {
+    clearEndOfGameUI();
+  }
+
+  if (unchanged) {
+    if (gameOver) displayResults();
+    return;
+  }
+
+  const hasGuesses = apiGuesses.length > 0;
+  if (hasGuesses) {
+    _initialRenderDone = false;
+    localStorage.setItem('fadeInAppliedList', JSON.stringify([]));
+    renderGuess({ animate: true, stagger: true });
+  } else {
+    renderGuess({ animate: true, stagger: false });
+  }
+  if (gameOver) displayResults();
+}
+
 async function setMysteryElementOfTheDay() {
   resetStreakIfNeeded();
 
@@ -1126,22 +1227,59 @@ async function setMysteryElementOfTheDay() {
     document.querySelector('.js-share-button')?.remove();
   }
 
-  mysteryElementCache = await fetchMysteryElementForDate(todayInt);
+  const token = getAuthToken();
+  const bootstrapPromise = token
+    ? fetchGameBootstrap(todayInt, token).catch(function (e) {
+        console.warn('Failed to load game bootstrap from server', e);
+        return null;
+      })
+    : null;
+  const mysteryPromise = bootstrapPromise
+    ? bootstrapPromise.then(function (data) {
+        if (!data) return null;
+        return data.useLegacyEndpoints
+          ? fetchMysteryElementForDate(todayInt)
+          : getElementFromAtomicNumber(data.atomic_number);
+      })
+    : fetchMysteryElementForDate(todayInt);
+  const statePromise = bootstrapPromise
+    ? bootstrapPromise.then(function (data) {
+        if (!data) return null;
+        return data.useLegacyEndpoints ? fetchGameState(todayInt, token) : data.game;
+      })
+    : null;
+
+  if (statePromise) {
+    _gameStateSyncPromise = statePromise;
+  }
+
+  const cachedMystery = getCachedMysteryElement(todayInt);
+  if (cachedMystery) {
+    mysteryElementCache = cachedMystery;
+    renderFromLocalCache();
+  }
+
+  const fetchedMystery = await mysteryPromise;
+  if (fetchedMystery) {
+    const mysteryChanged = !mysteryElementCache || mysteryElementCache.atomicNumber !== fetchedMystery.atomicNumber;
+    mysteryElementCache = fetchedMystery;
+    cacheMysteryElement(todayInt, fetchedMystery);
+    if (mysteryChanged) renderFromLocalCache();
+  }
   if (!mysteryElementCache) {
     console.error('Could not load mystery element for today');
+    if (statePromise) _gameStateSyncPromise = null;
     return;
   }
 
-  if (getAuthToken()) {
-    await syncGameStateFromServer();
-  } else {
-    var guestGuesses = JSON.parse(localStorage.getItem('guessesList') || '[]');
-    if (guestGuesses && guestGuesses.length > 0) {
-      _initialRenderDone = false;
-      localStorage.setItem('fadeInAppliedList', JSON.stringify([]));
-      renderGuess({ animate: true, stagger: true });
-    } else {
-      renderGuess();
+  renderFromLocalCache();
+
+  if (token && statePromise) {
+    try {
+      const data = await statePromise;
+      if (data) applyServerGameState(data);
+    } finally {
+      _gameStateSyncPromise = null;
     }
   }
 }
@@ -1173,32 +1311,12 @@ async function syncGameStateFromServer() {
   renderShimmerGrid();
   const todayInt = getTodayDateInt();
   try {
-    const res = await fetch(
-      API_BASE + '/game/state?localDate=' + encodeURIComponent(todayInt),
-      { headers: { Authorization: 'Bearer ' + token } }
-    );
-    if (!res.ok) return;
-    const data = await res.json();
-    applyGameStateFromApi(data.guesses || [], data.numGuesses, data.won);
-    localStorage.setItem('gameDate', String(todayInt));
-    clearEndOfGameUI();
-
-    const hasGuesses = (data.guesses && data.guesses.length) > 0;
-    if (hasGuesses) {
-      _initialRenderDone = false;
-      localStorage.setItem('fadeInAppliedList', JSON.stringify([]));
-      setTimeout(function () {
-        renderGuess({ animate: true, stagger: true });
-        if (data.won || data.numGuesses >= 8) {
-          displayResults();
-        }
-      }, 500);
-    } else {
-      renderGuess({ animate: true, stagger: false });
-      if (data.won || data.numGuesses >= 8) {
-        displayResults();
-      }
+    const data = await fetchGameState(todayInt, token);
+    if (!data) {
+      renderGuess();
+      return;
     }
+    applyServerGameState(data, { forceRender: true, fromLogin: true });
   } catch (e) {
     console.warn('Failed to load game state from server', e);
     renderGuess();
@@ -1425,7 +1543,7 @@ function scheduleMidnightReload() {
   }, msUntilMidnight);
 }
 
-window.onload = async function() {
+async function initializeGame() {
   inputElement.disabled = true;
   guessButtonElement.disabled = true;
 
@@ -1445,4 +1563,9 @@ window.onload = async function() {
   if (!totalGames && !getAuthToken()) {
     displayHelp();
   }
-};
+}
+
+// This script is loaded at the end of <body>, so all game DOM nodes already
+// exist. Starting here avoids waiting for non-essential resources such as ads,
+// web fonts, images, and analytics before the game API requests begin.
+initializeGame();
