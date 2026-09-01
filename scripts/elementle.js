@@ -1272,8 +1272,6 @@ async function setMysteryElementOfTheDay() {
     return;
   }
 
-  renderFromLocalCache();
-
   if (token && statePromise) {
     try {
       const data = await statePromise;
