@@ -8,22 +8,32 @@
 
 <url>
   <loc>https://elementlegame.com/</loc>
-  <lastmod>2024-09-09T01:48:27+00:00</lastmod>
+  <lastmod>2026-09-08</lastmod>
   <priority>1.00</priority>
 </url>
 <url>
   <loc>https://elementlegame.com/about.html</loc>
-  <lastmod>2024-09-09T01:48:27+00:00</lastmod>
+  <lastmod>2026-09-08</lastmod>
   <priority>0.80</priority>
 </url>
 <url>
   <loc>https://elementlegame.com/terms_of_service_and_privacy.html</loc>
-  <lastmod>2024-09-09T01:48:27+00:00</lastmod>
+  <lastmod>2026-09-08</lastmod>
   <priority>0.80</priority>
 </url>
 <url>
   <loc>https://elementlegame.com/disclaimer.html</loc>
-  <lastmod>2024-09-09T01:48:27+00:00</lastmod>
+  <lastmod>2026-09-08</lastmod>
   <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://elementlegame.com/how-to-play.html</loc>
+  <lastmod>2026-09-08</lastmod>
+  <priority>0.90</priority>
+</url>
+<url>
+  <loc>https://elementlegame.com/periodic-table-guide.html</loc>
+  <lastmod>2026-09-08</lastmod>
+  <priority>0.90</priority>
 </url>
 </urlset>

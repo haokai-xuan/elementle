@@ -1,15 +1,32 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TKDJK7L9FC"></script>
+    <!-- Consent defaults. A Google-certified CMP configured in AdSense updates EEA/UK/CH choices. -->
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'G-TKDJK7L9FC');
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        analytics_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        wait_for_update: 500,
+        region: ['AT', 'BE', 'BG', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GR', 'HR', 'HU', 'IE', 'IS', 'IT', 'LI', 'LT', 'LU', 'LV', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SK']
+      });
+      gtag('consent', 'default', {
+        ad_storage: 'granted',
+        analytics_storage: 'granted',
+        ad_user_data: 'granted',
+        ad_personalization: 'granted'
+      });
     </script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TKDJK7L9FC"></script>
+    <script>
+      gtag('js', new Date());
+      gtag('config', 'G-TKDJK7L9FC', { anonymize_ip: true });
+    </script>
+    <meta charset="utf-8">
     <meta property="og:image" content="https://elementlegame.com/images/og_image.jpg"/>
     <meta name="og:site_name" content="Elementle"></meta>
     <meta property="og:title" content="Elementle - Guess the Element">
@@ -17,7 +34,9 @@
     <meta property="og:description" content="Daily element guessing game. 8 chances to guess an element of the periodic table."></meta>
     <meta name="description" content="Daily element guessing game. 8 chances to guess an element of the periodic table.">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="index,follow">
     <title>Elementle - Guess the Element</title>
+    <link rel="canonical" href="https://elementlegame.com/">
     <link rel="stylesheet" href="styles/elementle.css">
     <link rel="icon" type="image/x-icon" href="images/favicon.png">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8537181990292235"
@@ -130,21 +149,25 @@
             <span class="js-seconds"></span>
         </p>
       </div>
+
     </main>
     
     <footer>
       <div class="footer-container">
         <div class="social-icons">
-          <a href="https://github.com/haokai-xuan/elementle" target="_blank" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
-          <a href="https://x.com/elementlegame" target="_blank" aria-label="X"><i class="fa-brands fa-x-twitter"></i></a>
-          <a href="https://www.reddit.com/r/elementle/" target="_blank" aria-label="Reddit"><i class="fa-brands fa-reddit"></i></a>
-          <a href="https://discord.gg/XUq8D4zryp" target="_blank" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>
+          <a href="https://github.com/haokai-xuan/elementle" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+          <a href="https://x.com/elementlegame" target="_blank" rel="noopener noreferrer" aria-label="X"><i class="fa-brands fa-x-twitter"></i></a>
+          <a href="https://www.reddit.com/r/elementle/" target="_blank" rel="noopener noreferrer" aria-label="Reddit"><i class="fa-brands fa-reddit"></i></a>
+          <a href="https://discord.gg/XUq8D4zryp" target="_blank" rel="noopener noreferrer" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>
         </div>
         <div class="footer-nav">
           <ul>
             <li><a href="https://elementlegame.com/">Home</a></li>
+            <li><a href="https://elementlegame.com/how-to-play.html">How to Play</a></li>
+            <li><a href="https://elementlegame.com/periodic-table-guide.html">Periodic Table Guide</a></li>
             <li><a href="https://elementlegame.com/about.html">About</a></li>
-            <li><a href="https://elementlegame.com/terms_of_service_and_privacy.html">TOS and Privacy Policy</a></li>
+            <li><a href="https://elementlegame.com/terms_of_service_and_privacy.html">Terms &amp; Privacy</a></li>
+            <li><a class="js-privacy-settings" href="https://elementlegame.com/terms_of_service_and_privacy.html#advertising-and-cookies">Privacy choices</a></li>
             <li><a href="https://elementlegame.com/disclaimer.html">Disclaimer</a></li>
             <li><a href="mailto:help@elementlegame.com">Contact</a></li>
           </ul>
@@ -160,5 +183,6 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script> 
     <script src="scripts/elementle.js"></script>
     <script src="scripts/auth.js"></script>
+    <script src="scripts/privacy-controls.js"></script>
   </body>
 </html>

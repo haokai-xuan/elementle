@@ -1,23 +1,81 @@
 @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Iceland&display=swap');
 
-body {
-  background-color: rgb(25, 25, 25);
-  color: white;
-  margin: 0;
-  padding: 0;
+* {
+  box-sizing: border-box;
 }
 
-html, body {
-  height: 100%;
+html,
+body {
+  min-height: 100%;
+}
+
+body {
   display: flex;
   flex-direction: column;
+  margin: 0;
+  padding: 0;
+  background-color: rgb(25, 25, 25);
+  color: white;
+}
+
+a {
+  color: #a9d7a1;
+}
+
+a:hover,
+a:focus-visible {
+  color: #fff;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  width: min(100%, 1100px);
+  margin: 0 auto;
+  padding: 18px 30px;
+  border-bottom: 1px solid rgba(98, 165, 92, 0.5);
+}
+
+.page-header .brand {
+  color: #fff;
+  font-family: "Iceland", sans-serif;
+  font-size: 2rem;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+}
+
+.page-header .brand .green-letter {
+  color: rgb(98, 165, 92);
+}
+
+.page-header nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px 18px;
+}
+
+.page-header nav a {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 1rem;
+  text-decoration: none;
+}
+
+.page-header nav a:hover,
+.page-header nav a:focus-visible,
+.page-header nav a[aria-current="page"] {
+  color: rgb(98, 165, 92);
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
 h1 {
-  text-align: left; /* Left-justifies the heading */
-  margin-top: 20px; /* Adds some space below the heading */
-  font-size: 34px;
+  margin-top: 20px;
   color: #ccc;
+  font-size: 34px;
+  text-align: left;
 }
 
 h2 {
@@ -30,15 +88,62 @@ p {
   line-height: 1.5;
 }
 
-/* Main content should grow to take available space */
 .container {
-  flex: 1; /* Allows the container to grow and push the footer down */
+  flex: 1;
   width: 90%;
-  max-width: 800px; /* Limits the width of the content */
-  margin: 0 auto; /* Centers the container with equal margins */
-  padding: 0 20px; /* Adds some padding for spacing */
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 20px;
 }
 
+.article-content {
+  max-width: 860px;
+  padding-bottom: 12px;
+}
+
+.article-content h1 {
+  margin-top: 48px;
+}
+
+.article-content h2 {
+  margin-top: 34px;
+  font-size: 1.45rem;
+}
+
+.article-content h3 {
+  margin-top: 24px;
+  color: #d8d8d8;
+  font-size: 1.1rem;
+}
+
+.article-content p,
+.article-content li {
+  font-family: "Courier Prime", monospace;
+  line-height: 1.75;
+}
+
+.article-content p + p {
+  margin-top: 14px;
+}
+
+.article-content .lede {
+  color: #e1e1e1;
+  font-size: 1.08rem;
+}
+
+.article-content ol,
+.article-content ul {
+  margin: 14px 0 0 24px;
+}
+
+.article-content li + li {
+  margin-top: 8px;
+}
+
+.article-content .article-cta {
+  margin-top: 34px;
+  font-size: 1.06rem;
+}
 
 .logo {
   margin-top: 30px;
@@ -47,11 +152,11 @@ p {
 }
 
 footer {
-  background-color: #111;
   margin-top: 100px;
-  font-family: "Iceland", sans-serif;
+  background-color: #111;
   border-top: 2px solid transparent;
   border-image: linear-gradient(90deg, transparent, rgb(83, 141, 78), rgb(98, 165, 92), rgb(83, 141, 78), transparent) 1;
+  font-family: "Iceland", sans-serif;
 }
 
 .footer-container {
@@ -71,27 +176,27 @@ footer {
   display: flex;
   align-items: center;
   justify-content: center;
-  text-decoration: none;
   width: 42px;
   height: 42px;
   background: rgba(255, 255, 255, 0.1);
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  text-decoration: none;
   transition: background 0.25s ease, transform 0.2s ease;
 }
 
 .social-icons a::before {
-  content: '';
   position: absolute;
   inset: 2px;
   background: #111;
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  content: '';
 }
 
 .social-icons a i {
   position: relative;
   z-index: 1;
-  font-size: 1rem;
   color: rgba(255, 255, 255, 0.75);
+  font-size: 1rem;
   transition: color 0.25s ease;
 }
 
@@ -107,9 +212,9 @@ footer {
 .footer-nav ul {
   display: flex;
   justify-content: center;
-  list-style-type: none;
-  padding: 0;
   margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .footer-nav ul li {
@@ -118,38 +223,40 @@ footer {
 
 .footer-nav ul li a {
   position: relative;
-  color: white;
   margin: 20px;
-  text-decoration: none;
+  color: white;
   font-size: 16px;
   opacity: 0.75;
+  text-decoration: none;
   transition: opacity 0.3s ease, color 0.3s ease;
 }
 
 .footer-nav ul li a::after {
-  content: '';
   position: absolute;
-  left: 0;
   bottom: -3px;
+  left: 0;
   width: 0;
   height: 2px;
   background: rgb(98, 165, 92);
   border-radius: 1px;
+  content: '';
   transition: width 0.3s ease;
 }
 
-.footer-nav ul li a:hover {
-  opacity: 1;
+.footer-nav ul li a:hover,
+.footer-nav ul li a:focus-visible {
   color: rgb(98, 165, 92);
+  opacity: 1;
 }
 
-.footer-nav ul li a:hover::after {
+.footer-nav ul li a:hover::after,
+.footer-nav ul li a:focus-visible::after {
   width: 100%;
 }
 
 .footer-bottom {
-  background-color: #000;
   padding: 20px;
+  background-color: #000;
   text-align: center;
 }
 
@@ -157,18 +264,12 @@ footer {
   color: white;
 }
 
-*{
-  padding: 0;
-  margin: 0;
-  box-sizing: border-box;
-}
-
 hr {
-  border: none;
   height: 5px;
-  background-color: #ccc;
-  border-radius: 10px;
   margin-bottom: 20px;
+  border: 0;
+  border-radius: 10px;
+  background-color: #ccc;
 }
 
 .text-muted {
@@ -183,12 +284,28 @@ hr {
   .footer-nav ul {
     flex-direction: column;
     align-items: center;
-    padding: 0;
   }
 
   .footer-nav ul li {
     width: 100%;
-    text-align: center;
     margin: 10px 0;
+    text-align: center;
+  }
+}
+
+@media (max-width: 650px) {
+  .page-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 20px;
+  }
+
+  .page-header nav {
+    justify-content: flex-start;
+  }
+
+  .article-content h1 {
+    margin-top: 32px;
   }
 }

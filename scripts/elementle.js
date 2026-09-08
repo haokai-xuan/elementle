@@ -1347,7 +1347,7 @@ function displayResults() {
     revealAnswerContainer.appendChild(revealAnswerElement); // Append to the appropriate container
   }
 
-  additionalInfoElement.innerHTML = `<a class="additional-info" href="https://en.wikipedia.org/wiki/${getMysteryElement().name}" target="_blank">&#128218; Wikipedia</a>`;
+  additionalInfoElement.innerHTML = `<a class="additional-info" href="https://en.wikipedia.org/wiki/${getMysteryElement().name}" target="_blank" rel="noopener noreferrer">&#128218; Wikipedia</a>`;
   inputElement.disabled = true;
   guessButtonElement.disabled = true;
 
