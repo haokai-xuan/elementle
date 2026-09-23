@@ -118,3 +118,7 @@ const elements = [
   { name: 'Tennessine', atomicNumber: 117, family: 'Halogen', hints: ['Named after US state known as the birthplace of blues.', 'It was first synthesised in 2010, making it one of the most recently confirmed elements on the periodic table.', 'Unlike the lighter halogens, it is predicted to have metallic rather than non-metallic properties due to relativistic effects.'], symbol: 'Ts' },
   { name: 'Oganesson', atomicNumber: 118, family: 'Noble Gas', hints: ['Named after Armenian-Russian nuclear physicist who led the discovery of many elements.', 'It is the heaviest element on the entire periodic table and the last element in period 7.', 'Despite being classified as a noble gas, it is predicted to be a solid at room temperature and potentially highly reactive.'], symbol: 'Og' }
 ];
+
+// Keep this file usable by the browser game and by the server-side element-page
+// generator, which enriches each reference page with these element-specific facts.
+if (typeof module !== 'undefined' && module.exports) module.exports = elements;
