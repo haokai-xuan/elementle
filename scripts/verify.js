@@ -62,7 +62,7 @@
       showBackButton();
 
       setTimeout(() => {
-        window.location.href = '/?verified=1';
+        window.location.href = '/account?verified=1';
       }, 1500);
     } catch {
       showStatus('');

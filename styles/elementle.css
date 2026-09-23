@@ -549,18 +549,47 @@ button {
 }
 
 .hint-container {
-  font-size: 1.15rem;
-  margin-top: 8px;
-  color: rgba(255, 255, 255, 0.9);
-  transition: opacity 0.4s ease;
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 0;
+  right: 0;
+  z-index: 8;
+  padding: 13px 18px 14px;
+  font-size: 1.05rem;
+  color: rgba(255, 255, 255, 0.92);
+  background: linear-gradient(145deg, rgba(48, 62, 48, 0.98), rgba(32, 40, 32, 0.98));
+  border: 1px solid rgba(98, 165, 92, 0.38);
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(98, 165, 92, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
   opacity: 0;
-  max-width: 440px;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-5px);
   text-align: center;
   line-height: 1.4;
 }
 
+.hint-container::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  right: 16px;
+  width: 11px;
+  height: 11px;
+  background: rgba(48, 62, 48, 0.98);
+  border-top: 1px solid rgba(98, 165, 92, 0.38);
+  border-left: 1px solid rgba(98, 165, 92, 0.38);
+  transform: rotate(45deg);
+}
+
 .hint-container.hint-visible {
   opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
 }
 
 @keyframes signupPromptRipple {
@@ -2645,3 +2674,6 @@ footer {
   75%  { content: '...'; }
   100% { content: ''; }
 }
+
+/* Navigation now uses ordinary page links. */
+.nav-icon-btn, .nav-dropdown-item { color: inherit; text-decoration: none; }

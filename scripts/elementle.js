@@ -239,438 +239,31 @@ hintButton.addEventListener('click', (event) => {
   event.preventDefault();
   const mystery = getMysteryElement();
   if (!mystery || !mystery.hints) return;
+
+  if (hintContainer.classList.contains('hint-visible')) {
+    hintContainer.classList.remove('hint-visible');
+    hintContainer.setAttribute('aria-hidden', 'true');
+    hintButton.setAttribute('aria-expanded', 'false');
+    return;
+  }
+
   const idx = getHintIndexForToday();
-  hintContainer.classList.remove('hint-visible');
   hintContainer.innerHTML = mystery.hints[idx];
+  hintContainer.setAttribute('aria-hidden', 'false');
+  hintButton.setAttribute('aria-expanded', 'true');
   requestAnimationFrame(() => hintContainer.classList.add('hint-visible'));
 });
 
-document.querySelectorAll('.js-stats-button').forEach((btn) => btn.addEventListener('click', (event) => {
-  event.preventDefault();
-  closeMobileNavMenu();
-  displayStats();
-}));
-
-function displayStats() {
-  const overlay = document.querySelector('.js-overlay');
-  overlay.style.display = 'flex';
-  setTimeout(() => {
-    overlay.classList.add('show');
-  }, 10);
-
-  const token = getAuthToken();
-  const isLoggedIn = !!token;
-
-  renderStatsModal(overlay, isLoggedIn);
-
-  if (isLoggedIn) {
-    var STATS_INTRO_DURATION = 1500;
-    var statsData = null;
-    var introDone = false;
-
-    var maybeApplyStats = function () {
-      if (!statsData || !introDone) return;
-      updateStatValues(overlay, {
-        wins: statsData.totalWins || 0,
-        played: statsData.totalGamesPlayed || 0,
-        streak: statsData.currentStreak || 0,
-        best: statsData.maxStreak || 0,
-        rate: (statsData.winRate != null ? statsData.winRate : 0) + '%'
-      });
-      if (statsData.guessDistribution) {
-        updateDistributionBars(overlay, statsData.guessDistribution);
-      }
-    };
-
-    setTimeout(function () {
-      introDone = true;
-      maybeApplyStats();
-    }, STATS_INTRO_DURATION);
-
-    var fetchStats = function () {
-      return fetch(API_BASE + '/user/stats?localDate=' + encodeURIComponent(getTodayDateInt()), {
-        headers: { Authorization: 'Bearer ' + token }
-      })
-        .then(function (res) { return res.ok ? res.json() : null; })
-        .then(function (data) {
-          if (data) {
-            statsData = data;
-            maybeApplyStats();
-          }
-        })
-        .catch(function () {});
-    };
-
-    if (_pendingGuessPromise) {
-      _pendingGuessPromise.then(fetchStats);
-    } else if (_gameStateSyncPromise) {
-      _gameStateSyncPromise.then(fetchStats);
-    } else {
-      fetchStats();
-    }
-  }
-}
-
-function updateStatValues(overlay, vals) {
-  var keys = ['wins', 'played', 'streak', 'best', 'rate'];
-  keys.forEach(function (key, idx) {
-    var el = overlay.querySelector('[data-stat="' + key + '"]');
-    if (!el) return;
-    var prev = el.textContent;
-    el.textContent = vals[key];
-    if (prev !== String(vals[key])) {
-      var delay = idx * 80;
-      setTimeout(function () {
-        el.classList.remove('stat-pop');
-        el.classList.add('stat-pop-reset');
-        void el.offsetWidth;
-        el.classList.remove('stat-pop-reset');
-        el.classList.add('stat-pop');
-      }, delay);
-    }
-  });
-}
-
-function updateDistributionBars(overlay, dist) {
-  var mapped = {};
-  for (var i = 1; i <= 8; i++) mapped[String(i)] = dist[String(i)] || 0;
-  mapped['X'] = dist['failed'] || 0;
-  var maxVal = Math.max(...Object.values(mapped), 1);
-  var keys = Object.keys(mapped);
-  keys.forEach(function (key, idx) {
-    var col = overlay.querySelector('[data-bar="' + key + '"]');
-    if (!col) return;
-    var count = col.querySelector('.bar-count');
-    var fill = col.querySelector('.bar-fill');
-    if (count) count.textContent = mapped[key];
-    if (fill) {
-      var pct = (mapped[key] / maxVal * 100);
-      fill.style.height = pct + '%';
-      fill.style.animation = 'none';
-      fill.style.transform = 'scaleY(0)';
-      void fill.offsetWidth;
-      fill.style.animation = 'barGrow 0.5s ease-out forwards';
-      fill.style.animationDelay = (0.5 + idx * 0.06) + 's';
-    }
-  });
-}
-
-var _leaderboardLoaded = false;
-
-function renderStatsModal(overlay, loading) {
-  var totalWins, totalGames, currentStreak, maxWinStreak, winRateDisplay;
-
-  if (loading) {
-    totalWins = totalGames = currentStreak = maxWinStreak = winRateDisplay = '—';
-  } else {
-    totalGames = localStorage.getItem('totalGames') || 0;
-    totalWins = localStorage.getItem('totalWins') || 0;
-    var winRate = totalGames > 0 ? Math.round((totalWins / totalGames) * 100) : 0;
-    currentStreak = localStorage.getItem('currentStreak') || 0;
-    maxWinStreak = localStorage.getItem('maxWinStreak') || 0;
-    winRateDisplay = winRate + '%';
-  }
-
-  let distributionData;
-  if (loading) {
-    distributionData = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 'X': 0 };
-  } else {
-    distributionData = JSON.parse(localStorage.getItem('guessDistribution') || JSON.stringify({
-      1: 0, 2: 0, 3: 0, 4: 0,
-      5: 0, 6: 0, 7: 0, 8: 0,
-      'X': 0
-    }));
-  }
-
-  let maxValue = Math.max(...Object.values(distributionData), 1);
-
-  const bars = Object.keys(distributionData).map((key, idx) => {
-    let value = distributionData[key];
-    let percentage = maxValue > 0 ? (value / maxValue) * 100 : 0;
-    let delay = (0.5 + idx * 0.06).toFixed(2);
-    return `
-      <div class="bar-col" data-bar="${key}">
-        <span class="bar-count">${value}</span>
-        <div class="bar-track">
-          <div class="bar-fill" style="height: ${percentage}%; animation-delay: ${delay}s;"></div>
-        </div>
-        <span class="bar-label">${key}</span>
-      </div>
-    `;
-  }).join("");
-
-  overlay.innerHTML = `
-    <div class="modal-card stats-modal">
-      <div class="stats-modal-header">
-        <h2 class="modal-title">Statistics</h2>
-        <button type="button" class="stats-fire-btn js-leaderboard-toggle" aria-label="View streak leaderboard">
-          <i class="fa-solid fa-fire"></i>
-        </button>
-      </div>
-
-      <div class="stats-swipe-viewport">
-        <div class="stats-swipe-track js-stats-swipe-track">
-
-          <div class="stats-swipe-panel stats-panel-view">
-            <div class="stats-grid">
-              <div class="stat-item">
-                <span class="stat-value" data-stat="wins">${totalWins}</span>
-                <span class="stat-label">Wins</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-value" data-stat="played">${totalGames}</span>
-                <span class="stat-label">Played</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-value" data-stat="streak">${currentStreak}</span>
-                <span class="stat-label">Current streak</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-value" data-stat="best">${maxWinStreak}</span>
-                <span class="stat-label">Best streak</span>
-              </div>
-              <div class="stat-item stat-item-wide">
-                <span class="stat-value" data-stat="rate">${winRateDisplay}</span>
-                <span class="stat-label">Win rate</span>
-              </div>
-            </div>
-            <div class="guess-distribution">
-              <h3 class="distribution-title">Guess distribution</h3>
-              <div class="bars-container">
-                ${bars}
-              </div>
-            </div>
-          </div>
-
-          <div class="stats-swipe-panel leaderboard-panel-view">
-            <div class="leaderboard-header">
-              <button type="button" class="leaderboard-back-btn js-leaderboard-back" aria-label="Back to your stats">
-                <i class="fa-solid fa-arrow-left"></i>
-              </button>
-              <h3 class="leaderboard-title"><i class="fa-solid fa-fire"></i> Top Current Streaks</h3>
-            </div>
-            <ul class="leaderboard-list js-leaderboard-list">
-              <li class="leaderboard-loading">Loading<span class="loading-dots"></span></li>
-            </ul>
-          </div>
-
-        </div>
-      </div>
-
-      <button class="modal-back-button">Back</button>
-    </div>
-  `;
-
-  document.querySelector('.modal-back-button').addEventListener('click', (event) => {
+// Let the latest signed-in guess finish syncing before leaving the game.
+document.querySelectorAll('a[href="/stats"], a[href="/account"], a[href="/how-to-play"]').forEach((link) => {
+  link.addEventListener('click', async (event) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const pending = _pendingGuessPromise || _gameStateSyncPromise;
+    if (!pending) return;
     event.preventDefault();
-    closeModal(overlay);
+    try { await pending; } finally { window.location.assign(link.href); }
   });
-
-  _leaderboardLoaded = false;
-  bindLeaderboardToggle(overlay);
-  syncStatsSwipeViewportHeight(overlay);
-
-  lockBodyScroll();
-  setTimeout(function () { setupFocusTrap(overlay); }, 20);
-}
-
-function syncStatsSwipeViewportHeight(overlay) {
-  var viewport = overlay.querySelector('.stats-swipe-viewport');
-  var statsPanel = overlay.querySelector('.stats-panel-view');
-  if (!viewport || !statsPanel) return;
-
-  viewport.style.height = 'auto';
-  viewport.style.height = statsPanel.offsetHeight + 'px';
-}
-
-function bindLeaderboardToggle(overlay) {
-  const fireBtn = overlay.querySelector('.js-leaderboard-toggle');
-  const backBtn = overlay.querySelector('.js-leaderboard-back');
-  const track = overlay.querySelector('.js-stats-swipe-track');
-  if (!fireBtn || !backBtn || !track) return;
-
-  fireBtn.addEventListener('click', () => {
-    syncStatsSwipeViewportHeight(overlay);
-    track.classList.add('is-leaderboard-view');
-    fireBtn.classList.add('is-active');
-    if (!_leaderboardLoaded) loadLeaderboard(overlay);
-  });
-
-  backBtn.addEventListener('click', () => {
-    track.classList.remove('is-leaderboard-view');
-    fireBtn.classList.remove('is-active');
-  });
-}
-
-async function loadLeaderboard(overlay) {
-  const list = overlay.querySelector('.js-leaderboard-list');
-  if (!list) return;
-
-  list.innerHTML = '<li class="leaderboard-loading">Loading<span class="loading-dots"></span></li>';
-
-  try {
-    const res = await fetch(API_BASE + '/leaderboard/current_streaks');
-    if (!res.ok) throw new Error('Failed to load leaderboard');
-    const data = await res.json(); // [["avsangelschick",42], ["gmeowser",27], ["LucaGiordano",27], ...]
-
-    if (!Array.isArray(data) || data.length === 0) {
-      list.innerHTML = '<li class="leaderboard-empty">No active streaks yet</li>';
-      _leaderboardLoaded = true;
-      return;
-    }
-
-    let lastStreak = null;
-    let lastRank = 0;
-    const currentUsername = typeof window.getAuthUser === 'function'
-      ? window.getAuthUser()?.username
-      : null;
-
-    list.innerHTML = data.map(([username, streak], index) => {
-      // Dense ranking: ties share a rank; next distinct streak value increments by 1 (no skipping)
-      if (streak !== lastStreak) {
-        lastRank += 1;
-        lastStreak = streak;
-      }
-      const rank = lastRank;
-      const rankClass = rank <= 3 ? ' rank-' + rank : '';
-      const isCurrentUser = currentUsername && username === currentUsername;
-      const currentUserClass = isCurrentUser ? ' is-current-user' : '';
-
-      return `
-        <li class="leaderboard-row${rankClass}${currentUserClass}" style="--row-i: ${index}"${isCurrentUser ? ' aria-current="true"' : ''}>
-          <div class="leaderboard-rank">${rank}</div>
-          <div class="leaderboard-username">${escapeHtmlText(username)}</div>
-          <div class="leaderboard-streak"><i class="fa-solid fa-fire"></i>${streak}</div>
-        </li>
-      `;
-    }).join('');
-
-    _leaderboardLoaded = true;
-  } catch (err) {
-    list.innerHTML = '<li class="leaderboard-error">Couldn\'t load leaderboard. Try again later.</li>';
-    console.warn('Leaderboard fetch failed', err);
-  }
-}
-
-function escapeHtmlText(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-var _focusTrapContainer = null;
-var _focusTrapHandler = null;
-
-function lockBodyScroll() {
-  document.body.classList.add('modal-open');
-}
-
-function unlockBodyScroll() {
-  document.body.classList.remove('modal-open');
-}
-
-function getFocusableElements(container) {
-  var sel = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-  return Array.prototype.filter.call(container.querySelectorAll(sel), function (el) {
-    return !el.disabled && el.offsetParent !== null;
-  });
-}
-
-function setupFocusTrap(container) {
-  if (_focusTrapContainer) return;
-  var focusables = getFocusableElements(container);
-  if (focusables.length === 0) return;
-  focusables[0].focus();
-  _focusTrapContainer = container;
-  _focusTrapHandler = function (e) {
-    if (e.key !== 'Tab') return;
-    var list = getFocusableElements(container);
-    if (list.length === 0) return;
-    var idx = list.indexOf(document.activeElement);
-    if (idx === -1) idx = 0;
-    var next = e.shiftKey ? (idx - 1 + list.length) % list.length : (idx + 1) % list.length;
-    list[next].focus();
-    e.preventDefault();
-  };
-  container.addEventListener('keydown', _focusTrapHandler);
-}
-
-function removeFocusTrap() {
-  if (_focusTrapContainer && _focusTrapHandler) {
-    _focusTrapContainer.removeEventListener('keydown', _focusTrapHandler);
-    _focusTrapContainer = null;
-    _focusTrapHandler = null;
-  }
-}
-
-function closeModal(overlay) {
-  unlockBodyScroll();
-  removeFocusTrap();
-  var card = overlay.querySelector('.modal-card');
-  if (card) {
-    card.classList.add('modal-closing');
-    card.addEventListener('animationend', function () {
-      overlay.classList.remove('show');
-      overlay.addEventListener('transitionend', function () {
-        if (!overlay.classList.contains('show')) {
-          overlay.style.display = 'none';
-          card.classList.remove('modal-closing');
-        }
-      }, { once: true });
-    }, { once: true });
-  } else {
-    overlay.classList.remove('show');
-    overlay.addEventListener('transitionend', function () {
-      if (!overlay.classList.contains('show')) overlay.style.display = 'none';
-    }, { once: true });
-  }
-}
-window.closeModal = closeModal;
-window.lockBodyScroll = lockBodyScroll;
-window.setupFocusTrap = setupFocusTrap;
-
-document.querySelectorAll('.js-help-button').forEach((btn) => btn.addEventListener('click', (event) => {
-  event.preventDefault();
-  closeMobileNavMenu();
-  displayHelp();
-}));
-
-function displayHelp() {
-  const overlay = document.querySelector('.js-overlay');
-  overlay.style.display = 'flex';
-
-  setTimeout(() => {
-    overlay.classList.add('show');
-  }, 10);
-
-  overlay.innerHTML = `
-    <div class="modal-card help-modal">
-      <h2 class="modal-title">How to Play</h2>
-      <div class="help-content">
-        <p class="help-intro">Guess the daily element in 8 tries. A new game is available at midnight (00:00) local time.</p>
-        <div class="help-section">
-          <h3 class="help-section-title">After each guess you'll see:</h3>
-          <ul class="help-list">
-            <li><span class="help-icon">⬆️</span> Mystery element's atomic number is <strong>higher</strong></li>
-            <li><span class="help-icon">⬇️</span> Mystery element's atomic number is <strong>lower</strong></li>
-            <li><span class="help-letter green">Green</span> symbol letter — correct letter, correct position</li>
-            <li><span class="help-letter yellow">Yellow</span> symbol letter — correct letter, wrong position</li>
-            <li><span class="help-letter green">Green</span> family name — element is in the correct family</li>
-          </ul>
-        </div>
-        <p class="help-tip">Use the <strong>HINT</strong> button if you're stuck.</p>
-      </div>
-      <button class="modal-back-button">Back</button>
-    </div>`;
-
-  document.querySelector('.modal-back-button').addEventListener('click', (event) => {
-    event.preventDefault();
-    closeModal(overlay);
-  });
-
-  lockBodyScroll();
-  setTimeout(function () { setupFocusTrap(overlay); }, 20);
-}
+});
 
 var _initialRenderDone = false;
 
@@ -901,6 +494,9 @@ async function processGuess() {
 
   const isCorrect = guessedElement.name.toLowerCase() === getMysteryElement().name.toLowerCase();
   const isGameOver = numberOfGuesses >= 8;
+
+  // Invalidate Stats page snapshots when this browser submits a new guess.
+  localStorage.setItem('elementle_stats_revision', String(Date.now()));
 
   const token = getAuthToken();
 
@@ -1557,10 +1153,6 @@ async function initializeGame() {
     inputElement.focus();
   }
 
-  let totalGames = parseInt(localStorage.getItem("totalGames"), 10);
-  if (!totalGames && !getAuthToken()) {
-    displayHelp();
-  }
 }
 
 // This script is loaded at the end of <body>, so all game DOM nodes already

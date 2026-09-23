@@ -1,0 +1,67 @@
+/* Full pages share the game's dark surfaces and green accents. */
+.detail-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 24px 16px 18px;
+  border-bottom: 1px solid rgba(98, 165, 92, .3);
+}
+.detail-header .nav-text { font-size: 48px; }
+.detail-header a { color: inherit; text-decoration: none; }
+.detail-header nav { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.detail-header nav a { padding: 8px 18px; border-radius: 8px; font-size: 20px; }
+.detail-header nav a:hover, .detail-header nav a[aria-current] { background: rgba(98, 165, 92, .16); color: #8ec987; }
+.detail-page .page-container { width: 48%; max-width: 820px; margin: 40px auto 64px; overflow: visible; }
+.page-card {
+  width: 100%;
+  max-width: none;
+  padding: 32px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: white;
+  text-align: center;
+  box-shadow: none;
+}
+.page-card .modal-title { font-size: 32px; }
+.page-card .modal-back-button { display: inline-block; text-decoration: none; align-self: center; }
+.page-card.auth-modal { padding: 32px; }
+.page-card .auth-input { width: 100%; }
+.page-card .auth-account-email { overflow-wrap: anywhere; }
+.help-article { text-align: left; font-size: 20px; line-height: 1.55; }
+.help-article h1 { font-size: 34px; line-height: 1.2; margin-bottom: 20px; }
+.help-article h2 { font-size: 25px; margin: 28px 0 8px; }
+.help-article p + p { margin-top: 12px; }
+.help-article .lede { color: #c9d6c7; }
+.help-article a { color: #8ec987; }
+.help-article .article-cta { margin-top: 28px; }
+.detail-page a:focus-visible, .detail-page button:focus-visible { outline: 2px solid #8ec987; outline-offset: 4px; }
+.nav-icon-btn, .nav-dropdown-item { text-decoration: none; }
+@media (max-width: 1180px) {
+  .detail-page .page-container { width: 100%; max-width: none; margin: 24px 0 40px; }
+}
+@media (max-width: 480px) {
+  .detail-header .nav-text { font-size: 40px; }
+  .detail-header nav a { padding: 8px 12px; }
+  .page-card, .page-card.auth-modal { padding: 24px 18px; }
+}
+
+.help-rules { list-style: none; margin-top: 20px; display: grid; gap: 10px; }
+
+.community-distribution .distribution-caption { color: #bdbdbd; font-size: 16px; margin-bottom: 12px; }
+.community-distribution [hidden] { display: none; }
+.community-distribution .bar-count { font-size: clamp(10px, 1.1vw, 13px); overflow-wrap: anywhere; text-align: center; }
+
+.community-distribution .bars-container { padding-top: 40px; }
+.community-distribution .bar-col { position: relative; }
+.distribution-you { position: absolute; bottom: 100%; margin-bottom: 5px; color: #a4db98; font-size: 14px; font-weight: bold; text-align: center; line-height: 1; }
+.distribution-you span { display: block; font-size: 22px; margin-top: 2px; }
+.community-distribution .is-player-result .bar-track { outline: 1px solid #8ec987; outline-offset: 2px; }
+
+@media (min-width: 1181px) {
+  .page-card.auth-modal {
+    max-width: 484px;
+    margin-inline: auto;
+  }
+}

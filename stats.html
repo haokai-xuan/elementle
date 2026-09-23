@@ -12,10 +12,10 @@
   <script>gtag('js', new Date()); gtag('config', 'G-TKDJK7L9FC', { anonymize_ip: true });</script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Guess the daily element in 8 tries. A quick guide to Elementle’s arrows, colours and hints.">
-  <meta name="robots" content="index,follow">
-  <title>How to Play | Elementle</title>
-  <link rel="canonical" href="https://elementlegame.com/how-to-play">
+  <meta name="description" content="Your Elementle statistics.">
+  <meta name="robots" content="noindex,follow">
+  <title>Statistics | Elementle</title>
+  <link rel="canonical" href="https://elementlegame.com/stats">
   <link rel="stylesheet" href="styles/elementle.css">
   <link rel="icon" type="image/png" href="images/favicon.png">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8537181990292235" crossorigin="anonymous"></script>
@@ -23,24 +23,8 @@
   <link rel="stylesheet" href="styles/pages.css">
 </head>
 <body class="detail-page">
-<header class="detail-header"><a class="nav-text" href="/" aria-label="Elementle home">ELEME<span class="green-letter">N</span>TLE</a><nav aria-label="Main navigation"><a href="/">Play</a><a href="/how-to-play" aria-current="page">Help</a><a href="/elements">Elements</a><a href="/stats">Stats</a><a href="/account">Account</a></nav></header>
-<main class="page-container">
-  <article class="page-card help-article">
-    <h1>How to play</h1>
-    <p class="lede">Guess the daily element in <strong>8 tries</strong>.</p>
-    <p>Type an element, pick a suggestion, then press <strong>Guess</strong>.</p>
-    <ul class="help-rules">
-      <li>⬆️ / ⬇️ The answer’s atomic number is higher / lower.</li>
-      <li>🟩 Green letter: correct letter and position.</li>
-      <li>🟨 Yellow letter: correct letter, wrong position.</li>
-      <li>⬜ Uncoloured letter: not in the answer’s symbol.</li>
-      <li>🟩 Green family: same element family.</li>
-      <li>💡 Stuck? Tap Hint.</li>
-      <li>🕛 New puzzle at midnight, your local time.</li>
-    </ul>
-    <a class="modal-back-button" href="/">Play now</a>
-  </article>
-</main>
+<header class="detail-header"><a class="nav-text" href="/" aria-label="Elementle home">ELEME<span class="green-letter">N</span>TLE</a><nav aria-label="Main navigation"><a href="/">Play</a><a href="/how-to-play">Help</a><a href="/elements">Elements</a><a href="/stats" aria-current="page">Stats</a><a href="/account">Account</a></nav></header>
+<main class="page-container"><div class="js-stats-page"></div></main>
   <footer>
     <div class="footer-container">
       <div class="social-icons">
@@ -56,6 +40,7 @@
     <div class="footer-bottom"><p>&copy; <span class="js-current-year"></span> Elementle</p></div>
   </footer>
 <script src="scripts/auth.js"></script>
+<script src="scripts/stats.js"></script>
 <script src="scripts/privacy-controls.js"></script>
 </body>
 </html>

@@ -11,7 +11,34 @@ const API_KEY = process.env.API_KEY || '';
 
 app.use(express.json());
 
+function sendHtmlPage(name) {
+  return (req, res) => res.sendFile(path.join(__dirname, `${name}.html`));
+}
+
+function redirectDropHtml(to) {
+  return (req, res) => {
+    const query = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+    res.redirect(301, to + query);
+  };
+}
+
+app.get('/how-to-play.html', redirectDropHtml('/how-to-play'));
+app.get('/stats.html', redirectDropHtml('/stats'));
+app.get('/account.html', redirectDropHtml('/account'));
+app.get('/how-to-play', sendHtmlPage('how-to-play'));
+app.get('/stats', sendHtmlPage('stats'));
+app.get('/account', sendHtmlPage('account'));
+
 app.use(express.static(path.join(__dirname)));
+
+const elementPages = require('./lib/element-pages').createElementPages(__dirname);
+app.get('/elements', (req, res) => res.type('html').send(elementPages.overview));
+app.get('/elements/:atomicNumber', (req, res) => {
+  const page = elementPages.details.get(req.params.atomicNumber);
+  if (!page) return res.status(404).type('html').send('<!doctype html><html lang="en"><meta charset="utf-8"><title>Element not found</title><h1>Element not found</h1><p>Choose an atomic number from 1 to 118.</p><a href="/elements">Back to the periodic table</a></html>');
+  res.type('html').send(page);
+});
+
 
 function upstreamHeaders(extra = {}) {
   const headers = { ...extra };
@@ -51,6 +78,20 @@ app.get('/api/mystery_element/:date', async (req, res) => {
   } catch (err) {
     console.error(`[proxy] Failed to reach ${url}:`, err.message);
     res.status(502).json({ error: 'Upstream error', detail: err.message });
+  }
+});
+
+// Read aggregate results without recording a guess.
+app.get('/api/guess_distribution', async (req, res) => {
+  try {
+    const upstream = await fetch(`${API_BASE_URL}/guess_distribution`, {
+      headers: upstreamHeaders()
+    });
+    const data = await upstream.json();
+    res.status(upstream.status).json(data);
+  } catch (err) {
+    console.error('Error reading guess distribution:', err.message);
+    res.status(502).json({ error: 'Upstream error' });
   }
 });
 
