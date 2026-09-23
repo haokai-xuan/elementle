@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const express = require('express');
 const path = require('path');
+const { readPage } = require('./lib/page-template');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -12,7 +13,8 @@ const API_KEY = process.env.API_KEY || '';
 app.use(express.json());
 
 function sendHtmlPage(name) {
-  return (req, res) => res.sendFile(path.join(__dirname, `${name}.html`));
+  const html = readPage(__dirname, name);
+  return (req, res) => res.type('html').send(html);
 }
 
 function redirectDropHtml(to) {
@@ -22,12 +24,11 @@ function redirectDropHtml(to) {
   };
 }
 
-app.get('/how-to-play.html', redirectDropHtml('/how-to-play'));
-app.get('/stats.html', redirectDropHtml('/stats'));
-app.get('/account.html', redirectDropHtml('/account'));
-app.get('/how-to-play', sendHtmlPage('how-to-play'));
-app.get('/stats', sendHtmlPage('stats'));
-app.get('/account', sendHtmlPage('account'));
+for (const name of ['how-to-play', 'stats', 'account', 'about', 'disclaimer', 'terms_of_service_and_privacy']) {
+  app.get(`/${name}.html`, redirectDropHtml(`/${name}`));
+  app.get(`/${name}`, sendHtmlPage(name));
+}
+app.get(['/', '/index.html'], sendHtmlPage('index'));
 
 app.use(express.static(path.join(__dirname)));
 

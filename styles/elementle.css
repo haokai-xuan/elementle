@@ -1762,117 +1762,6 @@ body.modal-open {
   color: rgba(255, 255, 255, 0.35);
 }
 
-/*Footer styles*/
-footer {
-  background-color: #111;
-  margin-top: 100px;
-  border-top: 2px solid transparent;
-  border-image: linear-gradient(90deg, transparent, rgb(83, 141, 78), rgb(98, 165, 92), rgb(83, 141, 78), transparent) 1;
-}
-
-.footer-container {
-  width: 100%;
-  padding: 10px 30px 20px;
-}
-
-.social-icons {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.social-icons a {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  width: 42px;
-  height: 42px;
-  background: rgba(255, 255, 255, 0.1);
-  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-  transition: background 0.25s ease, transform 0.2s ease;
-}
-
-.social-icons a::before {
-  content: '';
-  position: absolute;
-  inset: 2px;
-  background: #111;
-  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-}
-
-.social-icons a i {
-  position: relative;
-  z-index: 1;
-  font-size: 1rem;
-  color: rgba(255, 255, 255, 0.75);
-  transition: color 0.25s ease;
-}
-
-.social-icons a:hover {
-  background: rgb(83, 141, 78);
-  transform: scale(1.1);
-}
-
-.social-icons a:hover i {
-  color: #fff;
-}
-
-.footer-nav ul {
-  display: flex;
-  justify-content: center;
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-}
-
-.footer-nav ul li {
-  margin: 0 5px;
-}
-
-.footer-nav ul li a {
-  position: relative;
-  color: white;
-  margin: 20px;
-  text-decoration: none;
-  font-size: 16px;
-  opacity: 0.75;
-  transition: opacity 0.3s ease, color 0.3s ease;
-}
-
-.footer-nav ul li a::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: -3px;
-  width: 0;
-  height: 2px;
-  background: rgb(98, 165, 92);
-  border-radius: 1px;
-  transition: width 0.3s ease;
-}
-
-.footer-nav ul li a:hover {
-  opacity: 1;
-  color: rgb(98, 165, 92);
-}
-
-.footer-nav ul li a:hover::after {
-  width: 100%;
-}
-
-.footer-bottom {
-  background-color: #000;
-  padding: 20px;
-  text-align: center;
-}
-
-.footer-bottom p {
-  color: white;
-}
-
 /*Fade animation*/
 @keyframes fadeInText {
   from {
@@ -1893,17 +1782,6 @@ footer {
 
 /*Adjusting for screens under 1201px wide*/
 @media (max-width: 1200px) {
-  .footer-nav ul {
-    flex-direction: column;
-    align-items: center;
-    padding: 0;
-  }
-
-  .footer-nav ul li {
-    width: 100%;
-    text-align: center;
-    margin: 10px 0;
-  }
 
   h1 {
     font-size: 50px;

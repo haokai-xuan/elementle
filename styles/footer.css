@@ -1,0 +1,121 @@
+footer {
+  margin-top: 100px;
+  background-color: #111;
+  border-top: 2px solid transparent;
+  border-image: linear-gradient(90deg, transparent, rgb(83, 141, 78), rgb(98, 165, 92), rgb(83, 141, 78), transparent) 1;
+  font-family: "Iceland", sans-serif;
+}
+
+.footer-container {
+  width: 100%;
+  padding: 20px 16px 16px;
+}
+
+.social-icons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.social-icons a {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  background: rgba(255, 255, 255, 0.1);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  text-decoration: none;
+  transition: background 0.25s ease, transform 0.2s ease;
+}
+
+.social-icons a::before {
+  position: absolute;
+  inset: 2px;
+  background: #111;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  content: '';
+}
+
+.social-icons a i {
+  position: relative;
+  z-index: 1;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 1rem;
+  transition: color 0.25s ease;
+}
+
+.social-icons a:hover {
+  background: rgb(83, 141, 78);
+  transform: scale(1.1);
+}
+
+.social-icons a:hover i {
+  color: #fff;
+}
+
+.footer-nav { display: grid; gap: 4px; }
+.footer-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  column-gap: 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.footer-nav ul li { margin: 0; }
+.footer-nav ul li a {
+  position: relative;
+  display: inline-block;
+  padding: 8px 0;
+  color: white;
+  font-size: 16px;
+  line-height: 1.25;
+  white-space: nowrap;
+  opacity: .75;
+  text-decoration: none;
+  transition: opacity .3s ease, color .3s ease;
+}
+
+.footer-nav ul li a::after {
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: rgb(98, 165, 92);
+  border-radius: 1px;
+  content: '';
+  transition: width 0.3s ease;
+}
+
+.footer-nav ul li a:hover,
+.footer-nav ul li a:focus-visible {
+  color: rgb(98, 165, 92);
+  opacity: 1;
+}
+
+.footer-nav ul li a:hover::after,
+.footer-nav ul li a:focus-visible::after {
+  width: 100%;
+}
+
+.footer-bottom {
+  padding: 12px 16px;
+  background-color: #000;
+  text-align: center;
+}
+
+.footer-bottom p {
+  margin: 0;
+  color: white;
+}
+
+footer a:focus-visible { outline: 2px solid #8ec987; outline-offset: 4px; }
+@media (max-width: 480px) {
+  .footer-nav ul { column-gap: 16px; }
+}
