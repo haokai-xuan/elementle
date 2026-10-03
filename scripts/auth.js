@@ -28,7 +28,7 @@
   function getUser() {
     const payload = decodeJwtPayload(getToken());
     if (!payload || !payload.username) return null;
-    return { username: payload.username, email: payload.email || '' };
+    return { username: payload.username, email: payload.email || '', provider: payload.auth_provider || 'password' };
   }
 
   function updateProfileButton() {
@@ -65,6 +65,7 @@
           <p class="auth-account-name">${escapeHtml(user.username)}</p>
           <p class="auth-account-email">${escapeHtml(user.email)}</p>
         </div>
+        ${user.provider !== 'password' ? '<p class="auth-help-text">Sign in with ' + escapeHtml(user.provider === 'google' ? 'Google' : user.provider) + '. This account has no Elementle password to reset.</p>' : ''}
         <button type="button" class="auth-btn auth-btn-outline js-auth-logout">Log out</button>
         <a class="modal-back-button" href="/">Back to game</a>
       </div>`;
@@ -75,6 +76,12 @@
     return `
       <div class="page-card auth-modal auth-modal-wide">
         <h1 class="modal-title">Account</h1>
+        <div class="auth-social-buttons" aria-label="Sign in or sign up with Google">
+          <a class="auth-btn auth-btn-outline auth-provider-google" href="/api/auth/social/google/start"><svg class="auth-provider-logo" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path fill="#4285F4" d="M43.61 24.46c0-1.36-.12-2.66-.35-3.92H24v7.42h11a9.4 9.4 0 0 1-4.08 6.16v5h6.61c3.87-3.56 6.08-8.81 6.08-14.66Z"/><path fill="#34A853" d="M24 44c5.51 0 10.13-1.83 13.51-4.96l-6.61-5c-1.83 1.23-4.18 1.97-6.9 1.97-5.32 0-9.84-3.59-11.46-8.42H5.72v5.15A20 20 0 0 0 24 44Z"/><path fill="#FBBC05" d="M12.54 27.59a12 12 0 0 1 0-7.18v-5.15H5.72a20 20 0 0 0 0 17.48l6.82-5.15Z"/><path fill="#EA4335" d="M24 11.99c3 0 5.67 1.03 7.8 3.05l5.85-5.85A19.6 19.6 0 0 0 24 4 20 20 0 0 0 5.72 15.26l6.82 5.15C14.16 15.58 18.68 11.99 24 11.99Z"/></svg><span>Continue with Google</span></a>
+        </div>
+        <p class="auth-help-text">New here? Continue with Google, then verify your email. Social accounts have no Elementle password.</p>
+        <p class="auth-error js-social-error" role="alert"></p>
+        <p class="auth-divider">Or use email and password</p>
         <div class="auth-tabs" role="tablist">
           <button type="button" class="auth-tab ${loginActive ? 'is-active' : ''}" data-tab="login" role="tab">Log in</button>
           <button type="button" class="auth-tab ${!loginActive ? 'is-active' : ''}" data-tab="signup" role="tab">Sign up</button>
@@ -104,7 +111,7 @@
           <form class="auth-panel is-hidden" data-panel="reset" autocomplete="off">
             <p class="auth-label">Reset password</p>
             <p class="auth-help-text">
-              Enter your account email to request a reset link. We&rsquo;ll email you a link you can use to choose a new password.
+              For accounts created with a password, enter your account email to request a reset link. If you joined with Google, use that provider to sign in; password resets are unavailable for those accounts. We&rsquo;ll email you a link you can use to choose a new password.
             </p>
             <label class="auth-label" for="auth-resetEmail">Email</label>
             <input id="auth-resetEmail" class="auth-input" type="email" name="resetEmail" placeholder="you@example.com" autocomplete="email">
@@ -331,8 +338,74 @@
     const loginErr = document.querySelector('.js-auth-error-login');
     if (loginErr) {
       loginErr.classList.add('auth-success');
-      loginErr.textContent = 'Email verified. You can now log in.';
+      loginErr.textContent = 'Email verified. Sign in using the same method you used to create your account.';
     }
+  }
+
+  async function finishSocialSignIn() {
+    history.replaceState(null, '', window.location.pathname);
+    const root = document.querySelector('.js-account-page');
+    if (!root) return;
+    try {
+      const response = await fetch('/api/auth/social/result', { cache: 'no-store' });
+      const result = await response.json();
+      if (!response.ok || result.error) throw new Error(result.error || 'Sign-in failed.');
+      if (result.token) {
+        setToken(result.token);
+        updateProfileButton();
+        showAuth();
+        return;
+      }
+      if (!result.ticket || result.provider !== 'google') throw new Error('Please start sign-in again.');
+      const providerName = 'Google';
+      root.innerHTML = `
+        <div class="page-card auth-modal auth-modal-wide">
+          <h1 class="modal-title">Finish signing up with ${providerName}</h1>
+          <p class="auth-help-text">Choose your username and email. We’ll send a verification link before activating your account. You’ll sign in with ${providerName} and won’t have an Elementle password to reset.</p>
+          <form class="auth-panel js-social-signup">
+            <label class="auth-label" for="social-username">Username</label>
+            <input class="auth-input" id="social-username" name="username" autocomplete="username" required maxlength="50">
+            <label class="auth-label" for="social-email">Email</label>
+            <input class="auth-input" id="social-email" name="email" type="email" autocomplete="email" required maxlength="254">
+            <p class="auth-error js-social-error" role="alert"></p>
+            <button class="auth-btn auth-btn-primary" type="submit">Send verification email</button>
+          </form>
+          <a class="modal-back-button" href="/account">Back to sign in</a>
+        </div>`;
+      const form = root.querySelector('form');
+      form.elements.email.value = result.email || '';
+      form.addEventListener('submit', async event => {
+        event.preventDefault();
+        const button = form.querySelector('button');
+        const message = form.querySelector('.js-social-error');
+        button.disabled = true;
+        message.textContent = '';
+        try {
+          const response = await fetch(`/api/auth/social/${result.provider}/complete`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ticket: result.ticket, email: form.elements.email.value, username: form.elements.username.value })
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || 'Could not complete signup.');
+          message.classList.add('auth-success');
+          message.textContent = data.message;
+          button.textContent = 'Verification email sent';
+        } catch (error) {
+          message.textContent = error.message || 'Network error. Please try again.';
+          button.disabled = false;
+        }
+      });
+    } catch (error) {
+      showAuth();
+      const message = root.querySelector('.js-social-error');
+      if (message) message.textContent = error.message || 'Sign-in failed. Please try again.';
+    }
+  }
+  if (params.get('social') === '1') finishSocialSignIn();
+  if (params.get('social_error') === '1') {
+    history.replaceState(null, '', window.location.pathname);
+    const message = document.querySelector('.js-social-error');
+    if (message) message.textContent = 'Could not reach the sign-in service. Please try again.';
   }
 
   window.getAuthUser = getUser;

@@ -11,6 +11,7 @@ const API_BASE_URL = (process.env.API_BASE_URL || 'http://127.0.0.1:8000').repla
 const API_KEY = process.env.API_KEY || '';
 
 app.use(express.json());
+require('./lib/social-auth')(app, { apiBaseUrl: API_BASE_URL, apiKey: API_KEY });
 
 function sendHtmlPage(name) {
   const html = readPage(__dirname, name);
