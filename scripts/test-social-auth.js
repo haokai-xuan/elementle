@@ -68,3 +68,20 @@ test('disabled providers are rejected on start, callback and completion', async 
     }
   } finally { global.fetch = original; }
 });
+
+test('signup completion sends only username, ticket, and browser binding', async () => {
+  const original = global.fetch;
+  try {
+    global.fetch = async (url, options) => {
+      assert.deepEqual(JSON.parse(options.body), { ticket: 'ticket', username: 'test', binding: 'browser-binding' });
+      return { status: 200, json: async () => ({ message: 'Check your email' }) };
+    };
+    const res = response();
+    await routes.get('post /api/auth/social/:provider/complete')({
+      params: { provider: 'google' }, headers: { cookie: 'elementle_oauth_binding=browser-binding' },
+      body: { ticket: 'ticket', username: 'test', email: 'override@example.com' }
+    }, res);
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.data.message, 'Check your email');
+  } finally { global.fetch = original; }
+});

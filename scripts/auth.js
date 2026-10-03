@@ -361,19 +361,17 @@
       root.innerHTML = `
         <div class="page-card auth-modal auth-modal-wide">
           <h1 class="modal-title">Finish signing up with ${providerName}</h1>
-          <p class="auth-help-text">Choose your username and email. We’ll send a verification link before activating your account. You’ll sign in with ${providerName} and won’t have an Elementle password to reset.</p>
+          <p class="auth-help-text">Choose your username. We’ll send a verification link to your Google email before activating your account. You’ll sign in with ${providerName} and won’t have an Elementle password to reset.</p>
           <form class="auth-panel js-social-signup">
             <label class="auth-label" for="social-username">Username</label>
             <input class="auth-input" id="social-username" name="username" autocomplete="username" required maxlength="50">
-            <label class="auth-label" for="social-email">Email</label>
-            <input class="auth-input" id="social-email" name="email" type="email" autocomplete="email" required maxlength="254">
+            <p class="auth-help-text">Google email: <strong>${escapeHtml(result.email || '')}</strong></p>
             <p class="auth-error js-social-error" role="alert"></p>
             <button class="auth-btn auth-btn-primary" type="submit">Send verification email</button>
           </form>
           <a class="modal-back-button" href="/account">Back to sign in</a>
         </div>`;
       const form = root.querySelector('form');
-      form.elements.email.value = result.email || '';
       form.addEventListener('submit', async event => {
         event.preventDefault();
         const button = form.querySelector('button');
@@ -383,7 +381,7 @@
         try {
           const response = await fetch(`/api/auth/social/${result.provider}/complete`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ticket: result.ticket, email: form.elements.email.value, username: form.elements.username.value })
+            body: JSON.stringify({ ticket: result.ticket, username: form.elements.username.value })
           });
           const data = await response.json();
           if (!response.ok) throw new Error(data.error || 'Could not complete signup.');
