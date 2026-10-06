@@ -517,12 +517,12 @@ async function processGuess() {
       localStorage.setItem('guessedCorrectly', 'true');
       guessedCorrectly = 'true';
       confetti({ particleCount: 150, spread: 200 });
-      createPopup('Well done!');
+      createPopup(getGameResultMessage(true, numberOfGuesses));
       displayResults();
     } else if (isGameOver) {
       localStorage.setItem('guessedCorrectly', 'false');
       guessedCorrectly = 'false';
-      createPopup('Thanks for playing!');
+      createPopup(getGameResultMessage(false, numberOfGuesses));
       displayResults();
     } else {
       _guessInFlight = false;
@@ -542,7 +542,7 @@ async function processGuess() {
     localStorage.setItem('guessedCorrectly', 'true');
     guessedCorrectly = 'true';
     confetti({ particleCount: 150, spread: 200 });
-    createPopup('Well done!');
+    createPopup(getGameResultMessage(true, numberOfGuesses));
     displayResults();
     sendDistribution(numberOfGuesses);
   } else if (isGameOver) {
@@ -552,7 +552,7 @@ async function processGuess() {
     localStorage.setItem('guessedCorrectly', 'false');
     guessedCorrectly = 'false';
     displayResults();
-    createPopup('Thanks for playing!');
+    createPopup(getGameResultMessage(false, numberOfGuesses));
     sendDistribution(9);
   } else {
     localStorage.setItem('guessedCorrectly', 'false');
@@ -1054,6 +1054,23 @@ function displayResults() {
   window._countdownInterval = setInterval(displayCountdown, 1000);
 }
 
+
+function getGameResultMessage(won, guesses) {
+  const winMessages = {
+    1: ['Perfect!', 'Incredible!', 'Are you cheating?'],
+    2: ['Brilliant!', 'So quick!', 'Impressive!'],
+    3: ['Great job!', 'Nicely done!', 'Sharp work!'],
+    4: ['Nice work!', 'Good job!', 'You got it!'],
+    5: ['Got there!', 'Solved it!', 'Nice one!'],
+    6: ['You did it!', 'Kept at it!', 'Good effort!'],
+    7: ['Close call!', 'Just in time!', 'One to spare!'],
+    8: ['Just made it!', 'Last chance!', 'That was close!']
+  };
+  const messages = won
+    ? (winMessages[guesses] || winMessages[4])
+    : ['Good try!', 'Next time!', 'Try again tomorrow!'];
+  return messages[Math.floor(Math.random() * messages.length)];
+}
 
 function createPopup(text) {
   const popupElement = document.createElement('div');
