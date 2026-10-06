@@ -312,12 +312,12 @@ async function accountCacheScope(token, dayKey) {
   return dayKey + ':' + Array.from(new Uint8Array(hash), b => b.toString(16).padStart(2, '0')).join('') + ':' + statsGameRevision();
 }
 
-async function getTodayResultColumn(dayKey) {
+async function getDailyResultColumn(dayKey) {
   const token = localStorage.getItem('elementle_token');
   if (token) {
     try {
       const scope = await accountCacheScope(token, dayKey);
-      const state = await cachedStatsRequest('game_state', scope, 60000, async () => {
+      const state = await cachedStatsRequest('game_state_' + dayKey, scope, 60000, async () => {
         const response = await fetch(API_BASE + '/game/state?localDate=' + dayKey, {
           headers: { Authorization: 'Bearer ' + token }
         });
@@ -365,7 +365,7 @@ function initializeCommunityDistribution(root, period) {
     bars.hidden = true;
     retry.hidden = true;
     try {
-      const resultColumn = isToday ? getTodayResultColumn(day.key) : Promise.resolve(null);
+      const resultColumn = getDailyResultColumn(day.key);
       const data = await fetchCommunityDistribution();
       if (id !== requestId) return;
       const distribution = normalizeDailyDistribution(data[day.key]);

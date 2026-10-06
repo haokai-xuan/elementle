@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <!-- Consent defaults. A Google-certified CMP configured in AdSense updates EEA/UK/CH choices. -->
+    <!-- Google Analytics consent defaults for EEA/UK/CH visitors. -->
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -38,9 +38,8 @@
     <title>Elementle - Guess the Element</title>
     <link rel="canonical" href="https://elementlegame.com/">
     <link rel="stylesheet" href="styles/elementle.css">
+    <link rel="stylesheet" href="styles/signup-nudge.css">
     <link rel="icon" type="image/x-icon" href="images/favicon.png">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8537181990292235"
-    crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="/styles/footer.css">
 </head>
@@ -130,6 +129,16 @@
           <div class="js-additional-info"></div>
           <div class="js-share-button"></div>
         </div>
+        <dialog class="signup-nudge" aria-labelledby="signup-nudge-title" aria-describedby="signup-nudge-description">
+          <button class="signup-nudge-dismiss" type="button" aria-label="Dismiss sign-up reminder for 30 days">&times;</button>
+          <h2 id="signup-nudge-title">Make it a daily habit</h2>
+          <p id="signup-nudge-description">Create a free account to track your future games, stats and streaks across devices.</p>
+          <div class="signup-nudge-actions">
+            <a class="signup-nudge-link" href="/account?tab=signup">Create free account</a>
+            <button class="signup-nudge-later" type="button">Maybe later</button>
+          </div>
+          <small>You can always keep playing as a guest.</small>
+        </dialog>
       </div>
   
       <div class="timebox">
@@ -150,6 +159,7 @@
     <script src="data/elements.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script> 
+    <script src="scripts/signup-nudge.js"></script>
     <script src="scripts/elementle.js"></script>
     <script src="scripts/auth.js"></script>
     <script src="scripts/privacy-controls.js"></script>

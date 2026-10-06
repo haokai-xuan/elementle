@@ -1,0 +1,31 @@
+.signup-nudge {
+  position: fixed;
+  inset: 0;
+  width: min(400px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  margin: auto;
+  padding: 38px 28px 26px;
+  border: 1px solid #41483f;
+  border-radius: 20px;
+  background: #20231f;
+  color: #f5f7f3;
+  box-shadow: 0 24px 80px #0008;
+  text-align: center;
+}
+
+.signup-nudge::backdrop { background: rgb(0 0 0 / 45%); backdrop-filter: blur(3px); }
+.signup-nudge[open] { animation: signup-popup-in 180ms ease-out; }
+@keyframes signup-popup-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .signup-nudge[open] { animation: none; } }
+.signup-nudge h2 { margin: 0 0 12px; font-size: 30px; font-weight: 400; }
+.signup-nudge p { color: #d1d7cf; font-size: 19px; line-height: 1.4; }
+.signup-nudge small { display: block; color: #b4bdb1; font-size: 16px; line-height: 1.4; }
+.signup-nudge-actions { display: flex; flex-direction: column; gap: 4px; margin: 24px 0 10px; }
+.signup-nudge-link { padding: 11px 16px; border-radius: 8px; background: #a9cf9e; color: #172015; text-decoration: none; font-size: 19px; }
+.signup-nudge-link:hover { background: #bddfaf; }
+.signup-nudge-link { display: block; width: 100%; }
+.signup-nudge-later, .signup-nudge-dismiss { background: transparent; border: 0; color: #d1d7cf; }
+.signup-nudge-later { min-height: 44px; font-size: 18px; text-decoration: underline; text-underline-offset: 3px; }
+.signup-nudge-dismiss { position: absolute; top: 4px; right: 4px; width: 44px; height: 44px; font-size: 26px; }
+.signup-nudge :focus-visible { outline: 2px solid #c5e8b8; outline-offset: 3px; }

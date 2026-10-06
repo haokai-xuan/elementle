@@ -923,6 +923,7 @@ function getMysteryElement() {
 }
 
 function displayResults() {
+  window.dispatchEvent(new Event('elementle:game-complete'));
   let additionalInfoElement = document.querySelector('.js-additional-info');
   let revealAnswerElement = document.querySelector('.js-reveal-answer');
 
