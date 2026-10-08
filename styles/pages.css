@@ -87,3 +87,7 @@
 .auth-social-buttons a:focus-visible { outline: 3px solid #8ab4f8; outline-offset: 3px; }
 .auth-provider-logo { width: 22px; height: 22px; flex-shrink: 0; }
 .auth-divider { text-align: center; margin: 20px 0; opacity: .75; }
+
+.stats-modal :is([data-bar="X"], [data-result-column="X"]) .bar-label { color:#f87171; }
+.stats-modal .stat-item:nth-child(6) { animation-delay:.5s; }
+.stats-modal .stat-item:nth-child(6) .stat-value { animation-delay:.6s; }

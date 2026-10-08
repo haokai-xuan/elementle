@@ -1,0 +1,99 @@
+.freeplay-nav { font-size: 29px; }
+.lab-archives { position: relative; overflow: hidden; max-width: 600px; margin: 50px auto 32px; padding: 28px; border: 1px solid #538d4e; border-radius: 20px; background: linear-gradient(135deg,#242424ee,#191919f5); color:#c9d6c7; box-shadow: 0 0 45px #62a55c12; }
+.lab-archives::before { content:''; position:absolute; inset:0; pointer-events:none; background: repeating-linear-gradient(0deg,transparent 0 39px,#62a55c08 40px); }
+.lab-orbit { position:absolute; right:-20px; top:0; font-size:180px; color:#62a55c12; animation:lab-spin 28s linear infinite; pointer-events:none; }
+.lab-heading,.lab-controls { position:relative; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.lab-heading small,.lab-status { font: 10px monospace; letter-spacing:2px; color:#62a55c; }
+.lab-heading h2 { margin:8px 0; font-size:28px; }
+.lab-status { animation:lab-pulse 3s ease-in-out infinite; }
+.lab-archives p { font-size:14px; line-height:1.6; }
+.lab-controls { margin:24px 0 16px; }
+.lab-controls h3 { margin:0; font-size:18px; }
+.lab-controls button,.lab-days button { color:#c9d6c7; background:#252f24; border:1px solid #538d4e; border-radius:8px; cursor:pointer; min-height:42px; }
+.lab-controls button { width:42px; }
+.lab-week,.lab-days { position:relative; display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:6px; text-align:center; }
+.lab-week { margin-bottom:12px; color:#8ec987; font:12px monospace; }
+.lab-days button { transition:background .2s,box-shadow .2s,transform .2s; }
+.lab-days button:hover:not(:disabled) { background:#354b32; box-shadow:0 0 15px #62a55c55; transform:translateY(-2px); }
+.lab-days button.complete { border-color:#62a55c; }
+.lab-days button:disabled,.lab-controls button:disabled { opacity:.3; cursor:default; }
+.lab-archives > small { font-size:12px; color:#bdbdbd; }
+@keyframes lab-spin { to { transform:rotate(360deg); } }
+@keyframes lab-pulse { 50% { opacity:.4; } }
+@media(min-width:1000px) { .lab-archives { max-width:640px; padding:32px; } }
+@media(max-width:600px) { .lab-archives { margin:28px 12px; padding:18px; } .lab-heading { flex-wrap:wrap; } }
+@media(prefers-reduced-motion:reduce) { .lab-orbit,.lab-status { animation:none; } .lab-days button { transition:none; } }
+/* Modes use the same dark surfaces and periodic green as the daily lab. */
+.home-logo { color:inherit; text-decoration:none; }
+.mode-badge { display:block; font:10px "Courier Prime",monospace; letter-spacing:2px; color:#62a55c; margin-top:2px; }
+.mode-badge[hidden],.mode-tools[hidden],.practice-sync[hidden] { display:none; }
+.freeplay-nav[aria-current="page"] .nav-icon-circle { color:#62a55c; background:#538d4e; }
+.mode-tools { max-width:860px; margin:18px auto -32px; padding:0 20px; display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:10px 24px; color:#8c968a; font-size:13px; }
+.mode-file { font:11px "Courier Prime",monospace; letter-spacing:1px; }
+.mode-tools a { color:#8ec987; text-decoration:none; border-bottom:1px solid #538d4e55; }
+.mode-tools a:hover { border-color:#62a55c; }
+body[data-mode="freeplay"] .mode-tools a { display:none; }
+.practice-sync { background:#252f24; color:#c9d6c7; border:1px solid #538d4e; padding:5px 10px; border-radius:6px; }
+.lab-days button.today { border-color:#8ec987; box-shadow:inset 0 0 0 1px #62a55c; background:#354b32; }
+.practice-scenery { position:fixed; inset:90px 0 0; overflow:hidden; pointer-events:none; color:#62a55c; z-index:-1; }
+.practice-scenery svg { display:none; position:absolute; width:clamp(220px,28vw,440px); opacity:.15; }
+body[data-mode="archive"] .archive-scenery { display:block; bottom:5vh; left:0; }
+body[data-mode="freeplay"] .freeplay-scenery { display:block; right:0; top:10vh; }
+.archive-light { stroke:#8ec987; animation:lab-pulse 5s ease-in-out infinite; }
+.archive-files { animation:file-hover 7s ease-in-out infinite; transform-origin:280px 355px; }
+.lab-bubble { transform-box:fill-box; transform-origin:center; animation:bubble-rise 4s linear infinite; }
+.bubble-two { animation-delay:-2s; }
+.infinity-current { stroke:#8ec987; stroke-width:4; stroke-dasharray:30 70; animation:infinite-flow 14s linear infinite; }
+.cycle-molecule { transform-origin:250px 170px; animation:lab-spin 100s linear infinite; opacity:.4; }
+.share-button:disabled { opacity:.6; cursor:wait; }
+.home-logo:focus-visible,.mode-tools a:focus-visible { outline:2px solid #8ec987; outline-offset:4px; }
+@keyframes infinite-flow { to { stroke-dashoffset:-1000; } }
+@keyframes bubble-rise { 0% { transform:translateY(5px); opacity:0; } 25% { opacity:1; } 100% { transform:translateY(-45px); opacity:0; } }
+@keyframes file-hover { 50% { transform:translateY(-3px) rotate(-1deg); } }
+@media(max-width:1100px) { .practice-scenery svg { opacity:.07; width:260px; } body[data-mode="freeplay"] .freeplay-scenery { right:-65px; top:25vh; } body[data-mode="archive"] .archive-scenery { left:-65px; } }
+@media(max-width:600px) { .mode-tools { margin:14px 0 -34px; gap:10px; font-size:12px; } .mode-file { font-size:10px; } .mode-badge { font-size:9px; letter-spacing:1px; } .practice-scenery svg { width:220px; opacity:.06; } }
+@media(prefers-reduced-motion:reduce) { .practice-scenery * { animation:none !important; } }
+body[data-mode="freeplay"] .element.card-flip,body[data-mode="archive"] .element.card-flip { animation:cardFlip .18s ease-out forwards; }
+body[data-mode="freeplay"] .element.correct-card.card-flip,body[data-mode="archive"] .element.correct-card.card-flip { animation:cardFlip .18s ease-out forwards,winGlow 2s ease-in-out .18s infinite alternate; }
+body[data-mode="freeplay"] .fade-in-text,body[data-mode="archive"] .fade-in-text { animation-duration:.12s; }
+@media(prefers-reduced-motion:reduce) { body[data-mode="freeplay"] .element.card-flip,body[data-mode="archive"] .element.card-flip { animation:none; opacity:1; transform:none; } }
+
+/* Pair each lab with a second scene, keeping all artwork behind the game. */
+.practice-scenery svg { width:clamp(210px,24vw,380px); opacity:.18; }
+body[data-mode="archive"] .archive-companion { left:auto; right:0; bottom:auto; top:8vh; }
+body[data-mode="freeplay"] .freeplay-companion { right:auto; left:0; top:16vh; }
+.cycle-rings { transform-origin:220px 188px; animation:lab-spin 48s linear infinite; }
+.reaction-stream { stroke-dasharray:8 6; animation:infinite-flow 24s linear infinite; }
+.archive-scan { animation:archive-scan 6s ease-in-out infinite; stroke:#8ec987; }
+.mode-tools { min-height:24px; }
+.mode-file,.mode-tools a { display:inline-flex; align-items:center; min-height:24px; font:11px/24px "Courier Prime",monospace; }
+.mode-tools a { border-bottom:0; box-shadow:0 1px 0 #538d4e55; }
+@keyframes archive-scan { 50% { transform:translateY(20px); opacity:.3; } }
+@media(max-width:1100px) {
+  .practice-scenery svg { width:240px; opacity:.10; }
+  body[data-mode="archive"] .archive-companion { right:-70px; top:15vh; }
+  body[data-mode="freeplay"] .freeplay-companion { left:-70px; top:30vh; }
+}
+@media(max-width:600px) {
+  .practice-scenery svg { width:180px; opacity:.065; }
+  .mode-file,.mode-tools a { font-size:10px; line-height:24px; }
+  body[data-mode="archive"] .archive-companion { right:-75px; top:22vh; }
+  body[data-mode="freeplay"] .freeplay-companion { left:-75px; top:32vh; }
+}
+
+.archives-back { display:flex; justify-content:center; margin:0 12px 32px; }
+
+.archive-terminal-lines path { stroke-dasharray:110; stroke-dashoffset:110; animation:archive-terminal-type 6s steps(12,end) infinite; }
+.archive-terminal-lines path:nth-child(2) { animation-delay:.3s; }
+.archive-terminal-lines path:nth-child(3) { animation-delay:.6s; }
+.archive-terminal-lines path:nth-child(4) { animation-delay:.9s; }
+.archive-terminal-lines path:nth-child(5) { animation-delay:1.2s; }
+.archive-terminal-cursor { animation:archive-cursor-blink 1s steps(2,end) infinite; }
+.archive-computer-scan { opacity:.35; animation:archive-screen-scan 7s linear infinite; }
+.archive-computer-led { animation:lab-pulse 3s ease-in-out infinite; }
+.archive-screen-molecule { transform-origin:257px 301px; animation:lab-spin 32s linear infinite; }
+.archive-screen-signal { stroke-dasharray:90; animation:archive-signal 3s linear infinite; }
+@keyframes archive-terminal-type { 0%,10% { stroke-dashoffset:110; } 50%,90% { stroke-dashoffset:0; } 100% { stroke-dashoffset:110; } }
+@keyframes archive-cursor-blink { 50% { opacity:0; } }
+@keyframes archive-screen-scan { to { transform:translateY(135px); } }
+@keyframes archive-signal { to { stroke-dashoffset:-180; } }

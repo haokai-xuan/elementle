@@ -1,6 +1,16 @@
 const API_BASE = '/api';
+// Only completed wins have a solving guess count; X is excluded.
+function averageWinningGuesses(distribution) {
+  let wins = 0, guesses = 0;
+  for (let i = 1; i <= 8; i++) {
+    const count = Number(distribution[String(i)]) || 0;
+    wins += count;
+    guesses += i * count;
+  }
+  return wins ? (guesses / wins).toFixed(1) : '—';
+}
 function updateStatValues(root, vals) {
-  var keys = ['wins', 'played', 'streak', 'best', 'rate'];
+  var keys = ['wins', 'played', 'streak', 'best', 'rate', 'average'];
   keys.forEach(function (key, idx) {
     var el = root.querySelector('[data-stat="' + key + '"]');
     if (!el) return;
@@ -117,9 +127,13 @@ function renderStatsPage(root, loading) {
                 <span class="stat-value" data-stat="best">${maxWinStreak}</span>
                 <span class="stat-label">Best streak</span>
               </div>
-              <div class="stat-item stat-item-wide">
+              <div class="stat-item">
                 <span class="stat-value" data-stat="rate">${winRateDisplay}</span>
                 <span class="stat-label">Win rate</span>
+              </div>
+              <div class="stat-item" title="Average guesses in completed daily wins; unsuccessful and practice games are excluded.">
+                <span class="stat-value" data-stat="average">${loading ? '—' : averageWinningGuesses(distributionData)}</span>
+                <span class="stat-label">Avg guesses (wins)</span>
               </div>
             </div>
             <div class="guess-distribution">
@@ -146,15 +160,13 @@ function renderStatsPage(root, loading) {
       </div>
 
       <p class="js-stats-status auth-error" role="status"></p>
-      ${['today', 'yesterday'].map(period => `
-      <section class="guess-distribution community-distribution js-${period}-distribution" aria-labelledby="${period}-title">
-        <h2 class="distribution-title" id="${period}-title">${period === 'today' ? 'Today' : 'Yesterday'}’s community results</h2>
+      <section class="guess-distribution community-distribution js-today-distribution" aria-labelledby="today-title">
+        <h2 class="distribution-title" id="today-title">Today’s community results</h2>
         <p class="distribution-caption js-distribution-date"></p>
         <p class="distribution-caption js-distribution-status" role="status">Loading results…</p>
         <div class="bars-container js-distribution-bars" hidden></div>
         <button type="button" class="auth-forgot-link js-distribution-retry" hidden>Try again</button>
-      </section>`).join('')}
-      <a class="modal-back-button" href="/">Back to game</a>
+      </section>
     </div>
   `;
 
@@ -334,7 +346,7 @@ async function getDailyResultColumn(dayKey) {
   }, dayKey);
 }
 
-// Today and yesterday use the same five-minute snapshot, including across navigation.
+// Cache today’s community snapshot for five minutes, including across navigation.
 function fetchCommunityDistribution() {
   const scope = getLocalDay().key + ':' + statsGameRevision();
   return cachedStatsRequest('community', scope, 5 * 60000, async () => {
@@ -421,7 +433,6 @@ async function initializeStats() {
   const token = localStorage.getItem('elementle_token');
   renderStatsPage(root, !!token);
   initializeCommunityDistribution(root, 'today');
-  initializeCommunityDistribution(root, 'yesterday');
   if (!token) return;
   const status = root.querySelector('.js-stats-status');
   status.textContent = 'Loading your statistics…';
@@ -437,7 +448,7 @@ async function initializeStats() {
       return response.json();
     });
     updateStatValues(root, { wins: data.totalWins || 0, played: data.totalGamesPlayed || 0,
-      streak: data.currentStreak || 0, best: data.maxStreak || 0, rate: (data.winRate || 0) + '%' });
+      streak: data.currentStreak || 0, best: data.maxStreak || 0, rate: (data.winRate || 0) + '%', average: averageWinningGuesses(data.guessDistribution || {}) });
     updateDistributionBars(root, data.guessDistribution || {});
     status.textContent = '';
   } catch {

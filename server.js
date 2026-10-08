@@ -160,6 +160,29 @@ function gameHeaders(req, extra = {}) {
   return headers;
 }
 
+for (const endpoint of ['archives', 'start', 'guess']) {
+  const method = endpoint === 'archives' ? 'get' : 'post';
+  app[method]('/api/practice/' + endpoint, async (req, res) => {
+    try {
+      const upstream = await fetch(`${API_BASE_URL}/practice/${endpoint}${endpoint === 'archives' ? '?localDate=' + encodeURIComponent(req.query.localDate || '') : ''}`, {
+        method: method.toUpperCase(),
+        headers: { ...authProxyHeaders(), 'X-Guest-ID': req.headers['x-guest-id'] || '', ...(req.headers.authorization ? { Authorization: req.headers.authorization } : {}) },
+        ...(method === 'post' ? { body: JSON.stringify(req.body) } : {})
+      });
+      res.set('Cache-Control', 'no-store');
+      const contentType = upstream.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        console.error(`[practice proxy] ${endpoint}: upstream returned ${upstream.status} (${contentType})`);
+        const error = upstream.status === 404
+          ? 'The practice API has not been deployed yet. Deploy the updated Daily-Element-API service.'
+          : 'The lab service returned an unexpected response. Please try again.';
+        return res.status(upstream.status === 404 ? 503 : 502).json({ error });
+      }
+      res.status(upstream.status).json(await upstream.json());
+    } catch (error) { res.status(502).json({ error: 'Unable to reach the lab. Please try again.' }); }
+  });
+}
+
 app.get('/api/user/stats', async (req, res) => {
   const localDate = req.query.localDate || '';
   const url = `${API_BASE_URL}/user/stats?localDate=${encodeURIComponent(localDate)}`;

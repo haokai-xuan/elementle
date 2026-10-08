@@ -1,3 +1,102 @@
+const playParams = new URLSearchParams(location.search);
+const playMode = playParams.get('mode') === 'freeplay' ? 'freeplay' : playParams.get('mode') === 'archive' ? 'archive' : 'daily';
+const practice = playMode !== 'daily';
+const playDate = playParams.get('date');
+let practiceGame = null;
+let guestId = localStorage.getItem('elementle_guest_id');
+if (!guestId) { guestId = crypto.randomUUID(); localStorage.setItem('elementle_guest_id', guestId); }
+const practicePrefix = `elementle_${playMode}_${playDate || 'session'}_${localStorage.getItem('elementle_token') || guestId}_`;
+const gameStorage = practice ? {
+  getItem: key => localStorage.getItem(key === 'elementle_token' ? key : practicePrefix + key),
+  setItem: (key, value) => localStorage.setItem(practicePrefix + key, value)
+} : localStorage;
+async function practiceRequest(path, body) {
+  const token = getAuthToken();
+  const res = await fetch('/api/practice/' + path, {
+    method: body ? 'POST' : 'GET',
+    signal: typeof AbortSignal.timeout === 'function' ? AbortSignal.timeout(12000) : undefined,
+    headers: { 'Content-Type': 'application/json', 'X-Guest-ID': guestId, ...(token ? { Authorization: 'Bearer ' + token } : {}) },
+    ...(body ? { body: JSON.stringify(body) } : {})
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Unable to load lab');
+  return data;
+}
+let pendingPracticeGuesses = [];
+let practiceSyncing = false;
+let practiceSyncFailed = false;
+function updateModeUI() {
+  document.body.dataset.mode = playMode;
+  const badge = document.querySelector('.mode-badge');
+  badge.hidden = !practice;
+  badge.textContent = playMode === 'freeplay' ? '∞ FREEPLAY' : 'LAB ARCHIVES';
+  badge.title = 'Practice mode · daily stats stay untouched';
+  document.querySelector('.mode-tools').hidden = !practice;
+  const label = document.querySelector('.mode-file');
+  const date = playDate && new Date(Number(playDate.slice(0,4)), Number(playDate.slice(4,6))-1, Number(playDate.slice(6,8)));
+  label.textContent = playMode === 'archive' && date && !isNaN(date) ? 'FILE: ' + date.toLocaleDateString(undefined, {month:'short',day:'numeric',year:'numeric'}).toUpperCase() : 'EXPERIMENT: ∞';
+  document.title = playMode === 'archive' ? 'Lab archives | Elementle' : 'Freeplay | Elementle';
+  document.querySelectorAll('.freeplay-nav').forEach(el => { if (playMode === 'freeplay') el.setAttribute('aria-current','page'); });
+}
+function updatePracticeSyncUI() {
+  const button = document.querySelector('.practice-sync');
+  button.hidden = !practiceSyncFailed;
+  button.textContent = 'Save interrupted · Retry';
+  const next = document.querySelector('#next-experiment');
+  if (next) { next.disabled = pendingPracticeGuesses.length > 0; next.textContent = pendingPracticeGuesses.length ? 'Saving experiment…' : 'Next experiment ↻'; }
+}
+function savePracticeQueue() {
+  gameStorage.setItem('pendingGuesses', JSON.stringify(pendingPracticeGuesses));
+  if (playMode === 'archive' && practiceGame) {
+    const completed = guessedCorrectly === 'true' || Number(numberOfGuesses) >= 8 || practiceGame.completed;
+    window.ElementleArchiveProgress.publish(playDate, completed, pendingPracticeGuesses.length > 0);
+  }
+}
+async function flushPracticeQueue() {
+  if (practiceSyncing || !practiceGame) return;
+  practiceSyncing = true;
+  practiceSyncFailed = false;
+  updatePracticeSyncUI();
+  try {
+    while (pendingPracticeGuesses.length) {
+      const entry = pendingPracticeGuesses[0];
+      const state = await practiceRequest('guess', { gameId: practiceGame.id, guess: entry.guess, guessNumber: entry.number, localDate: getTodayDateInt() });
+      practiceGame = state;
+      pendingPracticeGuesses.shift();
+      savePracticeQueue();
+    }
+    // Reconcile after all queued guesses, never replace newer local feedback with an older response.
+    applyGameStateFromApi(practiceGame.guesses, practiceGame.guesses.length, practiceGame.won);
+  } catch (error) {
+    practiceSyncFailed = true;
+    createPopup('Your guesses are saved in this browser. Retry to sync with the lab.');
+  } finally {
+    practiceSyncing = false;
+    updatePracticeSyncUI();
+  }
+}
+async function loadPractice(newRound = false) {
+  if (playMode === 'archive' && Number(playDate) >= getTodayDateInt()) { location.replace('/'); return; }
+  practiceGame = await practiceRequest('start', { mode: playMode, date: playDate, localDate: getTodayDateInt(), gameId: playMode === 'freeplay' && !newRound ? gameStorage.getItem('sessionId') : null });
+  gameStorage.setItem('sessionId', practiceGame.id);
+  mysteryElementCache = getElementFromAtomicNumber(practiceGame.atomic_number);
+  pendingPracticeGuesses = newRound ? [] : JSON.parse(gameStorage.getItem('pendingGuesses') || '[]');
+  // A reply may have been lost after commit. Keep only guesses not yet acknowledged.
+  pendingPracticeGuesses = pendingPracticeGuesses.filter(entry => practiceGame.guesses[entry.number - 1] !== entry.guess);
+  if (practiceGame.completed) pendingPracticeGuesses = [];
+  savePracticeQueue();
+  const merged = [...practiceGame.guesses];
+  for (const entry of pendingPracticeGuesses) { if (entry.number === merged.length + 1) merged.push(entry.guess); }
+  applyGameStateFromApi(merged, merged.length, merged.at(-1) === practiceGame.atomic_number);
+  savePracticeQueue();
+  gameStorage.setItem('fadeInAppliedList', '[]');
+  renderFromLocalCache();
+  updateModeUI();
+  if (numberOfGuesses >= 8 || guessedCorrectly === 'true') displayResults();
+  if (pendingPracticeGuesses.length) flushPracticeQueue();
+}
+document.querySelector('.practice-sync').addEventListener('click', flushPracticeQueue);
+window.addEventListener('online', () => { if (practice) flushPracticeQueue(); });
 const options = { 
   year: 'numeric', 
   month: '2-digit', 
@@ -35,7 +134,7 @@ const AUTH_TOKEN_KEY = 'elementle_token';
 const MYSTERY_ELEMENT_STORAGE_KEY = 'elementle_mystery_element';
 
 function getAuthToken() {
-  return localStorage.getItem(AUTH_TOKEN_KEY) || '';
+  return gameStorage.getItem(AUTH_TOKEN_KEY) || '';
 }
 
 function closeMobileNavMenu() {
@@ -82,7 +181,7 @@ function getElementFromAtomicNumber(atomicNumber) {
 
 function getCachedMysteryElement(dateInt) {
   try {
-    const cached = JSON.parse(localStorage.getItem(MYSTERY_ELEMENT_STORAGE_KEY) || 'null');
+    const cached = JSON.parse(gameStorage.getItem(MYSTERY_ELEMENT_STORAGE_KEY) || 'null');
     if (!cached || String(cached.date) !== String(dateInt)) return null;
     return getElementFromAtomicNumber(cached.atomicNumber);
   } catch {
@@ -92,13 +191,13 @@ function getCachedMysteryElement(dateInt) {
 
 function cacheMysteryElement(dateInt, element) {
   if (!element) return;
-  localStorage.setItem(MYSTERY_ELEMENT_STORAGE_KEY, JSON.stringify({
+  gameStorage.setItem(MYSTERY_ELEMENT_STORAGE_KEY, JSON.stringify({
     date: String(dateInt),
     atomicNumber: element.atomicNumber
   }));
 }
 
-const defaultUsedElements = JSON.parse(localStorage.getItem('defaultUsedElements')) || []; // Load defaultUsedElements from localStorage
+const defaultUsedElements = JSON.parse(gameStorage.getItem('defaultUsedElements')) || []; // Load defaultUsedElements from localStorage
 
 
 const inputElement = document.querySelector('.js-guess-input');
@@ -217,15 +316,15 @@ document.body.addEventListener('keydown', (event) => {
   }
 });
 
-const savedGuessesList = localStorage.getItem('guessesList');
+const savedGuessesList = gameStorage.getItem('guessesList');
 const guessesList = savedGuessesList ? JSON.parse(savedGuessesList) : [];
 
-let numberOfGuesses = localStorage.getItem('numberOfGuesses'); // Update local storage with new numberOfGuesses
+let numberOfGuesses = gameStorage.getItem('numberOfGuesses'); // Update local storage with new numberOfGuesses
 if (numberOfGuesses === null) {
   numberOfGuesses = '0';
 }
 
-let guessedCorrectly = localStorage.getItem('guessedCorrectly');
+let guessedCorrectly = gameStorage.getItem('guessedCorrectly');
 if (guessedCorrectly === null) {
   guessedCorrectly = 'false';
 }
@@ -288,11 +387,11 @@ function renderGuess(options) {
   const mystery = getMysteryElement();
   if (!mystery) return;
 
-  const guessedList = JSON.parse(localStorage.getItem('guessesList'));
+  const guessedList = JSON.parse(gameStorage.getItem('guessesList'));
   const elementGrid = document.querySelector('.element-grid');
   elementGrid.innerHTML = '';
 
-  const fadeInAppliedList = JSON.parse(localStorage.getItem('fadeInAppliedList')) || [];
+  const fadeInAppliedList = JSON.parse(gameStorage.getItem('fadeInAppliedList')) || [];
   const guessCount = (guessedList && guessedList.length) || 0;
   const lastGuess = guessCount > 0 ? guessedList[guessCount - 1] : null;
   const lastGuessCorrect = lastGuess && lastGuess.name && lastGuess.name.toLowerCase() === mystery.name.toLowerCase();
@@ -319,7 +418,7 @@ function renderGuess(options) {
       const atomicNumberSpan = document.createElement('span');
       atomicNumberSpan.classList.add('atomic-number');
       const signalSpan = `<span class="atomic-signal">${atomicSignal}</span>`;
-      if (isNew) {
+      if (isNew && !practice) {
         atomicNumberSpan.innerHTML = `0 ${signalSpan}`;
         const target = guessedElement.atomicNumber;
         const duration = 1000;
@@ -404,12 +503,12 @@ function renderGuess(options) {
   }
 
   _initialRenderDone = true;
-  localStorage.setItem('fadeInAppliedList', JSON.stringify(fadeInAppliedList));
+  gameStorage.setItem('fadeInAppliedList', JSON.stringify(fadeInAppliedList));
 }
 
 
 function trackGuessDistribution(guessCount) {
-  let distributionData = JSON.parse(localStorage.getItem('guessDistribution') || JSON.stringify({
+  let distributionData = JSON.parse(gameStorage.getItem('guessDistribution') || JSON.stringify({
     1: 0, 2: 0, 3: 0, 4: 0, 
     5: 0, 6: 0, 7: 0, 8: 0, 
     'X': 0
@@ -421,7 +520,7 @@ function trackGuessDistribution(guessCount) {
     distributionData[guessCount]++;
   }
 
-  localStorage.setItem('guessDistribution', JSON.stringify(distributionData));
+  gameStorage.setItem('guessDistribution', JSON.stringify(distributionData));
 }
 
 
@@ -446,7 +545,7 @@ let _pendingGuessPromise = null;
 let _gameStateSyncPromise = null;
 
 async function processGuess() {
-  if (_guessInFlight) return;
+  if (_guessInFlight || inputElement.disabled || !getMysteryElement() || numberOfGuesses >= 8 || guessedCorrectly === 'true') return;
 
   const inputValue = inputElement.value.trim();
   const guessedElement = elements.find(element => element.name.toLowerCase() === inputValue.toLowerCase());
@@ -473,6 +572,26 @@ async function processGuess() {
 
   _guessInFlight = true;
 
+  if (practice) {
+    const nextGuesses = [...guessesList.map(el => el.atomicNumber), guessedElement.atomicNumber];
+    const won = guessedElement.atomicNumber === practiceGame.atomic_number;
+    applyGameStateFromApi(nextGuesses, nextGuesses.length, won);
+    pendingPracticeGuesses.push({ guess: guessedElement.atomicNumber, number: nextGuesses.length });
+    savePracticeQueue();
+    removeAutocompleteDropdown();
+    renderGuess({ animate: true });
+    if (won || nextGuesses.length >= 8) {
+      displayResults();
+      createPopup(getGameResultMessage(won, nextGuesses.length));
+      if (won && typeof confetti === 'function') confetti({ particleCount: 80, spread: 100 });
+    }
+    _guessInFlight = false;
+    updatePracticeSyncUI();
+    flushPracticeQueue();
+    inputElement.focus();
+    return;
+  }
+
   guessesList.push({
     name: guessedElement.name,
     atomicNumber: guessedElement.atomicNumber,
@@ -481,8 +600,8 @@ async function processGuess() {
     symbol: guessedElement.symbol
   });
   numberOfGuesses = +numberOfGuesses + 1;
-  localStorage.setItem('guessesList', JSON.stringify(guessesList));
-  localStorage.setItem('numberOfGuesses', numberOfGuesses);
+  gameStorage.setItem('guessesList', JSON.stringify(guessesList));
+  gameStorage.setItem('numberOfGuesses', numberOfGuesses);
   removeAutocompleteDropdown();
   renderGuess({ animate: true });
 
@@ -496,7 +615,7 @@ async function processGuess() {
   const isGameOver = numberOfGuesses >= 8;
 
   // Invalidate Stats page snapshots when this browser submits a new guess.
-  localStorage.setItem('elementle_stats_revision', String(Date.now()));
+  gameStorage.setItem('elementle_stats_revision', String(Date.now()));
 
   const token = getAuthToken();
 
@@ -514,13 +633,13 @@ async function processGuess() {
       });
 
     if (isCorrect) {
-      localStorage.setItem('guessedCorrectly', 'true');
+      gameStorage.setItem('guessedCorrectly', 'true');
       guessedCorrectly = 'true';
       confetti({ particleCount: 150, spread: 200 });
       createPopup(getGameResultMessage(true, numberOfGuesses));
       displayResults();
     } else if (isGameOver) {
-      localStorage.setItem('guessedCorrectly', 'false');
+      gameStorage.setItem('guessedCorrectly', 'false');
       guessedCorrectly = 'false';
       createPopup(getGameResultMessage(false, numberOfGuesses));
       displayResults();
@@ -535,11 +654,11 @@ async function processGuess() {
 
   if (isCorrect) {
     trackGuessDistribution(numberOfGuesses);
-    localStorage.setItem('totalGames', +localStorage.getItem('totalGames') + 1);
-    localStorage.setItem('totalWins', +localStorage.getItem('totalWins') + 1);
-    localStorage.setItem('currentStreak', +localStorage.getItem('currentStreak') + 1);
-    localStorage.setItem('maxWinStreak', (Number(localStorage.getItem("currentStreak")) > Number(localStorage.getItem("maxWinStreak"))) ? localStorage.getItem("currentStreak"): localStorage.getItem("maxWinStreak"));
-    localStorage.setItem('guessedCorrectly', 'true');
+    gameStorage.setItem('totalGames', +gameStorage.getItem('totalGames') + 1);
+    gameStorage.setItem('totalWins', +gameStorage.getItem('totalWins') + 1);
+    gameStorage.setItem('currentStreak', +gameStorage.getItem('currentStreak') + 1);
+    gameStorage.setItem('maxWinStreak', (Number(gameStorage.getItem("currentStreak")) > Number(gameStorage.getItem("maxWinStreak"))) ? gameStorage.getItem("currentStreak"): gameStorage.getItem("maxWinStreak"));
+    gameStorage.setItem('guessedCorrectly', 'true');
     guessedCorrectly = 'true';
     confetti({ particleCount: 150, spread: 200 });
     createPopup(getGameResultMessage(true, numberOfGuesses));
@@ -547,15 +666,15 @@ async function processGuess() {
     sendDistribution(numberOfGuesses);
   } else if (isGameOver) {
     trackGuessDistribution(0);
-    localStorage.setItem('totalGames', +localStorage.getItem('totalGames') + 1);
-    localStorage.setItem('currentStreak', 0);
-    localStorage.setItem('guessedCorrectly', 'false');
+    gameStorage.setItem('totalGames', +gameStorage.getItem('totalGames') + 1);
+    gameStorage.setItem('currentStreak', 0);
+    gameStorage.setItem('guessedCorrectly', 'false');
     guessedCorrectly = 'false';
     displayResults();
     createPopup(getGameResultMessage(false, numberOfGuesses));
     sendDistribution(9);
   } else {
-    localStorage.setItem('guessedCorrectly', 'false');
+    gameStorage.setItem('guessedCorrectly', 'false');
     guessedCorrectly = 'false';
   }
   inputElement.focus();
@@ -685,11 +804,11 @@ function onElementButtonClick(event) {
 
 function updateLastPlayedDate() {
   const date = new Date();
-  localStorage.setItem('lastPlayedDate', date.toISOString().slice(0,10).replace(/-/g,""));
+  gameStorage.setItem('lastPlayedDate', date.toISOString().slice(0,10).replace(/-/g,""));
 }
 
 function getLastPlayedDate() {
-  return localStorage.getItem('lastPlayedDate');
+  return gameStorage.getItem('lastPlayedDate');
 }
 
 function resetStreakIfNeeded() {
@@ -700,7 +819,7 @@ function resetStreakIfNeeded() {
     const dayBeforeYesterday = new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString().slice(0,10).replace(/-/g,"");
   
     if (lastPlayedDate <= dayBeforeYesterday) {
-      localStorage.setItem('currentStreak', 0);
+      gameStorage.setItem('currentStreak', 0);
     }
   }
 }
@@ -721,20 +840,20 @@ function applyGameStateFromApi(apiGuesses, numGuesses, won) {
   });
   numberOfGuesses = guessesList.length;
   guessedCorrectly = won ? 'true' : 'false';
-  localStorage.setItem('guessesList', JSON.stringify(guessesList));
-  localStorage.setItem('numberOfGuesses', String(numberOfGuesses));
-  localStorage.setItem('guessedCorrectly', guessedCorrectly);
+  gameStorage.setItem('guessesList', JSON.stringify(guessesList));
+  gameStorage.setItem('numberOfGuesses', String(numberOfGuesses));
+  gameStorage.setItem('guessedCorrectly', guessedCorrectly);
 }
 
 function localGuessesMatchServer(apiGuesses, numGuesses, won) {
-  const local = JSON.parse(localStorage.getItem('guessesList') || '[]');
+  const local = JSON.parse(gameStorage.getItem('guessesList') || '[]');
   const serverAtomic = (apiGuesses || []).map(Number);
   const localAtomic = local.map(function (g) { return g.atomicNumber; });
   if (localAtomic.length !== serverAtomic.length) return false;
   for (var i = 0; i < localAtomic.length; i++) {
     if (localAtomic[i] !== serverAtomic[i]) return false;
   }
-  const localWon = localStorage.getItem('guessedCorrectly') === 'true';
+  const localWon = gameStorage.getItem('guessedCorrectly') === 'true';
   return localWon === !!won && local.length === (numGuesses || 0);
 }
 
@@ -760,10 +879,10 @@ async function fetchGameBootstrap(todayInt, token) {
 }
 
 function renderFromLocalCache() {
-  var cachedGuesses = JSON.parse(localStorage.getItem('guessesList') || '[]');
+  var cachedGuesses = JSON.parse(gameStorage.getItem('guessesList') || '[]');
   if (cachedGuesses && cachedGuesses.length > 0) {
     _initialRenderDone = false;
-    localStorage.setItem('fadeInAppliedList', JSON.stringify([]));
+    gameStorage.setItem('fadeInAppliedList', JSON.stringify([]));
     renderGuess({ animate: true, stagger: true });
   } else {
     renderGuess();
@@ -779,7 +898,7 @@ function applyServerGameState(data, options) {
   const unchanged = !options.forceRender && localGuessesMatchServer(apiGuesses, numGuesses, won);
 
   applyGameStateFromApi(apiGuesses, numGuesses, won);
-  localStorage.setItem('gameDate', String(getTodayDateInt()));
+  gameStorage.setItem('gameDate', String(getTodayDateInt()));
 
   if (options.fromLogin) {
     clearEndOfGameUI();
@@ -793,7 +912,7 @@ function applyServerGameState(data, options) {
   const hasGuesses = apiGuesses.length > 0;
   if (hasGuesses) {
     _initialRenderDone = false;
-    localStorage.setItem('fadeInAppliedList', JSON.stringify([]));
+    gameStorage.setItem('fadeInAppliedList', JSON.stringify([]));
     renderGuess({ animate: true, stagger: true });
   } else {
     renderGuess({ animate: true, stagger: false });
@@ -806,15 +925,15 @@ async function setMysteryElementOfTheDay() {
 
   const todayInt = getTodayDateInt();
   const todayStr = String(todayInt);
-  const gameDate = localStorage.getItem('gameDate');
+  const gameDate = gameStorage.getItem('gameDate');
 
   if (gameDate !== todayStr) {
     numberOfGuesses = 0;
-    localStorage.setItem('guessedCorrectly', 'false');
-    localStorage.setItem('numberOfGuesses', '0');
-    localStorage.setItem('guessesList', JSON.stringify([]));
-    localStorage.setItem('fadeInAppliedList', JSON.stringify([]));
-    localStorage.setItem('gameDate', todayStr);
+    gameStorage.setItem('guessedCorrectly', 'false');
+    gameStorage.setItem('numberOfGuesses', '0');
+    gameStorage.setItem('guessesList', JSON.stringify([]));
+    gameStorage.setItem('fadeInAppliedList', JSON.stringify([]));
+    gameStorage.setItem('gameDate', todayStr);
     guessesList.length = 0;
     guessedCorrectly = 'false';
 
@@ -901,6 +1020,7 @@ window.clearEndOfGameUI = clearEndOfGameUI;
 
 async function syncGameStateFromServer() {
   const token = getAuthToken();
+  if (practice) { location.reload(); return; }
   if (!token) return;
   renderShimmerGrid();
   const todayInt = getTodayDateInt();
@@ -923,7 +1043,7 @@ function getMysteryElement() {
 }
 
 function displayResults() {
-  window.dispatchEvent(new Event('elementle:game-complete'));
+  if (!practice) window.dispatchEvent(new Event('elementle:game-complete'));
   let additionalInfoElement = document.querySelector('.js-additional-info');
   let revealAnswerElement = document.querySelector('.js-reveal-answer');
 
@@ -960,7 +1080,7 @@ function displayResults() {
     shareButtonElement.innerHTML = `<button class="share-button"><svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#FFFFFF"><path d="M648-96q-50 0-85-35t-35-85q0-9 4-29L295-390q-16 14-36.05 22-20.04 8-42.95 8-50 0-85-35t-35-85q0-50 35-85t85-35q23 0 43 8t36 22l237-145q-2-7-3-13.81-1-6.81-1-15.19 0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35q-23 0-43-8t-36-22L332-509q2 7 3 13.81 1 6.81 1 15.19 0 8.38-1 15.19-1 6.81-3 13.81l237 145q16-14 36.05-22 20.04-8 42.95-8 50 0 85 35t35 85q0 50-35 85t-85 35Zm0-72q20.4 0 34.2-13.8Q696-195.6 696-216q0-20.4-13.8-34.2Q668.4-264 648-264q-20.4 0-34.2 13.8Q600-236.4 600-216q0 20.4 13.8 34.2Q627.6-168 648-168ZM216-432q20.4 0 34.2-13.8Q264-459.6 264-480q0-20.4-13.8-34.2Q236.4-528 216-528q-20.4 0-34.2 13.8Q168-500.4 168-480q0 20.4 13.8 34.2Q195.6-432 216-432Zm432-264q20.4 0 34.2-13.8Q696-723.6 696-744q0-20.4-13.8-34.2Q668.4-792 648-792q-20.4 0-34.2 13.8Q600-764.4 600-744q0 20.4 13.8 34.2Q627.6-696 648-696Zm0 480ZM216-480Zm432-264Z"/></svg>Share</button>`;
   }
 
-  guessedCorrectly = localStorage.getItem('guessedCorrectly');
+  guessedCorrectly = gameStorage.getItem('guessedCorrectly');
 
   if (guessedCorrectly === 'false') {
     const m = getMysteryElement();
@@ -976,10 +1096,30 @@ function displayResults() {
     </div>`;
   }
 
+  if (practice) {
+    shareButtonElement.innerHTML = playMode === 'freeplay' ? '<button class="share-button" id="next-experiment">Next random element ↻</button>' : '<a class="additional-info" href="/stats#lab-archives">Back to Lab archives</a>';
+    document.querySelector('#next-experiment')?.addEventListener('click', async () => {
+      if (pendingPracticeGuesses.length) return;
+      const nextButton = document.querySelector('#next-experiment');
+      nextButton.disabled = true;
+      nextButton.textContent = 'Preparing experiment…';
+      inputElement.disabled = true;
+      guessButtonElement.disabled = true;
+      try {
+        await loadPractice(true);
+        clearEndOfGameUI();
+        inputElement.value = '';
+        inputElement.focus();
+      } catch (error) { createPopup(error.message); updatePracticeSyncUI(); }
+    });
+    updatePracticeSyncUI();
+    return;
+  }
+
   shareButtonElement.addEventListener('click', () => {
-    guessedCorrectly = localStorage.getItem('guessedCorrectly');
-    numberOfGuesses = localStorage.getItem('numberOfGuesses');
-    const guessedList = JSON.parse(localStorage.getItem('guessesList'));
+    guessedCorrectly = gameStorage.getItem('guessedCorrectly');
+    numberOfGuesses = gameStorage.getItem('numberOfGuesses');
+    const guessedList = JSON.parse(gameStorage.getItem('guessesList'));
     let shareText = `#Elementle 🧪\n${new Date().toLocaleDateString('en-US', options).slice(0, 10)}\n`;
   
     let line = '';
@@ -1156,12 +1296,16 @@ function scheduleMidnightReload() {
 }
 
 async function initializeGame() {
+  if (practice) updateModeUI();
   inputElement.disabled = true;
   guessButtonElement.disabled = true;
 
-  await setMysteryElementOfTheDay();
+  try {
+    if (practice) await loadPractice(); else await setMysteryElementOfTheDay();
+  } catch (error) { createPopup(error.message); return; }
+  if (!getMysteryElement()) return;
 
-  scheduleMidnightReload();
+  if (!practice) scheduleMidnightReload();
 
   if (numberOfGuesses >= 8 || guessedCorrectly === 'true') {
     displayResults();

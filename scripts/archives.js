@@ -1,0 +1,69 @@
+(function () {
+  const panel = document.querySelector('#lab-archives');
+  if (!panel) return;
+  const progressStore = window.ElementleArchiveProgress;
+  const status = document.querySelector('#archive-status');
+  let data = progressStore.read().snapshot || { dates: [], progress: {} };
+  let month = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  const first = new Date(2026, 6, 1);
+  let requestId = 0;
+  function render() {
+    const today = new Date();
+    const todayInt = String(today.getFullYear()*10000 + (today.getMonth()+1)*100 + today.getDate());
+    const last = new Date(today.getFullYear(), today.getMonth(), 1);
+    const current = progressStore.merge(data);
+    const available = new Set(current.dates.map(String));
+    document.querySelector('#archive-month').textContent = month.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+    document.querySelector('#archive-prev').disabled = month <= first;
+    document.querySelector('#archive-next').disabled = month >= last;
+    const grid = document.querySelector('#archive-days'); grid.replaceChildren();
+    for (let n = 0; n < month.getDay(); n++) grid.append(document.createElement('span'));
+    const days = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+    for (let n = 1; n <= days; n++) {
+      const date = String(month.getFullYear() * 10000 + (month.getMonth()+1)*100 + n);
+      const button = document.createElement('button');
+      const isToday = date === todayInt;
+      const progress = !isToday && current.progress[date];
+      button.textContent = n + (isToday ? ' ◦' : progress === 'complete' ? ' ✓' : progress ? ' •' : '');
+      button.disabled = !isToday && ((!available.has(date) && !progress) || date > todayInt || date < '20260721');
+      button.className = isToday ? 'today' : progress || '';
+      if (isToday) button.setAttribute('aria-current', 'date');
+      button.setAttribute('aria-label', `${month.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })} ${n}${isToday ? ', today — daily puzzle' : ''}${progress ? ', ' + progress : ''}`);
+      button.addEventListener('click', () => { location.href = isToday ? '/' : '/?mode=archive&date=' + date; });
+      grid.append(button);
+    }
+  }
+  async function refresh() {
+    const id = ++requestId;
+    // Restore the newest local markers first, including when restored from the back/forward cache.
+    data = progressStore.read().snapshot || { dates: [], progress: {} };
+    if (data.dates.length) status.textContent = '◦ Today’s daily puzzle · ✓ Completed · • In progress';
+    render();
+    try {
+      const today = new Date();
+      const date = today.getFullYear()*10000 + (today.getMonth()+1)*100 + today.getDate();
+      const token = localStorage.getItem('elementle_token');
+      const response = await fetch('/api/practice/archives?localDate=' + date, {
+        cache: 'no-store',
+        headers: { 'X-Guest-ID': localStorage.getItem('elementle_guest_id'), ...(token ? { Authorization: 'Bearer ' + token } : {}) }
+      });
+      const snapshot = await response.json();
+      if (id !== requestId) return;
+      if (!response.ok) throw new Error(snapshot.error || 'Unable to load archives');
+      data = snapshot;
+      progressStore.cache(snapshot);
+      render();
+      status.textContent = '◦ Today’s daily puzzle · ✓ Completed · • In progress';
+    } catch (error) { if (id === requestId) status.textContent = error.message; }
+  }
+  document.querySelector('#archive-prev').onclick = () => { month = new Date(month.getFullYear(), month.getMonth()-1, 1); render(); };
+  document.querySelector('#archive-next').onclick = () => { month = new Date(month.getFullYear(), month.getMonth()+1, 1); render(); };
+  window.addEventListener('pageshow', event => { if (event.persisted) refresh(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+  window.addEventListener('focus', refresh);
+  window.addEventListener('elementle:archive-progress', render);
+  window.addEventListener('storage', event => {
+    if (event.key === 'elementle_token' || event.key === 'elementle_guest_id' || event.key?.startsWith(progressStore.prefix)) refresh();
+  });
+  refresh();
+})();

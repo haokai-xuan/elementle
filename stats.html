@@ -20,15 +20,29 @@
   <link rel="icon" type="image/png" href="images/favicon.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer">
   <link rel="stylesheet" href="styles/pages.css">
+  <link rel="stylesheet" href="styles/lab.css">
   <link rel="stylesheet" href="/styles/footer.css">
   <script type="text/javascript" async="async" data-noptimize="1" data-cfasync="false" src="//scripts.mediavine.com/tags/80c3c057-e005-4c3f-a5a4-5b6e721e5808.js"></script>
 </head>
 <body class="detail-page">
 <header class="detail-header"><a class="nav-text" href="/" aria-label="Elementle home">ELEME<span class="green-letter">N</span>TLE</a><nav aria-label="Main navigation"><a href="/">Play</a><a href="/how-to-play">Help</a><a href="/elements">Elements</a><a href="/stats" aria-current="page">Stats</a><a href="/account">Account</a></nav></header>
-<main class="page-container"><div class="js-stats-page"></div></main>
+<main class="page-container"><div class="js-stats-page"></div>
+      <section id="lab-archives" class="lab-archives" aria-labelledby="lab-title">
+        <div class="lab-orbit" aria-hidden="true">⚛</div>
+        <div class="lab-heading"><div><small>ELEMENTLE / TIME LAB</small><h2 id="lab-title">Lab archives</h2></div><span class="lab-status">● SYSTEM ONLINE</span></div>
+        <p>Revisit past experiments. One eight-guess attempt per date. Your daily stats stay untouched.</p>
+        <div class="lab-controls"><button id="archive-prev" aria-label="Previous month">←</button><h3 id="archive-month"></h3><button id="archive-next" aria-label="Next month">→</button></div>
+        <div class="lab-week" aria-hidden="true"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>
+        <div id="archive-days" class="lab-days"></div><p id="archive-status" role="status">Connecting to the archives…</p>
+        <small>Available from July 21, 2026. Sign in to keep archive progress across devices.</small>
+      </section>
+      <div class="archives-back"><a class="modal-back-button" href="/">Back to game</a></div>
+</main>
   <!-- site-footer -->
 <script src="scripts/auth.js"></script>
 <script src="scripts/stats.js"></script>
+<script src="scripts/archive-progress.js"></script>
+<script src="scripts/archives.js"></script>
 <script src="scripts/privacy-controls.js"></script>
 </body>
 </html>
