@@ -334,7 +334,7 @@ const hintButton = document.querySelector('.js-hint-button');
 const hintContainer = document.querySelector('.js-hint-container');
 
 // Add click event listener to the hint button
-hintButton.addEventListener('click', (event) => {
+hintButton.addEventListener('click', async (event) => {
   event.preventDefault();
   const mystery = getMysteryElement();
   if (!mystery || !mystery.hints) return;
@@ -346,8 +346,34 @@ hintButton.addEventListener('click', (event) => {
     return;
   }
 
+  const hintKey = 'hintUsed:' + getTodayDateInt();
+  if (!practice && gameStorage.getItem(hintKey) !== 'true') {
+    if (!window.confirm('Reveal a hint? Today’s game will be marked as played with a hint.')) return;
+    hintButton.disabled = true;
+    try {
+      const pending = _pendingGuessPromise || _gameStateSyncPromise;
+      if (pending) await pending;
+      const token = getAuthToken();
+      if (token) {
+        const res = await fetch(API_BASE + '/game/hint', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify({ localDate: getTodayDateInt() })
+        });
+        if (!res.ok) throw new Error('Hint could not be saved');
+      }
+      gameStorage.setItem(hintKey, 'true');
+      gameStorage.setItem('hintUsedAtGuess:' + getTodayDateInt(), String(numberOfGuesses || 0));
+    } catch (error) {
+      createPopup('Could not save hint use. Please try again.');
+      return;
+    } finally {
+      hintButton.disabled = false;
+    }
+  }
+  if (!practice && !getAuthToken() && numberOfGuesses > 0 && guessedCorrectly !== 'true' && numberOfGuesses < 8) recordVaultDaily();
   const idx = getHintIndexForToday();
-  hintContainer.innerHTML = mystery.hints[idx];
+  hintContainer.textContent = mystery.hints[idx];
   hintContainer.setAttribute('aria-hidden', 'false');
   hintButton.setAttribute('aria-expanded', 'true');
   requestAnimationFrame(() => hintContainer.classList.add('hint-visible'));
@@ -613,6 +639,8 @@ async function processGuess() {
 
   const isCorrect = guessedElement.name.toLowerCase() === getMysteryElement().name.toLowerCase();
   const isGameOver = numberOfGuesses >= 8;
+
+  recordVaultDaily(isCorrect);
 
   // Invalidate Stats page snapshots when this browser submits a new guess.
   gameStorage.setItem('elementle_stats_revision', String(Date.now()));
@@ -891,6 +919,7 @@ function renderFromLocalCache() {
 
 function applyServerGameState(data, options) {
   options = options || {};
+  if (!practice && data.hintUsed) gameStorage.setItem('hintUsed:' + getTodayDateInt(), 'true');
   const apiGuesses = data.guesses || [];
   const numGuesses = data.numGuesses;
   const won = data.won;
@@ -1321,3 +1350,13 @@ async function initializeGame() {
 // exist. Starting here avoids waiting for non-essential resources such as ads,
 // web fonts, images, and analytics before the game API requests begin.
 initializeGame();
+
+// Daily guests keep a per-puzzle ledger; account records come from the API.
+function recordVaultDaily(won = guessedCorrectly === 'true') {
+  if (practice || getAuthToken() || !getMysteryElement()) return;
+  const date = String(getTodayDateInt());
+  window.ElementleVault?.recordGuest({ number: getMysteryElement().atomicNumber,
+    date: date.slice(0,4) + '-' + date.slice(4,6) + '-' + date.slice(6,8),
+    guesses: Number(numberOfGuesses), won,
+    hint: gameStorage.getItem('hintUsed:' + date) === 'true' });
+}

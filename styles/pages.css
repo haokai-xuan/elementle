@@ -91,3 +91,5 @@
 .stats-modal :is([data-bar="X"], [data-result-column="X"]) .bar-label { color:#f87171; }
 .stats-modal .stat-item:nth-child(6) { animation-delay:.5s; }
 .stats-modal .stat-item:nth-child(6) .stat-value { animation-delay:.6s; }
+
+.vault-nav-icon { flex-shrink: 0; vertical-align: middle; }

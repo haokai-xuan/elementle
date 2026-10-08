@@ -52,6 +52,26 @@ function upstreamHeaders(extra = {}) {
   return headers;
 }
 
+app.get('/api/vault', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  try {
+    const upstream = await fetch(`${API_BASE_URL}/vault`, {
+      headers: { ...authProxyHeaders(), 'X-Guest-ID': req.headers['x-guest-id'] || '', ...(req.headers.authorization ? { Authorization: req.headers.authorization } : {}) },
+      signal: AbortSignal.timeout(12000)
+    });
+    const data = await upstream.json().catch(() => ({ error: 'Vault service is not available yet.' }));
+    res.status(upstream.status).json(data);
+  } catch { res.status(502).json({ error: 'Unable to reach the vault. Please retry.' }); }
+});
+
+const vaultPages = require('./lib/vault-pages').createVaultPages(__dirname);
+app.get('/vault', (req, res) => res.type('html').send(vaultPages.overview));
+app.get('/vault/:atomicNumber', (req, res) => {
+  const page = vaultPages.details.get(req.params.atomicNumber);
+  if (!page) return res.status(404).send('Element not found. Choose an atomic number from 1 to 118.');
+  res.type('html').send(page);
+});
+
 const mysteryElementCache = new Map();
 
 app.get('/api/mystery_element/:date', async (req, res) => {
@@ -249,6 +269,22 @@ app.post('/api/game/guess', async (req, res) => {
     res.status(upstream.status).json(data);
   } catch (err) {
     console.error('[proxy] /api/game/guess:', err.message);
+    res.status(502).json({ error: 'Upstream error', detail: err.message });
+  }
+});
+
+app.post('/api/game/hint', async (req, res) => {
+  const url = `${API_BASE_URL}/game/hint`;
+  try {
+    const upstream = await fetch(url, {
+      method: 'POST',
+      headers: gameHeaders(req, { 'Content-Type': 'application/json' }),
+      body: JSON.stringify(req.body)
+    });
+    const data = await upstream.json().catch(() => ({}));
+    res.status(upstream.status).json(data);
+  } catch (err) {
+    console.error('[proxy] /api/game/hint:', err.message);
     res.status(502).json({ error: 'Upstream error', detail: err.message });
   }
 });
