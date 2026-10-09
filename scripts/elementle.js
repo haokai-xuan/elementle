@@ -309,6 +309,7 @@ document.body.addEventListener('click', () => {
 
 document.body.addEventListener('keydown', (event) => {
   if (event.key === 'Enter'){
+    if (event.target.closest('button, a, textarea, [contenteditable="true"]')) return;
       if (document.querySelector('.autocomplete-list')) {
         return;
       }
@@ -333,12 +334,66 @@ if (guessedCorrectly === null) {
 const hintButton = document.querySelector('.js-hint-button');
 const hintContainer = document.querySelector('.js-hint-container');
 
+let cancelHintConfirmation = null;
+
+function confirmHintInGame() {
+  return new Promise(resolve => {
+    hintContainer.innerHTML = `
+      <div class="hint-confirmation">
+        <strong>Reveal a hint?</strong>
+        <p>Today’s game will be marked as played with a hint.</p>
+        <div class="hint-confirmation-actions">
+          <button type="button" class="hint-cancel">Keep solving</button>
+          <button type="button" class="hint-reveal">Reveal hint</button>
+        </div>
+      </div>`;
+    hintContainer.setAttribute('role', 'group');
+    hintContainer.setAttribute('aria-label', 'Confirm hint use');
+    hintContainer.setAttribute('aria-hidden', 'false');
+    hintButton.setAttribute('aria-expanded', 'true');
+    hintContainer.classList.add('hint-visible');
+    const cancel = hintContainer.querySelector('.hint-cancel');
+    const reveal = hintContainer.querySelector('.hint-reveal');
+    function finish(accepted) {
+      cancelHintConfirmation = null;
+      hintContainer.removeEventListener('keydown', onKey);
+      hintContainer.setAttribute('role', 'status');
+      hintContainer.removeAttribute('aria-label');
+      hintContainer.textContent = accepted ? 'Revealing your hint…' : '';
+      if (!accepted) {
+        hintContainer.classList.remove('hint-visible');
+        hintContainer.setAttribute('aria-hidden', 'true');
+        hintButton.setAttribute('aria-expanded', 'false');
+      }
+      hintButton.focus({ preventScroll: true });
+      resolve(accepted);
+    }
+    function onKey(event) {
+      // Confirmation buttons must not trigger the game's Enter-to-guess shortcut.
+      event.stopPropagation();
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        finish(false);
+      }
+    }
+    cancelHintConfirmation = () => finish(false);
+    cancel.addEventListener('click', () => finish(false), { once: true });
+    reveal.addEventListener('click', () => finish(true), { once: true });
+    hintContainer.addEventListener('keydown', onKey);
+    cancel.focus({ preventScroll: true });
+  });
+}
+
 // Add click event listener to the hint button
 hintButton.addEventListener('click', async (event) => {
   event.preventDefault();
   const mystery = getMysteryElement();
   if (!mystery || !mystery.hints) return;
 
+  if (cancelHintConfirmation) {
+    cancelHintConfirmation();
+    return;
+  }
   if (hintContainer.classList.contains('hint-visible')) {
     hintContainer.classList.remove('hint-visible');
     hintContainer.setAttribute('aria-hidden', 'true');
@@ -348,7 +403,7 @@ hintButton.addEventListener('click', async (event) => {
 
   const hintKey = 'hintUsed:' + getTodayDateInt();
   if (!practice && gameStorage.getItem(hintKey) !== 'true') {
-    if (!window.confirm('Reveal a hint? Today’s game will be marked as played with a hint.')) return;
+    if (!await confirmHintInGame()) return;
     hintButton.disabled = true;
     try {
       const pending = _pendingGuessPromise || _gameStateSyncPromise;
@@ -365,6 +420,9 @@ hintButton.addEventListener('click', async (event) => {
       gameStorage.setItem(hintKey, 'true');
       gameStorage.setItem('hintUsedAtGuess:' + getTodayDateInt(), String(numberOfGuesses || 0));
     } catch (error) {
+      hintContainer.classList.remove('hint-visible');
+      hintContainer.setAttribute('aria-hidden', 'true');
+      hintButton.setAttribute('aria-expanded', 'false');
       createPopup('Could not save hint use. Please try again.');
       return;
     } finally {
@@ -608,7 +666,7 @@ async function processGuess() {
     renderGuess({ animate: true });
     if (won || nextGuesses.length >= 8) {
       displayResults();
-      createPopup(getGameResultMessage(won, nextGuesses.length));
+      showGameResult(won, nextGuesses.length);
       if (won && typeof confetti === 'function') confetti({ particleCount: 80, spread: 100 });
     }
     _guessInFlight = false;
@@ -653,8 +711,15 @@ async function processGuess() {
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
       body: JSON.stringify({ localDate: getTodayDateInt(), guess: guessedElement.atomicNumber })
     })
-      .then(function (res) { return res.json().catch(function () { return {}; }); })
-      .catch(function (e) { console.warn('Game guess sync failed', e); })
+      .then(async function (res) {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Could not save your game');
+        if (token === getAuthToken()) window.ElementleFreezes?.consume(data);
+        localStorage.setItem('elementle_stats_revision', String(Date.now()));
+        window.dispatchEvent(new Event('elementle:game-complete'));
+        return data;
+      })
+      .catch(function (e) { console.warn('Game guess sync failed', e); createPopup('Could not sync your game. Reopen the game to check your saved result.'); })
       .finally(function () {
         _guessInFlight = false;
         _pendingGuessPromise = null;
@@ -664,12 +729,12 @@ async function processGuess() {
       gameStorage.setItem('guessedCorrectly', 'true');
       guessedCorrectly = 'true';
       confetti({ particleCount: 150, spread: 200 });
-      createPopup(getGameResultMessage(true, numberOfGuesses));
+      showGameResult(true, numberOfGuesses);
       displayResults();
     } else if (isGameOver) {
       gameStorage.setItem('guessedCorrectly', 'false');
       guessedCorrectly = 'false';
-      createPopup(getGameResultMessage(false, numberOfGuesses));
+      showGameResult(false, numberOfGuesses);
       displayResults();
     } else {
       _guessInFlight = false;
@@ -689,7 +754,7 @@ async function processGuess() {
     gameStorage.setItem('guessedCorrectly', 'true');
     guessedCorrectly = 'true';
     confetti({ particleCount: 150, spread: 200 });
-    createPopup(getGameResultMessage(true, numberOfGuesses));
+    showGameResult(true, numberOfGuesses);
     displayResults();
     sendDistribution(numberOfGuesses);
   } else if (isGameOver) {
@@ -699,7 +764,7 @@ async function processGuess() {
     gameStorage.setItem('guessedCorrectly', 'false');
     guessedCorrectly = 'false';
     displayResults();
-    createPopup(getGameResultMessage(false, numberOfGuesses));
+    showGameResult(false, numberOfGuesses);
     sendDistribution(9);
   } else {
     gameStorage.setItem('guessedCorrectly', 'false');
@@ -919,6 +984,7 @@ function renderFromLocalCache() {
 
 function applyServerGameState(data, options) {
   options = options || {};
+  if (!practice) window.ElementleFreezes?.consume(data);
   if (!practice && data.hintUsed) gameStorage.setItem('hintUsed:' + getTodayDateInt(), 'true');
   const apiGuesses = data.guesses || [];
   const numGuesses = data.numGuesses;
@@ -1223,6 +1289,13 @@ function displayResults() {
   window._countdownInterval = setInterval(displayCountdown, 1000);
 }
 
+
+function showGameResult(won, guesses) {
+  const title = getGameResultMessage(won, guesses);
+  const detail = won ? 'Solved in ' + guesses + ' / 8 guesses.' : 'All eight guesses used. A new element awaits tomorrow.';
+  if (window.ElementleFreezes) window.ElementleFreezes.notice(title, detail, won ? 'win' : 'loss');
+  else createPopup(title);
+}
 
 function getGameResultMessage(won, guesses) {
   const winMessages = {

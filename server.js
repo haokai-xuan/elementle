@@ -204,6 +204,7 @@ for (const endpoint of ['archives', 'start', 'guess']) {
 }
 
 app.get('/api/user/stats', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
   const localDate = req.query.localDate || '';
   const url = `${API_BASE_URL}/user/stats?localDate=${encodeURIComponent(localDate)}`;
   try {
@@ -220,6 +221,7 @@ app.get('/api/user/stats', async (req, res) => {
 });
 
 app.get('/api/game/state', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
   const localDate = req.query.localDate;
   if (!localDate) {
     return res.status(400).json({ error: 'localDate required (query param YYYYMMDD)' });
@@ -239,6 +241,7 @@ app.get('/api/game/state', async (req, res) => {
 });
 
 app.get('/api/game/bootstrap', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
   const localDate = req.query.localDate;
   if (!localDate) {
     return res.status(400).json({ error: 'localDate required (query param YYYYMMDD)' });

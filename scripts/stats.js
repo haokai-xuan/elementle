@@ -54,6 +54,7 @@ function updateDistributionBars(root, dist) {
 }
 
 var _leaderboardLoaded = false;
+var _calendarSizeObserver;
 
 function renderStatsPage(root, loading) {
   var totalWins, totalGames, currentStreak, maxWinStreak, winRateDisplay;
@@ -167,11 +168,44 @@ function renderStatsPage(root, loading) {
         <div class="bars-container js-distribution-bars" hidden></div>
         <button type="button" class="auth-forgot-link js-distribution-retry" hidden>Try again</button>
       </section>
+
+      <hr class="stats-section-divider">
+      <section class="lab-archives stats-calendar streak-calendar" aria-labelledby="streak-calendar-title">
+        <div class="freeze-scenery" aria-hidden="true"><span>❄</span><span>❄</span><span>❄</span></div>
+        <div class="lab-heading"><h2 id="streak-calendar-title">Streak calendar</h2></div>
+        <p class="js-freeze-guest" ${loading ? 'hidden' : ''}><a href="/account">Sign in</a> to earn streak freezes and keep your daily calendar across devices.</p>
+        <div class="js-freeze-account calendar-body" ${loading ? '' : 'hidden'}>
+          <div class="calendar-intro"><div class="calendar-intro-content"><div class="freeze-summary"><span class="freeze-count">❄ <strong class="js-freeze-count" title="Every ten new daily solves earns one freeze. Milestones reached at capacity are not banked.">— / 2</strong><small> freezes</small></span><span class="js-freeze-progress-label">Loading…</span></div>
+          <progress class="freeze-progress js-freeze-progress" max="10" value="0" aria-label="Daily solves towards your next freeze"></progress>
+          <p>Earn a freeze every 10 daily solves, up to two. Freezes protect failed days and fully covered absences. Protected days preserve your streak without adding wins.</p></div></div>
+          <div class="lab-controls"><button class="js-streak-prev" aria-label="Previous month">←</button><h3 class="js-streak-month"></h3><button class="js-streak-next" aria-label="Next month">→</button></div>
+          <div class="lab-week" aria-hidden="true"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>
+          <div class="lab-days js-streak-days"></div>
+          <div class="calendar-legend"><span class="solved">✓ Solved</span><span class="missed">− Missed</span><span class="failed">× Failed</span><span class="frozen">❄ Freeze used</span></div>
+        </div>
+      </section>
     </div>
   `;
 
 
   _leaderboardLoaded = false;
+  const layout = typeof root.closest === 'function' ? root.closest('.stats-layout') : null;
+  if (layout) {
+    _calendarSizeObserver?.disconnect();
+    const intros = layout.querySelectorAll('.calendar-intro-content');
+    const legends = layout.querySelectorAll('.calendar-legend');
+    _calendarSizeObserver = new ResizeObserver(() => {
+      const height = Math.ceil(Math.max(...Array.from(intros, intro => intro.getBoundingClientRect().height)));
+      layout.style.setProperty('--calendar-intro-height', height + 'px');
+      const legendHeight = Math.ceil(Math.max(...Array.from(legends, legend => {
+        const top = legend.getBoundingClientRect().top;
+        return Math.max(...Array.from(legend.children, item => item.getBoundingClientRect().bottom - top));
+      })));
+      layout.style.setProperty('--calendar-legend-height', legendHeight + 'px');
+    });
+    intros.forEach(intro => _calendarSizeObserver.observe(intro));
+    legends.forEach(legend => _calendarSizeObserver.observe(legend));
+  }
   bindLeaderboardToggle(root);
   syncStatsSwipeViewportHeight(root);
 
@@ -428,31 +462,102 @@ function initializeCommunityDistribution(root, period) {
   load();
 }
 
+function initializeStreakCalendar(root) {
+  let month = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  let currentMonth = month.getTime();
+  let history = {};
+  let ready = false;
+  const first = new Date(2026, 6, 1);
+  function render() {
+    const now = new Date();
+    const today = getLocalDay().key;
+    const latestMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+    if (month.getTime() === currentMonth) month = new Date(latestMonth);
+    currentMonth = latestMonth;
+    root.querySelector('.js-streak-month').textContent = month.toLocaleDateString(undefined, {month:'long',year:'numeric'});
+    root.querySelector('.js-streak-prev').disabled = month <= first;
+    root.querySelector('.js-streak-next').disabled = month >= new Date(now.getFullYear(), now.getMonth(), 1);
+    const grid = root.querySelector('.js-streak-days');
+    grid.replaceChildren();
+    for (let i=0; i<month.getDay(); i++) grid.append(document.createElement('span'));
+    const days = new Date(month.getFullYear(), month.getMonth()+1, 0).getDate();
+    for (let n=1; n<=days; n++) {
+      const key = String(month.getFullYear()*10000 + (month.getMonth()+1)*100 + n);
+      const state = ready ? (key === today && history[key] === 'missed' ? '' : history[key]) || (key < today && key >= '20260721' ? 'missed' : '') : '';
+      const symbol = { solved:'✓', missed:'−', failed:'×', frozen:'❄' }[state] || '';
+      const cell = document.createElement('button');
+      cell.type = 'button';
+      cell.className = state + (key === today ? ' today' : '');
+      cell.disabled = key > today || key < '20260721';
+      cell.innerHTML = '<span class="day-number">' + n + '</span>' + '<span class="day-symbol" aria-hidden="true">' + symbol + '</span>';
+      const label = { solved:'Solved', missed:'Missed', failed:'Failed without a freeze', frozen:'Streak freeze used' }[state] || (key === today ? 'Not completed yet' : 'No result');
+      cell.setAttribute('aria-label', new Date(month.getFullYear(),month.getMonth(),n).toLocaleDateString() + ': ' + label);
+      cell.title = label;
+      if (key === today) cell.setAttribute('aria-current','date');
+      grid.append(cell);
+    }
+    const weeks = Math.ceil((month.getDay() + days) / 7);
+    grid.setAttribute('data-weeks', String(weeks));
+    while (grid.children.length < weeks * 7) grid.append(document.createElement('span'));
+  }
+  root.querySelector('.js-streak-prev').onclick = () => {month = new Date(month.getFullYear(),month.getMonth()-1,1);render();};
+  root.querySelector('.js-streak-next').onclick = () => {month = new Date(month.getFullYear(),month.getMonth()+1,1);render();};
+  render();
+  return data => {
+    const f = data.streakFreezes;
+    ready = true;
+    history = data.calendar || {};
+    root.querySelector('.js-freeze-count').textContent = f ? f.available + ' / ' + f.capacity : '— / 2';
+    root.querySelector('.js-freeze-progress').value = f?.progress || 0;
+    root.querySelector('.js-freeze-progress-label').textContent = f ? (f.available === f.capacity ? 'At capacity · ' : '') + f.progress + ' / ' + f.earnEvery + ' daily solves' : 'Freezes are coming soon';
+    render();
+    window.ElementleFreezes?.consume(data);
+  };
+}
+
 async function initializeStats() {
   const root = document.querySelector('.js-stats-page');
-  const token = localStorage.getItem('elementle_token');
+  let token = localStorage.getItem('elementle_token');
   renderStatsPage(root, !!token);
   initializeCommunityDistribution(root, 'today');
-  if (!token) return;
-  const status = root.querySelector('.js-stats-status');
-  status.textContent = 'Loading your statistics…';
-  const date = new Date();
-  const localDate = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
-  try {
-    const scope = await accountCacheScope(token, String(localDate));
-    const data = await cachedStatsRequest('user_stats', scope, 60000, async () => {
-      const response = await fetch('/api/user/stats?localDate=' + localDate, {
-        headers: { Authorization: 'Bearer ' + token }
+  let updateCalendar = initializeStreakCalendar(root);
+  let requestId = 0;
+  async function refresh() {
+    const auth = localStorage.getItem('elementle_token');
+    if (auth !== token) {
+      token = auth;
+      // Repaint account data immediately so another user's history never lingers.
+      renderStatsPage(root, !!token);
+      initializeCommunityDistribution(root, 'today');
+      updateCalendar = initializeStreakCalendar(root);
+    }
+    const id = ++requestId;
+    if (!auth) return;
+    const status = root.querySelector('.js-stats-status');
+    try {
+      const response = await fetch('/api/user/stats?localDate=' + getLocalDay().key, {
+        cache:'no-store', headers: {Authorization:'Bearer ' + auth}
       });
       if (!response.ok) throw new Error('Unable to load statistics');
-      return response.json();
-    });
-    updateStatValues(root, { wins: data.totalWins || 0, played: data.totalGamesPlayed || 0,
-      streak: data.currentStreak || 0, best: data.maxStreak || 0, rate: (data.winRate || 0) + '%', average: averageWinningGuesses(data.guessDistribution || {}) });
-    updateDistributionBars(root, data.guessDistribution || {});
-    status.textContent = '';
-  } catch {
-    status.textContent = 'Could not load your statistics. Please refresh to try again.';
+      const data = await response.json();
+      if (id !== requestId || auth !== localStorage.getItem('elementle_token')) return;
+      updateStatValues(root, {wins:data.totalWins || 0, played:data.totalGamesPlayed || 0,
+        streak:data.currentStreak || 0, best:data.maxStreak || 0, rate:(data.winRate || 0) + '%',
+        average:averageWinningGuesses(data.guessDistribution || {})});
+      updateDistributionBars(root, data.guessDistribution || {});
+      updateCalendar(data);
+      status.textContent = '';
+    } catch {
+      if (id === requestId) status.textContent = 'Could not load your statistics. We’ll try again when you return to this tab.';
+    }
   }
+  window.addEventListener('focus', refresh);
+  window.addEventListener('pageshow', event => {if (event.persisted) refresh();});
+  window.addEventListener('elementle:auth-change', refresh);
+  window.addEventListener('elementle:game-complete', refresh);
+  window.addEventListener('storage', event => {if (['elementle_token','elementle_stats_revision'].includes(event.key)) refresh();});
+  document.addEventListener('visibilitychange', () => {if (!document.hidden) refresh();});
+  setInterval(() => {if (!document.hidden) refresh();}, 60000);
+  await refresh();
 }
 initializeStats();

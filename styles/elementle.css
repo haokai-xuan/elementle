@@ -2585,3 +2585,12 @@ body.modal-open {
   .element { transition:none; }
   .element:not(.guessed-element).next-slot { animation:none; border-color:#538d4e; }
 }
+
+/* Hint confirmation stays beside the game instead of opening a browser dialog. */
+.hint-confirmation strong { display:block; font-size:1.1rem; }
+.hint-confirmation p { margin:6px 0 14px; font-size:.9rem; color:#c9d6c7; }
+.hint-confirmation-actions { display:flex; justify-content:center; flex-wrap:wrap; gap:10px; }
+.hint-confirmation-actions button { min-height:42px; padding:9px 15px; border:1px solid #71916d; border-radius:8px; background:#263126; color:#e9f1e7; font:inherit; font-size:.9rem; cursor:pointer; }
+.hint-confirmation-actions .hint-reveal { background:#538d4e; border-color:#8ec987; color:white; }
+.hint-confirmation-actions button:hover { filter:brightness(1.15); }
+.hint-confirmation-actions button:focus-visible { outline:2px solid #b0dfa7; outline-offset:3px; }

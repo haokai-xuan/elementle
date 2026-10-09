@@ -24,7 +24,9 @@
       const button = document.createElement('button');
       const isToday = date === todayInt;
       const progress = !isToday && current.progress[date];
-      button.textContent = n + (isToday ? ' ◦' : progress === 'complete' ? ' ✓' : progress ? ' •' : '');
+      const symbol = isToday ? '◦' : progress === 'complete' ? '✓' : progress ? '•' : '';
+      button.innerHTML = '<span class="day-number">' + n + '</span><span class="day-symbol" aria-hidden="true">' + symbol + '</span>';
+      button.setAttribute('data-date', date);
       button.disabled = !isToday && ((!available.has(date) && !progress) || date > todayInt || date < '20260721');
       button.className = isToday ? 'today' : progress || '';
       if (isToday) button.setAttribute('aria-current', 'date');
@@ -32,12 +34,15 @@
       button.addEventListener('click', () => { location.href = isToday ? '/' : '/?mode=archive&date=' + date; });
       grid.append(button);
     }
+    const weeks = Math.ceil((month.getDay() + days) / 7);
+    grid.setAttribute('data-weeks', String(weeks));
+    while (grid.children.length < weeks * 7) grid.append(document.createElement('span'));
   }
   async function refresh() {
     const id = ++requestId;
     // Restore the newest local markers first, including when restored from the back/forward cache.
     data = progressStore.read().snapshot || { dates: [], progress: {} };
-    if (data.dates.length) status.textContent = '◦ Today’s daily puzzle · ✓ Completed · • In progress';
+    if (data.dates.length) status.textContent = '';
     render();
     try {
       const today = new Date();
@@ -53,11 +58,15 @@
       data = snapshot;
       progressStore.cache(snapshot);
       render();
-      status.textContent = '◦ Today’s daily puzzle · ✓ Completed · • In progress';
+      status.textContent = '';
     } catch (error) { if (id === requestId) status.textContent = error.message; }
   }
-  document.querySelector('#archive-prev').onclick = () => { month = new Date(month.getFullYear(), month.getMonth()-1, 1); render(); };
-  document.querySelector('#archive-next').onclick = () => { month = new Date(month.getFullYear(), month.getMonth()+1, 1); render(); };
+  function changeMonth(offset) {
+    month = new Date(month.getFullYear(), month.getMonth() + offset, 1);
+    render();
+  }
+  document.querySelector('#archive-prev').onclick = () => changeMonth(-1);
+  document.querySelector('#archive-next').onclick = () => changeMonth(1);
   window.addEventListener('pageshow', event => { if (event.persisted) refresh(); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
   window.addEventListener('focus', refresh);

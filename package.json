@@ -9,6 +9,7 @@
     "dev": "node scripts/dev.js",
     "test": "node scripts/audit-element-pages.js",
     "test:stats": "node scripts/test-stats-render.js",
+    "test:freezes": "node scripts/test-streak-freezes.js",
     "test:archives": "node scripts/test-archive-progress.js",
     "test:vault": "node scripts/test-vault.js"
   },

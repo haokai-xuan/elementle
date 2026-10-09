@@ -24,7 +24,7 @@ const date = String(yesterday.getFullYear()*10000+(yesterday.getMonth()+1)*100+y
 const snapshot = {dates:[Number(date)],progress:{}};
 window.ElementleArchiveProgress.cache(snapshot);
 vm.runInContext(files('archives.js'),context);
-const findDay = ()=>nodes['#archive-days'].children.find(button=>button.textContent.startsWith(String(yesterday.getDate())+' ') || button.textContent===String(yesterday.getDate()));
+const findDay = ()=>nodes['#archive-days'].children.find(button=>button.attrs['data-date'] === date);
 async function main() {
   // If yesterday belongs to the previous month, show that month first.
   if (yesterday.getMonth() !== new Date().getMonth()) nodes['#archive-prev'].onclick();

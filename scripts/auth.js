@@ -9,6 +9,7 @@
   function setToken(token) {
     if (token) localStorage.setItem(TOKEN_KEY, token);
     else localStorage.removeItem(TOKEN_KEY);
+    window.dispatchEvent(new Event("elementle:auth-change"));
   }
 
   function decodeJwtPayload(token) {
