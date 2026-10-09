@@ -1,0 +1,41 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const source = fs.readFileSync(require.resolve('./elementle.js'), 'utf8');
+const clock = source.slice(source.indexOf('function getNextMidnight()'), source.indexOf('(function initMobileNavMenu()'));
+let now = new Date(2026, 9, 8, 23, 59, 58).getTime();
+class TestDate extends Date { constructor(...args) { super(...(args.length ? args : [now])); } }
+const nodes = new Map();
+const get = name => {
+  if (!nodes.has(name)) nodes.set(name, {textContent:''});
+  return nodes.get(name);
+};
+const colons = [{textContent:''}, {textContent:''}];
+let reveals = 0;
+const style = {};
+Object.defineProperty(style,'display',{set(value) {
+  assert.equal(value,'flex');
+  assert.equal(get('.countdown-text').textContent,'Next Elementle in ');
+  assert.match(get('.js-hours').textContent,/^\d{2}$/);
+  assert.match(get('.js-minutes').textContent,/^\d{2}$/);
+  assert.match(get('.js-seconds').textContent,/^\d{2}$/);
+  assert.ok(colons.every(node=>node.textContent===':'));
+  reveals++;
+}});
+get('.timebox').style = style;
+const context = vm.createContext({Date:TestDate,document:{querySelector:get,querySelectorAll:()=>colons}});
+vm.runInContext(clock,context);
+vm.runInContext('displayCountdown()',context);
+assert.equal(get('.js-hours').textContent,'00');
+assert.equal(get('.js-minutes').textContent,'00');
+assert.equal(get('.js-seconds').textContent,'02');
+now += 1000;
+vm.runInContext('displayCountdown()',context);
+assert.equal(get('.js-seconds').textContent,'01');
+now += 1000;
+vm.runInContext('displayCountdown()',context);
+assert.equal(get('.js-hours').textContent,'24');
+assert.equal(get('.js-minutes').textContent,'00');
+assert.equal(get('.js-seconds').textContent,'00');
+assert.equal(reveals,3);
+console.log('Post-game countdown reveals complete digits, updates correctly, and handles midnight.');

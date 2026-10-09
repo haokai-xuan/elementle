@@ -30,6 +30,8 @@ for (const name of ['how-to-play', 'stats', 'account', 'about', 'disclaimer', 't
   app.get(`/${name}`, sendHtmlPage(name));
 }
 app.get(['/', '/index.html'], sendHtmlPage('index'));
+const analysisPage = require('./lib/analysis-page')(__dirname);
+app.get('/analysis', (req, res) => res.type('html').send(analysisPage));
 
 app.use(express.static(path.join(__dirname)));
 
@@ -51,6 +53,19 @@ function upstreamHeaders(extra = {}) {
   }
   return headers;
 }
+
+app.post('/api/game/analysis', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  try {
+    const upstream = await fetch(`${API_BASE_URL}/game/analysis`, {
+      method: 'POST',
+      headers: { ...authProxyHeaders(), ...(req.headers.authorization ? { Authorization: req.headers.authorization } : {}) },
+      body: JSON.stringify(req.body), signal: AbortSignal.timeout(20000)
+    });
+    const data = await upstream.json().catch(() => ({ error: 'Analysis service is unavailable. Please retry.' }));
+    res.status(upstream.status).json(data);
+  } catch { res.status(502).json({ error: 'Unable to reach elBot. Please retry.' }); }
+});
 
 app.get('/api/vault', async (req, res) => {
   res.set('Cache-Control', 'no-store');

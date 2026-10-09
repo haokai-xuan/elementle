@@ -2594,3 +2594,22 @@ body.modal-open {
 .hint-confirmation-actions .hint-reveal { background:#538d4e; border-color:#8ec987; color:white; }
 .hint-confirmation-actions button:hover { filter:brightness(1.15); }
 .hint-confirmation-actions button:focus-visible { outline:2px solid #b0dfa7; outline-offset:3px; }
+
+/* The daily post-game coach entry. */
+.elbot-brand { color: rgb(83, 141, 78); }
+.correct-guess-container.has-game-analysis { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:fit-content; max-width:100%; margin-left:auto; margin-right:auto; }
+.has-game-analysis .js-analysis-button { grid-column:1 / -1; grid-row:1; width:100%; margin:0; gap:8px; box-sizing:border-box; }
+.has-game-analysis .js-additional-info,.has-game-analysis .js-share-button { min-width:0; }
+.has-game-analysis .additional-info,.has-game-analysis .js-share-button .share-button { width:100%; box-sizing:border-box; }
+@media(max-width:599px) { .correct-guess-container.has-game-analysis { width:100%; } }
+
+.has-game-analysis .share-button,.has-game-analysis .additional-info { height:44px; min-height:44px; box-sizing:border-box; }
+.analysis-button-icon { width:24px; height:24px; flex:0 0 24px; object-fit:contain; image-rendering:pixelated; }
+@media(max-width:599px) { .has-game-analysis .share-button,.has-game-analysis .additional-info { height:48px; min-height:48px; } }
+
+/* Reveal the finished-game controls once; syncing never restarts their entrance. */
+.correct-guess-container.post-game-ready { animation:postGameEnter .38s ease-out both; }
+.timebox.post-game-ready { animation:postGameEnter .38s ease-out .08s both; }
+.timebox .js-hours,.timebox .js-minutes,.timebox .js-seconds { width:2ch; min-width:2ch; font-variant-numeric:tabular-nums; }
+@keyframes postGameEnter { from { opacity:0; transform:translateY(7px); } to { opacity:1; transform:translateY(0); } }
+@media(prefers-reduced-motion:reduce) { .correct-guess-container.post-game-ready,.timebox.post-game-ready { animation:none; } }

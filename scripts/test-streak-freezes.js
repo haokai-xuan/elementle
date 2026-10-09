@@ -14,6 +14,7 @@ const root = {querySelector(selector) {if(!elements.has(selector)) elements.set(
 const notices=[];
 const context=vm.createContext({Date,Map,Number,JSON,Math,console,
   document:{createElement:()=>new Element()},
+  location:{assign:url=>notices.push(url)},
   window:{ElementleFreezes:{consume:data=>notices.push(data)}},localStorage:{getItem:()=>null}});
 const stats=fs.readFileSync(path.join(__dirname,'stats.js'),'utf8');
 vm.runInContext(stats.replace(/initializeStats\(\);\s*$/,''),context);
@@ -21,7 +22,7 @@ context.root=root;
 vm.runInContext('updateCalendar = initializeStreakCalendar(root)',context);
 const now=new Date();
 const month=now.getFullYear()*10000+(now.getMonth()+1)*100;
-context.data={calendar:{[month+1]:'solved',[month+2]:'failed',[month+3]:'missed',[month+4]:'frozen'},streakFreezes:{available:1,capacity:2,progress:7,earnEvery:10}};
+context.data={calendar:{[month+1]:'solved',[month+2]:'failed',[month+3]:'missed',[month+4]:'frozen'},analyzableDates:[String(month+1),String(month+2),String(month+4)],streakFreezes:{available:1,capacity:2,progress:7,earnEvery:10}};
 vm.runInContext('updateCalendar(data)',context);
 assert.equal(root.querySelector('.js-freeze-count').textContent,'1 / 2');
 assert.equal(root.querySelector('.js-freeze-progress').value,7);
@@ -31,6 +32,14 @@ assert.match(cells[1].innerHTML,/×/);
 assert.match(cells[2].innerHTML,/−/);
 assert.match(cells[3].innerHTML,/❄/);
 assert.match(cells[3].attributes['aria-label'],/Streak freeze used/);
+assert.equal(cells[0].disabled,false);
+assert.equal(cells[1].disabled,false);
+assert.equal(cells[2].disabled,true);
+assert.equal(cells[3].disabled,false); // A completed loss can also have a freeze.
+assert.match(cells[3].innerHTML,/analysis-magnifier/);
+assert.match(cells[3].title,/Analyze this game/);
+cells[3].onclick();
+assert.equal(notices.at(-1),'/analysis?date='+String(month+4));
 // New account data updates existing cells and balance without rebuilding the page.
 context.data={calendar:{[month+4]:'solved'},streakFreezes:{available:0,capacity:2,progress:8,earnEvery:10}};
 vm.runInContext('updateCalendar(data)',context);

@@ -985,7 +985,10 @@ function renderFromLocalCache() {
 function applyServerGameState(data, options) {
   options = options || {};
   if (!practice) window.ElementleFreezes?.consume(data);
-  if (!practice && data.hintUsed) gameStorage.setItem('hintUsed:' + getTodayDateInt(), 'true');
+  if (!practice) {
+    gameStorage.setItem('hintUsed:' + getTodayDateInt(), String(Boolean(data.hintUsed)));
+    gameStorage.setItem('hintUsedAtGuess:' + getTodayDateInt(), String(data.hintUsedAtGuess ?? 0));
+  }
   const apiGuesses = data.guesses || [];
   const numGuesses = data.numGuesses;
   const won = data.won;
@@ -1035,6 +1038,9 @@ async function setMysteryElementOfTheDay() {
     document.querySelector('.js-reveal-answer')?.remove();
     document.querySelector('.js-additional-info')?.remove();
     document.querySelector('.js-share-button')?.remove();
+    document.querySelector('.js-analysis-button')?.remove();
+    document.querySelector('.correct-guess-container').classList.remove('has-game-analysis', 'post-game-ready');
+    document.querySelector('.timebox')?.classList.remove('post-game-ready');
   }
 
   const token = getAuthToken();
@@ -1108,6 +1114,9 @@ function clearEndOfGameUI() {
   var timebox = document.querySelector('.timebox');
   if (timebox) timebox.style.display = 'none';
 
+  document.querySelector('.js-analysis-button')?.remove();
+  document.querySelector('.correct-guess-container').classList.remove('has-game-analysis', 'post-game-ready');
+  timebox?.classList.remove('post-game-ready');
   inputElement.disabled = false;
   guessButtonElement.disabled = false;
 }
@@ -1138,7 +1147,29 @@ function getMysteryElement() {
 }
 
 function displayResults() {
-  if (!practice) window.dispatchEvent(new Event('elementle:game-complete'));
+  if (!practice) {
+    window.dispatchEvent(new Event('elementle:game-complete'));
+    document.querySelector('.correct-guess-container').classList.add('has-game-analysis');
+    if (!document.querySelector('.js-analysis-button')) {
+      const button = document.createElement('button');
+      button.className = 'share-button js-analysis-button';
+      button.innerHTML = '<img class="analysis-button-icon" src="/images/elbot_frames/idle_01.png" width="24" height="24" alt="" aria-hidden="true"><span>Analyze with el<span class="elbot-brand">B</span>ot</span>';
+      button.addEventListener('click', async () => {
+        button.disabled = true;
+        const pending = _pendingGuessPromise || _gameStateSyncPromise;
+        if (pending) await pending.catch(() => {});
+        const date = String(getTodayDateInt());
+        sessionStorage.setItem('elementle_analysis', JSON.stringify({
+          localDate: date,
+          guesses: JSON.parse(gameStorage.getItem('guessesList') || '[]').map(e => e.atomicNumber),
+          hintUsed: gameStorage.getItem('hintUsed:' + date) === 'true',
+          hintAt: Number(gameStorage.getItem('hintUsedAtGuess:' + date) || 0)
+        }));
+        location.assign('/analysis?date=' + date);
+      });
+      document.querySelector('.correct-guess-container').prepend(button);
+    }
+  }
   let additionalInfoElement = document.querySelector('.js-additional-info');
   let revealAnswerElement = document.querySelector('.js-reveal-answer');
 
@@ -1159,7 +1190,7 @@ function displayResults() {
     revealAnswerContainer.appendChild(revealAnswerElement); // Append to the appropriate container
   }
 
-  additionalInfoElement.innerHTML = `<a class="additional-info" href="https://en.wikipedia.org/wiki/${getMysteryElement().name}" target="_blank" rel="noopener noreferrer">&#128218; Wikipedia</a>`;
+  if (!additionalInfoElement.querySelector('a') || additionalInfoElement.querySelector('a').href !== `https://en.wikipedia.org/wiki/${getMysteryElement().name}`) additionalInfoElement.innerHTML = `<a class="additional-info" href="https://en.wikipedia.org/wiki/${getMysteryElement().name}" target="_blank" rel="noopener noreferrer">&#128218; Wikipedia</a>`;
   inputElement.disabled = true;
   guessButtonElement.disabled = true;
 
@@ -1171,7 +1202,7 @@ function displayResults() {
     correctGuessContainer.appendChild(shareButtonElement); // Append to the appropriate container
   }
 
-  if (shareButtonElement) {
+  if (shareButtonElement && !shareButtonElement.querySelector('button')) {
     shareButtonElement.innerHTML = `<button class="share-button"><svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#FFFFFF"><path d="M648-96q-50 0-85-35t-35-85q0-9 4-29L295-390q-16 14-36.05 22-20.04 8-42.95 8-50 0-85-35t-35-85q0-50 35-85t85-35q23 0 43 8t36 22l237-145q-2-7-3-13.81-1-6.81-1-15.19 0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35q-23 0-43-8t-36-22L332-509q2 7 3 13.81 1 6.81 1 15.19 0 8.38-1 15.19-1 6.81-3 13.81l237 145q16-14 36.05-22 20.04-8 42.95-8 50 0 85 35t35 85q0 50-35 85t-85 35Zm0-72q20.4 0 34.2-13.8Q696-195.6 696-216q0-20.4-13.8-34.2Q668.4-264 648-264q-20.4 0-34.2 13.8Q600-236.4 600-216q0 20.4 13.8 34.2Q627.6-168 648-168ZM216-432q20.4 0 34.2-13.8Q264-459.6 264-480q0-20.4-13.8-34.2Q236.4-528 216-528q-20.4 0-34.2 13.8Q168-500.4 168-480q0 20.4 13.8 34.2Q195.6-432 216-432Zm432-264q20.4 0 34.2-13.8Q696-723.6 696-744q0-20.4-13.8-34.2Q668.4-792 648-792q-20.4 0-34.2 13.8Q600-764.4 600-744q0 20.4 13.8 34.2Q627.6-696 648-696Zm0 480ZM216-480Zm432-264Z"/></svg>Share</button>`;
   }
 
@@ -1211,7 +1242,7 @@ function displayResults() {
     return;
   }
 
-  shareButtonElement.addEventListener('click', () => {
+  shareButtonElement.onclick = () => {
     guessedCorrectly = gameStorage.getItem('guessedCorrectly');
     numberOfGuesses = gameStorage.getItem('numberOfGuesses');
     const guessedList = JSON.parse(gameStorage.getItem('guessesList'));
@@ -1282,11 +1313,13 @@ function displayResults() {
   
     navigator.clipboard.writeText(shareText);
     createPopup('Copied results to clipboard');
-  });
+  };
   updateLastPlayedDate();
   displayCountdown();
   if (window._countdownInterval) clearInterval(window._countdownInterval);
   window._countdownInterval = setInterval(displayCountdown, 1000);
+  correctGuessContainer.classList.add('post-game-ready');
+  document.querySelector('.timebox')?.classList.add('post-game-ready');
 }
 
 
@@ -1343,16 +1376,15 @@ function getNextMidnight() {
 
 function displayCountdown() {
   const timebox = document.querySelector('.timebox');
-  if (timebox) timebox.style.display = 'flex';
   const hours_container = document.querySelector(".js-hours");
   const minutes_container = document.querySelector(".js-minutes");
   const seconds_container = document.querySelector(".js-seconds");
   const countdown_text_container = document.querySelector(".countdown-text");
   const colon_containers = document.querySelectorAll(".colon-text");
 
-  countdown_text_container.innerHTML = "Next Elementle in ";
+  if (countdown_text_container.textContent !== "Next Elementle in ") countdown_text_container.textContent = "Next Elementle in ";
   colon_containers.forEach(element => {
-    element.innerHTML = ":";
+    if (element.textContent !== ":") element.textContent = ":";
   })
 
   const target_date = getNextMidnight();
@@ -1365,9 +1397,11 @@ function displayCountdown() {
 
   // console.log(hours + ":" + minutes + ":" + seconds);
 
-  hours_container.innerHTML = hours;
-  minutes_container.innerHTML = minutes;
-  seconds_container.innerHTML = seconds;
+  if (hours_container.textContent !== hours) hours_container.textContent = hours;
+  if (minutes_container.textContent !== minutes) minutes_container.textContent = minutes;
+  if (seconds_container.textContent !== seconds) seconds_container.textContent = seconds;
+  // Reveal only after every digit is ready, so the first frame is complete.
+  if (timebox) timebox.style.display = 'flex';
 
 }
 

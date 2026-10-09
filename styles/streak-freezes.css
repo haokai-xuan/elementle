@@ -86,3 +86,10 @@
 .stats-calendar .calendar-status:empty { display:none; }
 .stats-calendar .calendar-status:not(:empty) { margin-top:8px; }
 
+
+/* Completed main games open their saved elBot analysis. */
+.streak-calendar .lab-days button.analyzable { position:relative; cursor:pointer; }
+.streak-calendar .lab-days button.analyzable:hover,.streak-calendar .lab-days button.analyzable:focus-visible { background:#34412f; border-color:#a2c691; box-shadow:0 0 0 1px #91b780; }
+.streak-calendar .analysis-magnifier { position:absolute; top:2px; right:5px; font:22px/1 system-ui,sans-serif; color:#e7f4df; opacity:0; transition:opacity .15s; }
+.streak-calendar .analyzable:hover .analysis-magnifier,.streak-calendar .analyzable:focus-visible .analysis-magnifier { opacity:1; }
+@media(hover:none) { .streak-calendar .analysis-magnifier { opacity:.8; } }

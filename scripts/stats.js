@@ -466,6 +466,7 @@ function initializeStreakCalendar(root) {
   let month = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   let currentMonth = month.getTime();
   let history = {};
+  let analyzableDates = new Set();
   let ready = false;
   const first = new Date(2026, 6, 1);
   function render() {
@@ -487,12 +488,18 @@ function initializeStreakCalendar(root) {
       const symbol = { solved:'✓', missed:'−', failed:'×', frozen:'❄' }[state] || '';
       const cell = document.createElement('button');
       cell.type = 'button';
-      cell.className = state + (key === today ? ' today' : '');
-      cell.disabled = key > today || key < '20260721';
+      const analyzable = ready && analyzableDates.has(key) && key <= today;
+      cell.className = state + (key === today ? ' today' : '') + (analyzable ? ' analyzable' : '');
+      cell.disabled = !analyzable;
       cell.innerHTML = '<span class="day-number">' + n + '</span>' + '<span class="day-symbol" aria-hidden="true">' + symbol + '</span>';
       const label = { solved:'Solved', missed:'Missed', failed:'Failed without a freeze', frozen:'Streak freeze used' }[state] || (key === today ? 'Not completed yet' : 'No result');
       cell.setAttribute('aria-label', new Date(month.getFullYear(),month.getMonth(),n).toLocaleDateString() + ': ' + label);
-      cell.title = label;
+      cell.title = label + (analyzable ? ' · Analyze this game with elBot' : '');
+      if (analyzable) {
+        cell.innerHTML += '<span class="analysis-magnifier" aria-hidden="true">⌕</span>';
+        cell.setAttribute('aria-label', cell.title + ' · ' + new Date(month.getFullYear(),month.getMonth(),n).toLocaleDateString());
+        cell.onclick = () => { location.assign('/analysis?date=' + key); };
+      }
       if (key === today) cell.setAttribute('aria-current','date');
       grid.append(cell);
     }
@@ -507,6 +514,7 @@ function initializeStreakCalendar(root) {
     const f = data.streakFreezes;
     ready = true;
     history = data.calendar || {};
+    analyzableDates = new Set(data.analyzableDates || Object.keys(history).filter(key => ['solved','failed'].includes(history[key])));
     root.querySelector('.js-freeze-count').textContent = f ? f.available + ' / ' + f.capacity : '— / 2';
     root.querySelector('.js-freeze-progress').value = f?.progress || 0;
     root.querySelector('.js-freeze-progress-label').textContent = f ? (f.available === f.capacity ? 'At capacity · ' : '') + f.progress + ' / ' + f.earnEvery + ' daily solves' : 'Freezes are coming soon';
