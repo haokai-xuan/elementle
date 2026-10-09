@@ -3,6 +3,12 @@ const playMode = playParams.get('mode') === 'freeplay' ? 'freeplay' : playParams
 const practice = playMode !== 'daily';
 const playDate = playParams.get('date');
 let practiceGame = null;
+let dailyReadOnly = false;
+let dailyLockReason = null;
+let loadedDailyDate = 0;
+let dailyReloadPending = false;
+let dailyMidnightTimer = null;
+let dailyDateInterval = null;
 let guestId = localStorage.getItem('elementle_guest_id');
 if (!guestId) { guestId = crypto.randomUUID(); localStorage.setItem('elementle_guest_id', guestId); }
 const practicePrefix = `elementle_${playMode}_${playDate || 'session'}_${localStorage.getItem('elementle_token') || guestId}_`;
@@ -387,6 +393,9 @@ function confirmHintInGame() {
 // Add click event listener to the hint button
 hintButton.addEventListener('click', async (event) => {
   event.preventDefault();
+  if (checkDailyDateLock()) return;
+  const completed = numberOfGuesses >= 8 || guessedCorrectly === 'true';
+  if ((dailyReadOnly && !completed) || hintButton.disabled) return;
   const mystery = getMysteryElement();
   if (!mystery || !mystery.hints) return;
 
@@ -402,12 +411,19 @@ hintButton.addEventListener('click', async (event) => {
   }
 
   const hintKey = 'hintUsed:' + getTodayDateInt();
-  if (!practice && gameStorage.getItem(hintKey) !== 'true') {
+  if (!completed && !practice && gameStorage.getItem(hintKey) !== 'true') {
     if (!await confirmHintInGame()) return;
     hintButton.disabled = true;
     try {
       const pending = _pendingGuessPromise || _gameStateSyncPromise;
       if (pending) await pending;
+      if (checkDailyDateLock()) return;
+      // Completion can arrive while the confirmation or last guess is pending.
+      if (numberOfGuesses >= 8 || guessedCorrectly === 'true') {
+        revealHintText(mystery);
+        return;
+      }
+      if (dailyReadOnly) return;
       const token = getAuthToken();
       if (token) {
         const res = await fetch(API_BASE + '/game/hint', {
@@ -415,7 +431,11 @@ hintButton.addEventListener('click', async (event) => {
           headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
           body: JSON.stringify({ localDate: getTodayDateInt() })
         });
-        if (!res.ok) throw new Error('Hint could not be saved');
+        if (!res.ok) {
+          const data = await res.json();
+          if (data.readOnly || data.frozen) setDailyReadOnly(true, data.lockReason);
+          throw new Error(data.error || 'Hint could not be saved');
+        }
       }
       gameStorage.setItem(hintKey, 'true');
       gameStorage.setItem('hintUsedAtGuess:' + getTodayDateInt(), String(numberOfGuesses || 0));
@@ -426,16 +446,21 @@ hintButton.addEventListener('click', async (event) => {
       createPopup('Could not save hint use. Please try again.');
       return;
     } finally {
-      hintButton.disabled = false;
+      hintButton.disabled = dailyReloadPending || (dailyReadOnly && numberOfGuesses < 8 && guessedCorrectly !== 'true');
     }
   }
+  if (dailyReadOnly && numberOfGuesses < 8 && guessedCorrectly !== 'true') return;
   if (!practice && !getAuthToken() && numberOfGuesses > 0 && guessedCorrectly !== 'true' && numberOfGuesses < 8) recordVaultDaily();
+  revealHintText(mystery);
+});
+
+function revealHintText(mystery) {
   const idx = getHintIndexForToday();
   hintContainer.textContent = mystery.hints[idx];
   hintContainer.setAttribute('aria-hidden', 'false');
   hintButton.setAttribute('aria-expanded', 'true');
   requestAnimationFrame(() => hintContainer.classList.add('hint-visible'));
-});
+}
 
 // Let the latest signed-in guess finish syncing before leaving the game.
 document.querySelectorAll('a[href="/stats"], a[href="/account"], a[href="/how-to-play"]').forEach((link) => {
@@ -629,7 +654,8 @@ let _pendingGuessPromise = null;
 let _gameStateSyncPromise = null;
 
 async function processGuess() {
-  if (_guessInFlight || inputElement.disabled || !getMysteryElement() || numberOfGuesses >= 8 || guessedCorrectly === 'true') return;
+  if (checkDailyDateLock()) return;
+  if (dailyReadOnly || _guessInFlight || inputElement.disabled || !getMysteryElement() || numberOfGuesses >= 8 || guessedCorrectly === 'true') return;
 
   const inputValue = inputElement.value.trim();
   const guessedElement = elements.find(element => element.name.toLowerCase() === inputValue.toLowerCase());
@@ -713,7 +739,10 @@ async function processGuess() {
     })
       .then(async function (res) {
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Could not save your game');
+        if (!res.ok) {
+          if (data.readOnly || data.frozen) setDailyReadOnly(true, data.lockReason);
+          throw new Error(data.error || 'Could not save your game');
+        }
         if (token === getAuthToken()) window.ElementleFreezes?.consume(data);
         localStorage.setItem('elementle_stats_revision', String(Date.now()));
         window.dispatchEvent(new Event('elementle:game-complete'));
@@ -982,6 +1011,59 @@ function renderFromLocalCache() {
   }
 }
 
+function checkDailyDateLock() {
+  if (practice) return false;
+  if (dailyReloadPending) return true;
+  const today = getTodayDateInt();
+  if (loadedDailyDate && today !== loadedDailyDate) {
+    dailyReloadPending = true;
+    inputElement.disabled = true;
+    guessButtonElement.disabled = true;
+    hintButton.disabled = true;
+    if (cancelHintConfirmation) cancelHintConfirmation();
+    const pending = [_pendingGuessPromise, _gameStateSyncPromise].filter(Boolean);
+    if (!pending.length) window.location.reload();
+    else Promise.race([
+      Promise.allSettled(pending),
+      new Promise(resolve => setTimeout(resolve, 10000))
+    ]).then(() => window.location.reload());
+    return true;
+  }
+  return false;
+}
+window.addEventListener('focus', checkDailyDateLock);
+window.addEventListener('pageshow', checkDailyDateLock);
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) checkDailyDateLock();
+});
+
+
+function setDailyReadOnly(readOnly, reason = 'frozen') {
+  dailyReadOnly = !practice && Boolean(readOnly);
+  dailyLockReason = dailyReadOnly ? reason : null;
+  if (dailyReadOnly) {
+    inputElement.disabled = true;
+    guessButtonElement.disabled = true;
+    hintButton.disabled = dailyReloadPending || !(reason === 'completed' || numberOfGuesses >= 8 || guessedCorrectly === 'true');
+    document.querySelector('.autocomplete-list')?.remove();
+    if (cancelHintConfirmation) cancelHintConfirmation();
+    hintContainer.classList.remove('hint-visible');
+    hintContainer.setAttribute('aria-hidden', 'true');
+    hintButton.setAttribute('aria-expanded', 'false');
+    if (reason !== 'frozen') document.querySelector('.frozen-day-notice')?.remove();
+    if (reason === 'frozen' && !document.querySelector('.frozen-day-notice')) {
+      const notice = document.createElement('p');
+      notice.className = 'frozen-day-notice';
+      notice.setAttribute('role', 'status');
+      notice.textContent = 'A streak freeze protected this day. Guesses and hints are locked.';
+      inputElement.parentElement.insertAdjacentElement('beforebegin', notice);
+    }
+  } else {
+    document.querySelector('.frozen-day-notice')?.remove();
+    hintButton.disabled = false;
+  }
+}
+
 function applyServerGameState(data, options) {
   options = options || {};
   if (!practice) window.ElementleFreezes?.consume(data);
@@ -1001,6 +1083,7 @@ function applyServerGameState(data, options) {
   if (options.fromLogin) {
     clearEndOfGameUI();
   }
+  setDailyReadOnly(data.readOnly || data.frozen || gameOver, data.lockReason || (gameOver ? 'completed' : 'frozen'));
 
   if (unchanged) {
     if (gameOver) displayResults();
@@ -1091,7 +1174,8 @@ async function setMysteryElementOfTheDay() {
   if (token && statePromise) {
     try {
       const data = await statePromise;
-      if (data) applyServerGameState(data);
+      if (!data) throw new Error("Could not verify your saved game. Reload to try again.");
+      applyServerGameState(data);
     } finally {
       _gameStateSyncPromise = null;
     }
@@ -1126,6 +1210,9 @@ async function syncGameStateFromServer() {
   const token = getAuthToken();
   if (practice) { location.reload(); return; }
   if (!token) return;
+  inputElement.disabled = true;
+  guessButtonElement.disabled = true;
+  hintButton.disabled = true;
   renderShimmerGrid();
   const todayInt = getTodayDateInt();
   try {
@@ -1147,6 +1234,11 @@ function getMysteryElement() {
 }
 
 function displayResults() {
+  if (!practice) setDailyReadOnly(true, dailyLockReason === 'past' || dailyLockReason === 'frozen' ? dailyLockReason : 'completed');
+  hintButton.disabled = dailyReloadPending;
+  hintContainer.classList.remove('hint-visible');
+  hintContainer.setAttribute('aria-hidden', 'true');
+  hintButton.setAttribute('aria-expanded', 'false');
   if (!practice) {
     window.dispatchEvent(new Event('elementle:game-complete'));
     document.querySelector('.correct-guess-container').classList.add('has-game-analysis');
@@ -1423,32 +1515,43 @@ function displayCountdown() {
 })();
 
 function scheduleMidnightReload() {
-  var now = new Date();
-  var tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-  var msUntilMidnight = tomorrow - now;
-  setTimeout(function() {
-    window.location.reload();
-  }, msUntilMidnight);
+  if (practice || dailyReloadPending) return;
+  clearTimeout(dailyMidnightTimer);
+  const now = new Date();
+  const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  dailyMidnightTimer = setTimeout(() => {
+    if (!checkDailyDateLock()) scheduleMidnightReload();
+  }, tomorrow - now + 50);
+  if (!dailyDateInterval) dailyDateInterval = setInterval(() => {
+    if (!document.hidden) checkDailyDateLock();
+  }, 15000);
 }
 
 async function initializeGame() {
+  if (!practice) {
+    loadedDailyDate = getTodayDateInt();
+    scheduleMidnightReload();
+  }
   if (practice) updateModeUI();
   inputElement.disabled = true;
   guessButtonElement.disabled = true;
+  hintButton.disabled = !practice && Boolean(getAuthToken());
 
   try {
     if (practice) await loadPractice(); else await setMysteryElementOfTheDay();
   } catch (error) { createPopup(error.message); return; }
   if (!getMysteryElement()) return;
 
-  if (!practice) scheduleMidnightReload();
+  if (checkDailyDateLock()) return;
 
   if (numberOfGuesses >= 8 || guessedCorrectly === 'true') {
     displayResults();
   } else {
-    inputElement.disabled = false;
-    guessButtonElement.disabled = false;
-    inputElement.focus();
+    if (!dailyReadOnly) {
+      inputElement.disabled = false;
+      guessButtonElement.disabled = false;
+      inputElement.focus();
+    }
   }
 
 }

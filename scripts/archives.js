@@ -7,6 +7,7 @@
   let month = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   const first = new Date(2026, 6, 1);
   let requestId = 0;
+  let availabilityVerified = false;
   function render() {
     const today = new Date();
     const todayInt = String(today.getFullYear()*10000 + (today.getMonth()+1)*100 + today.getDate());
@@ -27,11 +28,12 @@
       const symbol = isToday ? '◦' : progress === 'complete' ? '✓' : progress ? '•' : '';
       button.innerHTML = '<span class="day-number">' + n + '</span><span class="day-symbol" aria-hidden="true">' + symbol + '</span>';
       button.setAttribute('data-date', date);
-      button.disabled = !isToday && ((!available.has(date) && !progress) || date > todayInt || date < '20260721');
+      button.disabled = !isToday && (!availabilityVerified || !available.has(date) ||
+        (current.archiveCutoff && Number(date) >= current.archiveCutoff) || date > todayInt || date < '20260721');
       button.className = isToday ? 'today' : progress || '';
       if (isToday) button.setAttribute('aria-current', 'date');
       button.setAttribute('aria-label', `${month.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })} ${n}${isToday ? ', today — daily puzzle' : ''}${progress ? ', ' + progress : ''}`);
-      button.addEventListener('click', () => { location.href = isToday ? '/' : '/?mode=archive&date=' + date; });
+      button.addEventListener('click', () => { if (button.disabled) return; location.href = isToday ? '/' : '/?mode=archive&date=' + date; });
       grid.append(button);
     }
     const weeks = Math.ceil((month.getDay() + days) / 7);
@@ -40,6 +42,7 @@
   }
   async function refresh() {
     const id = ++requestId;
+    availabilityVerified = false;
     // Restore the newest local markers first, including when restored from the back/forward cache.
     data = progressStore.read().snapshot || { dates: [], progress: {} };
     if (data.dates.length) status.textContent = '';
@@ -56,6 +59,7 @@
       if (id !== requestId) return;
       if (!response.ok) throw new Error(snapshot.error || 'Unable to load archives');
       data = snapshot;
+      availabilityVerified = true;
       progressStore.cache(snapshot);
       render();
       status.textContent = '';

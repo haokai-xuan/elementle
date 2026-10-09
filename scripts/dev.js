@@ -12,7 +12,11 @@ if (!fs.existsSync(path.join(apiDir, 'app.py')) || !fs.existsSync(python)) {
 const apiPort = process.env.LOCAL_API_PORT || '8000';
 const api = spawn(python, ['app.py'], {
   cwd: apiDir,
-  env: { ...process.env, PORT: apiPort, PYTHONDONTWRITEBYTECODE: '1' },
+  // The browser and local API share the device clock. Use a remote clock for archives.
+  env: { ...process.env, PORT: apiPort, PYTHONDONTWRITEBYTECODE: '1',
+    ARCHIVE_TIME_SOURCE_URL: process.env.ARCHIVE_TIME_SOURCE_URL ||
+      new URL('/', process.env.API_BASE_URL || 'https://daily-element-api-production.up.railway.app').href
+  },
   stdio: 'inherit'
 });
 const web = spawn(process.execPath, [path.resolve(__dirname, '../server.js')], {

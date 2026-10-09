@@ -29,6 +29,7 @@ async function main() {
   // If yesterday belongs to the previous month, show that month first.
   if (yesterday.getMonth() !== new Date().getMonth()) nodes['#archive-prev'].onclick();
   assert.equal(findDay().className,'');
+  assert.equal(findDay().disabled,true); // Cached availability alone cannot unlock dates.
   gameWindow.ElementleArchiveProgress.publish(date,false,false);
   assert.equal(findDay().className,''); // Frozen calendar has not been revisited yet.
   events.pageshow({persisted:true});
@@ -36,9 +37,16 @@ async function main() {
   pending.at(-1)({ok:true,json:async()=>snapshot});
   await new Promise(resolve=>setImmediate(resolve));
   assert.equal(findDay().className,'in-progress'); // Stale reply cannot erase progress.
+  assert.equal(findDay().disabled,false); // Fresh server eligibility enables the date.
   gameWindow.ElementleArchiveProgress.publish(date,true,true);
   events.storage({key:window.ElementleArchiveProgress.prefix+'test-guest'});
   assert.equal(findDay().className,'complete');
+  // Existing local progress cannot override the server's worldwide date cutoff.
+  events.focus();
+  pending.at(-1)({ok:true,json:async()=>({dates:[],progress:{},archiveCutoff:Number(date)})});
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(findDay().className,'complete');
+  assert.equal(findDay().disabled,true);
   localStorage.setItem('elementle_token','different-account');
   events.storage({key:'elementle_token'});
   assert.equal(findDay().className,''); // Guest progress does not leak into an account.

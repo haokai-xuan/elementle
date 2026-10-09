@@ -15,6 +15,16 @@
 .analysis-main button:disabled { opacity:.35; cursor:default; }
 #analysis-retry,.feedback-toggle { background:#30442c; border:1px solid #638c56; border-radius:8px; padding:10px 16px; font-size:16px; margin-top:12px; }
 .analysis-scores { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:28px; }
+@keyframes analysis-arrive {
+  from { opacity:0; transform:translateY(8px); }
+  to { opacity:1; transform:translateY(0); }
+}
+#analysis-scores:not([hidden]) .score-card { animation:analysis-arrive .4s cubic-bezier(.22,1,.36,1) backwards; }
+#analysis-scores .score-card:nth-child(2) { animation-delay:40ms; }
+#analysis-scores .score-card:nth-child(3) { animation-delay:80ms; }
+#analysis-scores .score-card:nth-child(4) { animation-delay:120ms; }
+#analysis-content:not([hidden]) .guess-ledger { animation:analysis-arrive .45s cubic-bezier(.22,1,.36,1) 100ms backwards; }
+#analysis-content:not([hidden]) .analysis-table-panel { animation:analysis-arrive .45s cubic-bezier(.22,1,.36,1) 140ms backwards; }
 .score-card { position:relative; border:1px solid #434843; border-radius:12px; background:#242724; padding:20px 32px 20px 24px; display:grid; gap:10px; }
 .score-card > span { color:#c0c5bd; font-size:16px; }
 .score-card strong { font-size:36px; }
