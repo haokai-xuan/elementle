@@ -2,7 +2,7 @@
   const elements = new Map(JSON.parse(document.getElementById('analysis-elements').textContent).map(e => [e.number, e]));
   const $ = id => document.getElementById(id);
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-  const states = { idle:3, thinking:3, explain:3, encourage:2, celebrate:3, confused:2 };
+  const states = { idle:3, reading:5, thinking:3, explain:3, encourage:2, celebrate:3, confused:2 };
   const frames = {};
   let state = '', frame = 0, animation, idleTimer, result, turn = 0, before = false, requestId = 0;
   for (const [name, count] of Object.entries(states)) {
@@ -19,13 +19,25 @@
       $('bot-frame').src = frames[state][frame].src;
     }, state === 'idle' ? 650 : 420);
   }
-  document.addEventListener('visibilitychange', () => { if (document.hidden) { clearInterval(animation); animation = null; } else animateBot(state); });
+  function animateIdle() {
+    clearTimeout(idleTimer);
+    if (document.hidden) return;
+    const reading = !reduced.matches && Math.random() < .5;
+    animateBot(reading ? 'reading' : 'idle');
+    // Let the five reading frames play twice, then pick another idle activity.
+    idleTimer = setTimeout(animateIdle, reading ? 420 * frames.reading.length * 2 : 10000);
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { clearInterval(animation); animation = null; clearTimeout(idleTimer); }
+    else if (state === 'idle' || state === 'reading') animateIdle();
+    else { animateBot(state); if (state !== 'thinking') idleTimer = setTimeout(animateIdle, 8500); }
+  });
   reduced.addEventListener('change', () => { clearInterval(animation); animation = null; animateBot(state); });
   function speak(title, message, mood) {
     clearTimeout(idleTimer);
     $('bot-title').textContent = title; $('bot-message').textContent = message;
     animateBot(mood);
-    if (mood !== 'thinking') idleTimer = setTimeout(() => animateBot('idle'), 8500);
+    if (mood !== 'thinking') idleTimer = setTimeout(animateIdle, 8500);
   }
   function make(tag, cls, text) { const node = document.createElement(tag); node.className = cls; node.textContent = text; return node; }
   let helpId = 0;
