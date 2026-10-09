@@ -16,3 +16,6 @@
 .vault-entry.opening .vault-corridor { animation: none; }
 .vault-entry .vault-door, .vault-entry .vault-wheel { will-change: transform; }
 @media (max-width: 700px) { .vault-entry { transform-origin: 50% 38%; } }
+
+.tier-help button, .tier-tooltip { font-family:"Iceland",sans-serif; }
+.tier-tooltip { font-size:16px; }

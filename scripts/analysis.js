@@ -165,6 +165,9 @@
   }
   async function load() {
     const id = ++requestId; $('analysis-retry').hidden = true;
+    const revealAt = performance.now() + 2000 + Math.random() * 3000;
+    $('analysis-scores').hidden = true;
+    $('analysis-content').hidden = true;
     speak('Connecting the clues…', 'I’m comparing your decisions with every available guess.', 'thinking');
     try {
       const date = new URLSearchParams(location.search).get('date');
@@ -183,6 +186,8 @@
       const response = await fetch('/api/game/analysis', {method:'POST', headers:{'Content-Type':'application/json', ...(token ? {Authorization:'Bearer '+token} : {})}, body:JSON.stringify(body), signal:AbortSignal.timeout(25000)});
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Analysis is unavailable. Please retry.');
+      const remaining = revealAt - performance.now();
+      if (remaining > 0) await new Promise(resolve => setTimeout(resolve, remaining));
       if (id === requestId) display(data);
     } catch (error) {
       if (id !== requestId) return;

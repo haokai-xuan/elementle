@@ -70,9 +70,9 @@
 .metric-help { position:absolute; top:9px; right:9px; z-index:3; font-size:13px; }
 .step-metric .metric-help { top:50%; transform:translateY(-50%); }
 .metric-help:hover,.metric-help.help-open,.metric-help:focus-within { z-index:20; }
-.metric-help .help-toggle { display:grid; place-items:center; width:21px; height:21px; border:1px solid #84917e; border-radius:50%; color:#cad9c2; cursor:help; background:transparent; padding:0; font:13px system-ui,sans-serif; }
+.metric-help .help-toggle { display:grid; place-items:center; width:21px; height:21px; border:1px solid #84917e; border-radius:50%; color:#cad9c2; cursor:help; background:transparent; padding:0; font:16px "Iceland",sans-serif; }
 .metric-help .help-toggle:focus-visible { outline:2px solid #b4d6a7; outline-offset:3px; }
-.metric-help > .help-copy { display:block; position:absolute; right:0; top:28px; width:240px; max-width:75vw; box-sizing:border-box; padding:12px 14px; background:#30372d; border:1px solid #738267; border-radius:9px; box-shadow:0 8px 24px #0008; color:#ecf2e8; font:14px/1.6 system-ui,sans-serif; visibility:hidden; opacity:0; pointer-events:none; transition:opacity .15s; }
+.metric-help > .help-copy { display:block; position:absolute; right:0; top:28px; width:240px; max-width:75vw; box-sizing:border-box; padding:12px 14px; background:#30372d; border:1px solid #738267; border-radius:9px; box-shadow:0 8px 24px #0008; color:#ecf2e8; font:16px/1.6 "Iceland",sans-serif; visibility:hidden; opacity:0; pointer-events:none; transition:opacity .15s; }
 .metric-help:hover > .help-copy,.metric-help:focus-within > .help-copy,.metric-help.help-open > .help-copy { visibility:visible; opacity:1; pointer-events:auto; }
 [hidden] { display:none !important; }
 @media(max-width:1000px) { .analysis-workspace { grid-template-columns:1fr; } .guess-ledger ol { grid-template-columns:repeat(2,minmax(0,1fr)); } }

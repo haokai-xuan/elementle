@@ -18,11 +18,12 @@ const result = { answer:118, won:true, hintUsed:false, referenceGuesses:4, refer
   {guess:26,optimal:26,before:[26,118],after:[118],quality:100,feedback:['gray','gray','up','diff'],expectedBits:1,optimalBits:1,correct:false,possible:true},
   {guess:118,optimal:118,before:[118],after:[118],quality:100,feedback:['green','green','same','same'],expectedBits:0,optimalBits:0,correct:true,possible:true}
 ]};
-async function run({fail=false,token=null,missing=false,rating=91,knownMistake=false,idleChance=1,reducedMotion=false}={}) {
+async function run({fail=false,token=null,missing=false,rating=91,knownMistake=false,idleChance=1,reducedMotion=false,deferReveal=false}={}) {
   const ids = new Map(), cells = data.map(e => { const n = new Node(); n.dataset={number:String(e.number)}; return n; });
   const get = id => { if(!ids.has(id)) ids.set(id,new Node()); return ids.get(id); };
   get('analysis-elements').textContent = JSON.stringify(data);
   let request, chance = idleChance, timerId = 0;
+  const delays = [];
   const timers = new Map(), intervals = new Map();
   const context = {
     window:{innerWidth:390},
@@ -30,7 +31,8 @@ async function run({fail=false,token=null,missing=false,rating=91,knownMistake=f
     Math:Object.assign(Object.create(Math),{random:()=>chance}),
     matchMedia:()=>({matches:reducedMotion,addEventListener(){}}), Image:class{},
     setInterval:fn=>{const id=++timerId;intervals.set(id,fn);return id;},clearInterval:id=>intervals.delete(id),
-    setTimeout:fn=>{const id=++timerId;timers.set(id,fn);return id;},clearTimeout:id=>timers.delete(id),
+    performance:{now:()=>0},
+    setTimeout:(fn,ms)=>{delays.push(ms);const id=++timerId;timers.set(id,fn);return id;},clearTimeout:id=>timers.delete(id),
     URLSearchParams,location:{search:'?date=20261008'},AbortSignal,
     localStorage:{getItem:key=>key==='elementle_token' ? token : null},
     sessionStorage:{getItem:()=>missing ? null : JSON.stringify({localDate:'20261008',guesses:[1,26,118],hintUsed:false,hintAt:0})},
@@ -38,9 +40,23 @@ async function run({fail=false,token=null,missing=false,rating=91,knownMistake=f
   };
   vm.runInNewContext(fs.readFileSync(require.resolve('./analysis.js'),'utf8'),context);
   await new Promise(resolve=>setImmediate(resolve));
-  return {get,cells,request,setChance:value=>{chance=value;},fireTimer:()=>{const [id,fn]=timers.entries().next().value;timers.delete(id);fn();},fireFrame:()=>intervals.values().next().value()};
+  if (!deferReveal && !fail && !missing) {
+    const [id,fn] = timers.entries().next().value; timers.delete(id); fn();
+    await new Promise(resolve=>setImmediate(resolve));
+  }
+  return {get,cells,request,delays,setChance:value=>{chance=value;},fireTimer:()=>{const [id,fn]=timers.entries().next().value;timers.delete(id);fn();},fireFrame:()=>intervals.values().next().value()};
 }
 (async()=>{
+  for (const [chance,delay] of [[0,2000],[.5,3500],[1,5000]]) {
+    const thinking = await run({idleChance:chance,deferReveal:true});
+    assert.equal(thinking.delays[0],delay);
+    assert.equal(thinking.get('analysis-content').hidden,true);
+    assert.equal(thinking.get('analysis-scores').hidden,true);
+    assert.match(thinking.get('bot-frame').src,/thinking_01/);
+    thinking.fireTimer();
+    await new Promise(resolve=>setImmediate(resolve));
+    assert.equal(thinking.get('analysis-content').hidden,false);
+  }
   const {get,cells,request} = await run();
   assert.equal(request.url,'/api/game/analysis');
   assert.equal(get('analysis-content').hidden,false);
