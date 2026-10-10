@@ -148,6 +148,15 @@
       }
       return card;
     }));
+    if (data.elELO) {
+      const elo = data.elELO;
+      const card = make('div', 'score-card elelo-analysis', '');
+      const change = Number(elo.change);
+      card.append(make('span', '', 'elELO · ' + elo.tier),
+        make('strong', '', Number(elo.rating).toFixed(1)),
+        make('small', '', `${change >= 0 ? '+' : ''}${change.toFixed(2)} this game · from ${Number(elo.oldRating).toFixed(1)}`));
+      $('analysis-scores').append(card);
+    }
     $('analysis-guesses').replaceChildren(...data.steps.map((step,index) => {
       const e = elements.get(step.guess), li = document.createElement('li'), button = make('button', 'guess-turn', '');
       button.type = 'button'; button.setAttribute('aria-label', `Guess ${index+1}: ${e.name}. ${step.quality} out of 100 information quality.`);
@@ -165,7 +174,7 @@
   }
   async function load() {
     const id = ++requestId; $('analysis-retry').hidden = true;
-    const revealAt = performance.now() + 2000 + Math.random() * 3000;
+    const revealAt = performance.now() + 3000 + Math.random() * 4000; // 3 to 7 seconds
     $('analysis-scores').hidden = true;
     $('analysis-content').hidden = true;
     speak('Connecting the clues…', 'I’m comparing your decisions with every available guess.', 'thinking');

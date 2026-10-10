@@ -100,63 +100,69 @@ function renderStatsPage(root, loading) {
 
   root.innerHTML = `
     <div class="page-card stats-modal">
-      <div class="stats-modal-header">
-        <h1 class="modal-title">Statistics</h1>
-        <button type="button" class="stats-fire-btn js-leaderboard-toggle" aria-label="View streak leaderboard">
-          <i class="fa-solid fa-fire"></i>
-        </button>
-      </div>
+      <section class="major-stats-card" aria-labelledby="major-stats-title">
+        <div class="stats-modal-header">
+          <h1 class="modal-title" id="major-stats-title">Statistics</h1>
+          <button type="button" class="leaderboard-launch streak-leaderboard-launch js-leaderboard-toggle" aria-label="View streak leaderboard" aria-expanded="false" aria-controls="streak-leaderboard">
+            <i class="fa-solid fa-fire" aria-hidden="true"></i><span>Streak leaders</span><span aria-hidden="true">↗</span>
+          </button>
+        </div>
+        <div class="stats-swipe-viewport">
+          <div class="stats-swipe-track js-stats-swipe-track">
 
-      <div class="stats-swipe-viewport">
-        <div class="stats-swipe-track js-stats-swipe-track">
-
-          <div class="stats-swipe-panel stats-panel-view">
-            <div class="stats-grid">
-              <div class="stat-item">
-                <span class="stat-value" data-stat="wins">${totalWins}</span>
-                <span class="stat-label">Wins</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-value" data-stat="played">${totalGames}</span>
-                <span class="stat-label">Played</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-value" data-stat="streak">${currentStreak}</span>
-                <span class="stat-label">Current streak</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-value" data-stat="best">${maxWinStreak}</span>
-                <span class="stat-label">Best streak</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-value" data-stat="rate">${winRateDisplay}</span>
-                <span class="stat-label">Win rate</span>
-              </div>
-              <div class="stat-item" title="Average guesses in completed daily wins; unsuccessful and practice games are excluded.">
-                <span class="stat-value" data-stat="average">${loading ? '—' : averageWinningGuesses(distributionData)}</span>
-                <span class="stat-label">Avg guesses (wins)</span>
+            <div class="stats-swipe-panel stats-panel-view">
+              <div class="stats-grid">
+                <div class="stat-item">
+                  <span class="stat-value" data-stat="wins">${totalWins}</span>
+                  <span class="stat-label">Wins</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-value" data-stat="played">${totalGames}</span>
+                  <span class="stat-label">Played</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-value" data-stat="streak">${currentStreak}</span>
+                  <span class="stat-label">Current streak</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-value" data-stat="best">${maxWinStreak}</span>
+                  <span class="stat-label">Best streak</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-value" data-stat="rate">${winRateDisplay}</span>
+                  <span class="stat-label">Win rate</span>
+                </div>
+                <div class="stat-item" title="Average guesses in completed daily wins; unsuccessful and practice games are excluded.">
+                  <span class="stat-value" data-stat="average">${loading ? '—' : averageWinningGuesses(distributionData)}</span>
+                  <span class="stat-label">Avg guesses (wins)</span>
+                </div>
               </div>
             </div>
-            <div class="guess-distribution">
-              <h3 class="distribution-title">Guess distribution</h3>
-              <div class="bars-container">
-                ${bars}
+
+            <div class="stats-swipe-panel leaderboard-panel-view" id="streak-leaderboard" inert>
+              <div class="leaderboard-header">
+                <button type="button" class="leaderboard-back-btn js-leaderboard-back" aria-label="Back to your stats">
+                  <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <h3 class="leaderboard-title"><i class="fa-solid fa-fire"></i> Top Current Streaks</h3>
               </div>
+              <ul class="leaderboard-list js-leaderboard-list">
+                <li class="leaderboard-loading">Loading<span class="loading-dots"></span></li>
+              </ul>
             </div>
+
           </div>
+        </div>
 
-          <div class="stats-swipe-panel leaderboard-panel-view" inert>
-            <div class="leaderboard-header">
-              <button type="button" class="leaderboard-back-btn js-leaderboard-back" aria-label="Back to your stats">
-                <i class="fa-solid fa-arrow-left"></i>
-              </button>
-              <h3 class="leaderboard-title"><i class="fa-solid fa-fire"></i> Top Current Streaks</h3>
-            </div>
-            <ul class="leaderboard-list js-leaderboard-list">
-              <li class="leaderboard-loading">Loading<span class="loading-dots"></span></li>
-            </ul>
-          </div>
+      </section>
 
+      <hr class="stats-section-divider">
+
+      ${window.ElementleElo.markup(loading)}
+      <div class="guess-distribution">
+        <h3 class="distribution-title">Guess distribution</h3>
+        <div class="bars-container">
+          ${bars}
         </div>
       </div>
 
@@ -207,18 +213,18 @@ function renderStatsPage(root, loading) {
     legends.forEach(legend => _calendarSizeObserver.observe(legend));
   }
   bindLeaderboardToggle(root);
+  window.ElementleElo.initialize(root, loading);
   syncStatsSwipeViewportHeight(root);
 
-  new ResizeObserver(() => syncStatsSwipeViewportHeight(root)).observe(root.querySelector('.stats-panel-view'));
+  new ResizeObserver(() => syncStatsSwipeViewportHeight(root)).observe(root.querySelector('.stats-grid'));
 }
 
 function syncStatsSwipeViewportHeight(root) {
   var viewport = root.querySelector('.stats-swipe-viewport');
-  var statsPanel = root.querySelector('.stats-panel-view');
-  if (!viewport || !statsPanel) return;
+  var grid = root.querySelector('.stats-grid');
+  if (!viewport || !grid) return;
 
-  viewport.style.height = 'auto';
-  viewport.style.height = statsPanel.offsetHeight + 'px';
+  viewport.style.height = grid.offsetHeight + 'px';
 }
 
 function bindLeaderboardToggle(root) {
@@ -235,6 +241,7 @@ function bindLeaderboardToggle(root) {
     // Focus must not scroll the offscreen panel in addition to the slide transform.
     backBtn.focus({ preventScroll: true });
     fireBtn.classList.add('is-active');
+    fireBtn.setAttribute('aria-expanded', 'true');
     if (!_leaderboardLoaded) loadLeaderboard(root);
   });
 
@@ -244,6 +251,7 @@ function bindLeaderboardToggle(root) {
     track.classList.remove('is-leaderboard-view');
     fireBtn.focus({ preventScroll: true });
     fireBtn.classList.remove('is-active');
+    fireBtn.setAttribute('aria-expanded', 'false');
   });
 }
 
@@ -525,6 +533,7 @@ function initializeStreakCalendar(root) {
 
 async function initializeStats() {
   const root = document.querySelector('.js-stats-page');
+  root.addEventListener('elementle:elo-layout', () => syncStatsSwipeViewportHeight(root));
   let token = localStorage.getItem('elementle_token');
   renderStatsPage(root, !!token);
   initializeCommunityDistribution(root, 'today');
@@ -540,6 +549,7 @@ async function initializeStats() {
       updateCalendar = initializeStreakCalendar(root);
     }
     const id = ++requestId;
+    void window.ElementleElo.refreshLeaderboard(root);
     if (!auth) return;
     const status = root.querySelector('.js-stats-status');
     try {
@@ -554,9 +564,14 @@ async function initializeStats() {
         average:averageWinningGuesses(data.guessDistribution || {})});
       updateDistributionBars(root, data.guessDistribution || {});
       updateCalendar(data);
+      window.ElementleElo.update(root, data.elELO);
+      syncStatsSwipeViewportHeight(root);
       status.textContent = '';
     } catch {
-      if (id === requestId) status.textContent = 'Could not load your statistics. We’ll try again when you return to this tab.';
+      if (id === requestId) {
+        status.textContent = 'Could not load your statistics. We’ll try again when you return to this tab.';
+        if(root.querySelector('.js-elelo-rating').textContent === '—') window.ElementleElo.update(root, null);
+      }
     }
   }
   window.addEventListener('focus', refresh);

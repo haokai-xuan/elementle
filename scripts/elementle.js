@@ -633,20 +633,15 @@ function trackGuessDistribution(guessCount) {
 }
 
 
-function sendDistribution(nog) {
-  const dateInt = getTodayDateInt();
-  const guesses = Math.max(1, Math.min(9, nog <= 8 ? nog : 9));
-
-  fetch(`${API_BASE}/guess_distribution`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      localDate: dateInt,
-      guesses: guesses
-    })
-  })
-    .then((res) => (res.ok ? res.json() : Promise.reject(res)))
-    .catch((err) => console.warn('Guess distribution request failed', err));
+function submitGuestMainResult() {
+  if (practice || getAuthToken()) return;
+  const date = String(getTodayDateInt());
+  window.ElementleGuestResults?.record(guestId, {
+    mode: 'daily', localDate: date,
+    guesses: guessesList.map(element => element.atomicNumber),
+    hintUsed: gameStorage.getItem('hintUsed:' + date) === 'true',
+    hintAt: Number(gameStorage.getItem('hintUsedAtGuess:' + date) || 0)
+  });
 }
 
 let _guessInFlight = false;
@@ -785,7 +780,7 @@ async function processGuess() {
     confetti({ particleCount: 150, spread: 200 });
     showGameResult(true, numberOfGuesses);
     displayResults();
-    sendDistribution(numberOfGuesses);
+    submitGuestMainResult();
   } else if (isGameOver) {
     trackGuessDistribution(0);
     gameStorage.setItem('totalGames', +gameStorage.getItem('totalGames') + 1);
@@ -794,7 +789,7 @@ async function processGuess() {
     guessedCorrectly = 'false';
     displayResults();
     showGameResult(false, numberOfGuesses);
-    sendDistribution(9);
+    submitGuestMainResult();
   } else {
     gameStorage.setItem('guessedCorrectly', 'false');
     guessedCorrectly = 'false';

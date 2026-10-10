@@ -54,6 +54,19 @@ function upstreamHeaders(extra = {}) {
   return headers;
 }
 
+app.post('/api/game/guest-result', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  if (req.headers.authorization) return res.status(400).json({error:'Use the registered main game endpoint'});
+  try {
+    const upstream = await fetch(`${API_BASE_URL}/game/guest-result`, {
+      method:'POST',
+      headers:{...authProxyHeaders(), 'X-Guest-ID':req.headers['x-guest-id'] || ''},
+      body:JSON.stringify(req.body), signal:AbortSignal.timeout(20000)
+    });
+    res.status(upstream.status).json(await upstream.json());
+  } catch { res.status(502).json({error:'Unable to save guest result. Please retry.'}); }
+});
+
 app.post('/api/game/analysis', async (req, res) => {
   res.set('Cache-Control', 'no-store');
   try {
@@ -305,6 +318,16 @@ app.post('/api/game/hint', async (req, res) => {
     console.error('[proxy] /api/game/hint:', err.message);
     res.status(502).json({ error: 'Upstream error', detail: err.message });
   }
+});
+
+app.get('/api/leaderboard/elelo', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  try {
+    const upstream = await fetch(`${API_BASE_URL}/leaderboard/elelo`, {
+      headers: authProxyHeaders(), signal: AbortSignal.timeout(12000)
+    });
+    res.status(upstream.status).json(await upstream.json());
+  } catch { res.status(502).json({ error: 'Unable to load elELO leaders' }); }
 });
 
 app.get('/api/leaderboard/current_streaks', async (req, res) => {

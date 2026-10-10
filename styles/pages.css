@@ -93,3 +93,81 @@
 .stats-modal .stat-item:nth-child(6) .stat-value { animation-delay:.6s; }
 
 .vault-nav-icon { flex-shrink: 0; vertical-align: middle; }
+
+/* Registered main-game rating. */
+.elelo-card, .major-stats-card { margin: 1.25rem 0; padding: 1rem; border: 1px solid #484848; border-radius: 16px; background: #262626; color: #f0f0f0; }
+.elelo-summary { display: flex; align-items: baseline; flex-wrap: wrap; gap: .65rem; }
+.elelo-summary strong { font-size: 1.8rem; color: #8ec987; }
+.elelo-card p { font-size: .88rem; line-height: 1.6; margin: .5rem 0; }
+.elelo-card a { color: #8ec987; }
+.elelo-card summary { cursor: pointer; font-size: .85rem; }
+.elelo-card details p { color: #c3c3c3; }
+
+/* Rating progress, tier symbols and visible leaderboard entry points. */
+.leaderboard-launch { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.65rem .85rem; border:1px solid #626262; border-radius:12px; background:linear-gradient(140deg,#353535,#292929); color:#ededed; font-family:inherit; font-size:.8rem; font-weight:600; cursor:pointer; box-shadow:0 2px 10px #0003; transition:transform .2s, box-shadow .2s, background .2s; flex-shrink:0; }
+.leaderboard-launch:hover, .leaderboard-launch.is-active { background:#3c3c3c; box-shadow:0 0 18px #ffffff18; transform:translateY(-2px); }
+.leaderboard-launch:focus-visible, .elelo-card a:focus-visible { outline:2px solid #8ec987; outline-offset:4px; }
+.leaderboard-launch i { animation:leaderboardShine 4s ease-in-out infinite; }
+.streak-leaderboard-launch { border-color:#ca8650; color:#ffcd9a; background:linear-gradient(140deg,#583b28,#34281f); }
+.streak-leaderboard-launch:hover, .streak-leaderboard-launch.is-active { background:#65442c; box-shadow:0 0 18px #ff983530; }
+@keyframes leaderboardShine { 0%,70%,100% { transform:rotate(0deg) scale(1); filter:brightness(1); } 80% { transform:rotate(-8deg) scale(1.15); filter:brightness(1.4); } 90% { transform:rotate(8deg) scale(1.1); } }
+.elelo-card [hidden] { display:none !important; }
+.elelo-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:.75rem; }
+.elelo-heading h2 { margin:0; font-size:1.3rem; color:#ededed; }
+.tier-symbol { width:26px; height:26px; object-fit:contain; flex-shrink:0; }
+.elelo-summary { align-items:center; }
+.elelo-summary strong { font-variant-numeric:tabular-nums; }
+.elelo-explanation { color:#c5c5c5; max-width:65ch; }
+.elelo-chart-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:1.25rem; }
+.elelo-chart-heading h3 { margin:0; font-size:.95rem; }
+.elelo-chart-heading select { background:#242424; border:1px solid #616161; border-radius:7px; color:#e1e1e1; font:inherit; font-size:.8rem; padding:.4rem; }
+.elelo-chart { min-width:0; }
+.elelo-chart svg { display:block; width:100%; height:auto; overflow:visible; touch-action:pan-y; }
+.elo-grid { stroke:#ffffff20; }
+.elo-axis { fill:#b8b8b8; font-size:15px; }
+.elo-tier-line { stroke:#8ec98755; stroke-dasharray:5 5; }
+.elo-line { fill:none; stroke:#8ec987; stroke-width:2.5; stroke-linejoin:round; stroke-linecap:round; }
+.elo-area { fill:#62a55c16; }
+.elo-cursor { stroke:#ffffff44; stroke-dasharray:3 4; }
+.elo-dot { fill:#8ec987; stroke:#262626; stroke-width:2; }
+.elelo-inspector { padding:.6rem .75rem; border-radius:9px; background:#202020; display:grid; gap:.5rem; }
+.elelo-scrubber-label { display:flex; align-items:center; gap:12px; font-size:.8rem; color:#c4c4c4; }
+.elelo-inspector input { flex:1; min-width:50px; accent-color:#8ec987; }
+.elelo-inspector output { font-size:.82rem; line-height:1.5; font-variant-numeric:tabular-nums; }
+.elelo-inspector a { font-size:.8rem; justify-self:start; }
+.elelo-guide { margin-top:1rem; }
+.elelo-tiers { list-style:none; padding:0; margin:1rem 0 0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.4rem; }
+.elelo-tiers li { display:flex; align-items:center; gap:.6rem; padding:.4rem; background:#303030; border-radius:9px; font-size:.82rem; }
+.elelo-tiers img { width:22px; height:22px; object-fit:contain; }
+.elelo-tiers small { display:block; color:#ababab; margin-top:.2rem; }
+.elelo-board { animation:eloPanelIn .22s ease-out; }
+.elelo-board .leaderboard-list { max-height:460px; min-height:100px; }
+.elelo-board .leaderboard-title { font-size:1.05rem; }
+.elo-leader-row { display:grid; grid-template-columns:30px 22px minmax(0,1fr) auto; gap:8px; padding:10px; }
+.elo-leader-row .tier-symbol { width:22px; height:22px; }
+.elo-leader-row .leaderboard-streak { font-size:.88rem; color:#ededed; }
+.elelo-board-caption { color:#bcbcbc; }
+@keyframes eloPanelIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+@media (max-width:480px) { .leaderboard-launch { padding:.6rem; gap:.35rem; font-size:.75rem; } .elelo-card { padding:.8rem; } .elo-leader-row { gap:5px; padding:8px; grid-template-columns:25px 20px minmax(0,1fr) auto; } .elo-leader-row .tier-symbol { width:20px; height:20px; } .elelo-tiers { grid-template-columns:1fr; } .elo-axis { font-size:20px; } }
+@media (prefers-reduced-motion:reduce) { .leaderboard-launch i,.elelo-board { animation:none; } .leaderboard-launch { transition:none; } .leaderboard-launch:hover { transform:none; } }
+
+.elo-title-help { display:flex; align-items:center; gap:.55rem; }
+.elo-help { display:inline-flex; position:relative; }
+.elo-help-button { width:22px; height:22px; padding:0; display:grid; place-items:center; border:1px solid #666; border-radius:50%; color:#ccc; background:#303030; font:inherit; font-size:.75rem; cursor:help; }
+.elo-help-tooltip { position:absolute; z-index:5; top:calc(100% + 8px); left:-45px; width:min(280px,65vw); padding:.8rem; border:1px solid #616161; border-radius:10px; background:#1e1e1e; box-shadow:0 6px 20px #0008; color:#ddd; text-align:left; font-size:.8rem; line-height:1.65; opacity:0; visibility:hidden; transition:opacity .15s; pointer-events:none; }
+.elo-help:hover .elo-help-tooltip,.elo-help:focus-within .elo-help-tooltip,.elo-help:has([aria-expanded="true"]) .elo-help-tooltip { opacity:1; visibility:visible; }
+.elo-rank-progress { margin:.85rem 0 1rem; }
+.elo-rank-labels { display:flex; justify-content:space-between; gap:10px; color:#bcbcbc; font-size:.75rem; margin-bottom:.4rem; }
+.elo-rank-progress progress { display:block; width:100%; height:7px; border:0; border-radius:10px; overflow:hidden; background:#414141; accent-color:#62a55c; }
+.elo-rank-progress progress::-webkit-progress-bar { background:#414141; border-radius:10px; }
+.elo-rank-progress progress::-webkit-progress-value { background:#62a55c; border-radius:10px; transition:width .3s; }
+.elo-rank-progress progress::-moz-progress-bar { background:#62a55c; border-radius:10px; }
+.elo-empty-line { stroke-dasharray:5 5; opacity:.55; }
+.elelo-tiers li,.elelo-tiers li span,.elelo-tiers small { text-align:left; }
+.elelo-tiers li span { min-width:0; }
+
+.major-stats-card { margin-top:0; }
+.major-stats-card .modal-title { font-size:1.3rem; }
+.major-stats-card .stats-grid { margin-bottom:0; }
+.major-stats-card .stat-item { background:#303030; }
+@media (max-width:480px) { .major-stats-card { padding:.8rem; } }

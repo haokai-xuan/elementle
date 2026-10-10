@@ -18,7 +18,7 @@ const result = { answer:118, won:true, hintUsed:false, referenceGuesses:4, refer
   {guess:26,optimal:26,before:[26,118],after:[118],quality:100,feedback:['gray','gray','up','diff'],expectedBits:1,optimalBits:1,correct:false,possible:true},
   {guess:118,optimal:118,before:[118],after:[118],quality:100,feedback:['green','green','same','same'],expectedBits:0,optimalBits:0,correct:true,possible:true}
 ]};
-async function run({fail=false,token=null,missing=false,rating=91,knownMistake=false,idleChance=1,reducedMotion=false,deferReveal=false}={}) {
+async function run({fail=false,token=null,missing=false,rating=91,knownMistake=false,idleChance=1,reducedMotion=false,deferReveal=false,elELO=null}={}) {
   const ids = new Map(), cells = data.map(e => { const n = new Node(); n.dataset={number:String(e.number)}; return n; });
   const get = id => { if(!ids.has(id)) ids.set(id,new Node()); return ids.get(id); };
   get('analysis-elements').textContent = JSON.stringify(data);
@@ -36,7 +36,7 @@ async function run({fail=false,token=null,missing=false,rating=91,knownMistake=f
     URLSearchParams,location:{search:'?date=20261008'},AbortSignal,
     localStorage:{getItem:key=>key==='elementle_token' ? token : null},
     sessionStorage:{getItem:()=>missing ? null : JSON.stringify({localDate:'20261008',guesses:[1,26,118],hintUsed:false,hintAt:0})},
-    fetch:async(url,options)=>{ request={url,options}; return {ok:!fail,json:async()=>fail ? {error:'Service offline'} : {...result,scores:{...result.scores,rating},steps:knownMistake ? result.steps.map((step,i)=>i===1 ? {...step,before:[118],guess:32,optimal:118,quality:0,possible:false,expectedBits:0,optimalBits:0} : step) : result.steps}}; }
+    fetch:async(url,options)=>{ request={url,options}; return {ok:!fail,json:async()=>fail ? {error:'Service offline'} : {...result,elELO,scores:{...result.scores,rating},steps:knownMistake ? result.steps.map((step,i)=>i===1 ? {...step,before:[118],guess:32,optimal:118,quality:0,possible:false,expectedBits:0,optimalBits:0} : step) : result.steps}}; }
   };
   vm.runInNewContext(fs.readFileSync(require.resolve('./analysis.js'),'utf8'),context);
   await new Promise(resolve=>setImmediate(resolve));
@@ -113,6 +113,12 @@ async function run({fail=false,token=null,missing=false,rating=91,knownMistake=f
   const account = await run({token:'test-token'});
   assert.equal(account.request.options.headers.Authorization,'Bearer test-token');
   assert.deepEqual(JSON.parse(account.request.options.body),{localDate:'20261008'});
+  const rated = await run({token:'test-token',elELO:{rating:409.6,oldRating:400,change:9.6,tier:'Lab Apprentice'}});
+  const eloCard = rated.get('analysis-scores').children[4];
+  assert.equal(eloCard.children[0].textContent, 'elELO · Lab Apprentice');
+  assert.equal(eloCard.children[1].textContent, '409.6');
+  assert.match(eloCard.children[2].textContent, /\+9.60 this game/);
+  assert.equal(get('analysis-scores').children.length, 4);
   const missing = await run({missing:true});
   assert.equal(missing.request,undefined);
   assert.match(missing.get('bot-message').textContent,/Finish a daily game/);
