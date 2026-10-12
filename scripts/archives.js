@@ -1,4 +1,5 @@
 (function () {
+  const ARCHIVE_START_DATE = '20260725';
   const panel = document.querySelector('#lab-archives');
   if (!panel) return;
   const progressStore = window.ElementleArchiveProgress;
@@ -29,7 +30,7 @@
       button.innerHTML = '<span class="day-number">' + n + '</span><span class="day-symbol" aria-hidden="true">' + symbol + '</span>';
       button.setAttribute('data-date', date);
       button.disabled = !isToday && (!availabilityVerified || !available.has(date) ||
-        (current.archiveCutoff && Number(date) >= current.archiveCutoff) || date > todayInt || date < '20260721');
+        (current.archiveCutoff && Number(date) >= current.archiveCutoff) || date > todayInt || date < ARCHIVE_START_DATE);
       button.className = isToday ? 'today' : progress || '';
       if (isToday) button.setAttribute('aria-current', 'date');
       button.setAttribute('aria-label', `${month.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })} ${n}${isToday ? ', today — daily puzzle' : ''}${progress ? ', ' + progress : ''}`);

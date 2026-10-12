@@ -2606,7 +2606,23 @@ body.modal-open {
 .has-game-analysis .js-analysis-button { grid-column:1 / -1; grid-row:1; width:100%; margin:0; gap:8px; box-sizing:border-box; }
 .has-game-analysis .js-additional-info,.has-game-analysis .js-share-button { min-width:0; }
 .has-game-analysis .additional-info,.has-game-analysis .js-share-button .share-button { width:100%; box-sizing:border-box; }
-@media(max-width:599px) { .correct-guess-container.has-game-analysis { width:100%; } }
+/* Match the two guess cards, including the space between them. */
+@media(max-width:599px) {
+  .correct-guess-container,
+  .correct-guess-container.has-game-analysis {
+    width:min(100%,420px);
+    column-gap:20px;
+    margin-left:auto;
+    margin-right:auto;
+  }
+}
+@media(max-width:450px) {
+  .correct-guess-container,
+  .correct-guess-container.has-game-analysis {
+    width:min(100%,308px);
+    column-gap:8px;
+  }
+}
 
 .has-game-analysis .share-button,.has-game-analysis .additional-info { height:44px; min-height:44px; box-sizing:border-box; }
 .analysis-button-icon { width:24px; height:24px; flex:0 0 24px; object-fit:contain; image-rendering:pixelated; }

@@ -119,7 +119,6 @@
     await Promise.all(animations.map(animation => animation.finished.catch(() => {})));
     if (!cancelled) enter();
    };
-   verify.focus();
   }
  }
 })();

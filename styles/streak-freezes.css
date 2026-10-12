@@ -90,8 +90,14 @@
 /* Completed main games open their saved elBot analysis. */
 .streak-calendar .lab-days button.analyzable { position:relative; cursor:pointer; }
 .streak-calendar .lab-days button.analyzable:hover,.streak-calendar .lab-days button.analyzable:focus-visible { background:#34412f; border-color:#a2c691; box-shadow:0 0 0 1px #91b780; }
-.streak-calendar .analysis-magnifier { position:absolute; top:2px; right:5px; font:22px/1 system-ui,sans-serif; color:#e7f4df; opacity:0; transition:opacity .15s; }
+.streak-calendar .analysis-magnifier { position:absolute; top:4px; right:4px; width:12px; height:12px; line-height:0; color:#e7f4df; opacity:0; transition:opacity .15s; }
 .streak-calendar .analyzable:hover .analysis-magnifier,.streak-calendar .analyzable:focus-visible .analysis-magnifier { opacity:1; }
 @media(hover:none) { .streak-calendar .analysis-magnifier { opacity:.8; } }
 .js-freeze-guest a { color: #8ec987; }
 .js-freeze-guest a:hover, .js-freeze-guest a:focus-visible { color: #c7edc2; }
+
+.streak-calendar .analysis-magnifier svg { display:block; width:100%; height:100%; }
+@media (max-width:600px) {
+  .streak-calendar .analysis-magnifier { top:3px; right:3px; width:clamp(8px,2.4vw,12px); height:clamp(8px,2.4vw,12px); }
+  .streak-calendar .analyzable .day-number { transform:translateX(-4px); }
+}

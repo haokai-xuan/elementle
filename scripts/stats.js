@@ -1,4 +1,5 @@
 const API_BASE = '/api';
+const CALENDAR_START_DATE = '20260725';
 // Only completed wins have a solving guess count; X is excluded.
 function averageWinningGuesses(distribution) {
   let wins = 0, guesses = 0;
@@ -495,11 +496,11 @@ function initializeStreakCalendar(root) {
     const days = new Date(month.getFullYear(), month.getMonth()+1, 0).getDate();
     for (let n=1; n<=days; n++) {
       const key = String(month.getFullYear()*10000 + (month.getMonth()+1)*100 + n);
-      const state = ready ? (key === today && history[key] === 'missed' ? '' : history[key]) || (key < today && key >= '20260721' ? 'missed' : '') : '';
+      const state = ready && key >= CALENDAR_START_DATE ? (key === today && history[key] === 'missed' ? '' : history[key]) || (key < today && key >= CALENDAR_START_DATE ? 'missed' : '') : '';
       const symbol = { solved:'✓', missed:'−', failed:'×', frozen:'❄' }[state] || '';
       const cell = document.createElement('button');
       cell.type = 'button';
-      const analyzable = ready && (analyzableDates.has(key) || ratings.has(key)) && key <= today;
+      const analyzable = ready && key >= CALENDAR_START_DATE && (analyzableDates.has(key) || ratings.has(key)) && key <= today;
       cell.className = state + (key === today ? ' today' : '') + (analyzable ? ' analyzable' : '');
       cell.disabled = !analyzable;
       cell.innerHTML = '<span class="day-number">' + n + '</span>' + '<span class="day-symbol" aria-hidden="true">' + symbol + '</span>';
@@ -507,7 +508,7 @@ function initializeStreakCalendar(root) {
       cell.setAttribute('aria-label', new Date(month.getFullYear(),month.getMonth(),n).toLocaleDateString() + ': ' + label);
       cell.title = label + (analyzable ? ' · View game result and elELO' : '');
       if (analyzable) {
-        cell.innerHTML += '<span class="analysis-magnifier" aria-hidden="true">⌕</span>';
+        cell.innerHTML += '<span class="analysis-magnifier" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></svg></span>';
         cell.setAttribute('aria-label', cell.title + ' · ' + new Date(month.getFullYear(),month.getMonth(),n).toLocaleDateString());
         cell.onclick = () => {
           window.ElementleGameResult.openHistory({localDate:key, title:'Daily game result', historical:true, elo:ratings.get(key)});
