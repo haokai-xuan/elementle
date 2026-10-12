@@ -132,3 +132,20 @@ and locate the API near MySQL. A slow proxy with a fast backend can indicate HTT
 network delay or request queueing before Flask handles the request. Large
 `stripe_ms` points to Stripe calls. These timings do not measure the subsequent
 loading of Stripe's own hosted page after redirect.
+
+
+## Daily game membership lookup
+
+Ordinary daily-game loading does not call `/api/billing/status`, and focus or
+visibility changes on the daily page do not start a membership request. The page
+uses a valid existing cache or waits for the existing game response. Its
+server-provided freeze capacity supplies the access flag (two for Lab, one for
+free accounts), including after guess submissions. No additional subscription
+query is sent by the browser for this information.
+
+This access-only cache lasts at most 30 seconds and can be used by paid-feature
+gates. Account and Lab billing views do not reuse an access-only entry as billing
+details; they retrieve the full saved status. Explicit billing changes from
+another tab and paid-feature denials still invalidate/recheck membership. While
+membership is unknown, a signed-in daily page holds ads until the game response
+confirms whether they should load. Backend paid-feature authorization is unchanged.

@@ -40,8 +40,12 @@ async function run({ token = null, status = {isLab:false}, path = '/', mode = ''
 }
 (async()=>{
   const guest=await run({});assert.equal(guest.requests,0);assert.equal(guest.scripts.length,1);
-  const free=await run({token:'jwt',status:{isLab:false}});assert.equal(free.scripts.length,1);
-  const trial=await run({token:'jwt',status:{isLab:true,status:'trialing'}});assert.equal(trial.scripts.length,0);assert.equal(trial.root.dataset.lab,'active');
+  const free=await run({token:'jwt',status:{isLab:false}});assert.equal(free.requests,0);assert.equal(free.scripts.length,0);
+  free.events.focus();free.tick();await new Promise(resolve=>setImmediate(resolve));assert.equal(free.requests,0);
+  free.window.ElementleLab.consumeGame({streakFreezes:{capacity:1}});await new Promise(resolve=>setImmediate(resolve));assert.equal(free.scripts.length,1);
+  const trial=await run({token:'jwt',status:{isLab:true,status:'trialing'}});assert.equal(trial.requests,0);
+  trial.window.ElementleLab.consumeGame({streakFreezes:{capacity:2}});await new Promise(resolve=>setImmediate(resolve));assert.equal(trial.scripts.length,0);assert.equal(trial.root.dataset.lab,'active');
+  const detailed=await run({token:'jwt',path:'/account',cache:trial.cache,status:{isLab:true,status:'trialing',plan:'monthly'}});assert.equal(detailed.requests,1);assert.equal(detailed.window.ElementleLab.status.plan,'monthly');
   const failed=await run({token:'jwt',failure:true});assert.equal(failed.scripts.length,0);
   for(const path of ['/vault','/vault/26','/analysis','/analysis/']){
     const gated=await run({path});assert.equal(gated.redirects.length,0);assert.equal(gated.scripts.length,0);
@@ -77,7 +81,7 @@ async function run({ token = null, status = {isLab:false}, path = '/', mode = ''
   free.events['elementle:auth-change']();assert.equal(free.redirects.at(-1),'reload');
   // Cache persists across navigation, expires from the original fetch, and is account-bound.
   const cache=new Map();let clock=100000;
-  await run({token:'member',status:{isLab:true},cache,now:()=>clock});
+  await run({token:'member',path:'/vault',status:{isLab:true},cache,now:()=>clock});
   const cached=await run({token:'member',status:{isLab:false},path:'/vault',cache,now:()=>clock});
   assert.equal(cached.requests,0);assert.equal(cached.root.dataset.lab,'active');
   clock+=10000;cached.tick();await new Promise(resolve=>setImmediate(resolve));
@@ -85,7 +89,7 @@ async function run({ token = null, status = {isLab:false}, path = '/', mode = ''
   clock+=21000;cached.tick();await new Promise(resolve=>setImmediate(resolve));
   assert.equal(cached.requests,1);assert.equal(cached.root.dataset.lab,'free');
   assert.equal(cached.main.inert,true);
-  const other=await run({token:'other-member',status:{isLab:false},cache,now:()=>clock});
+  const other=await run({token:'other-member',path:'/vault',status:{isLab:false},cache,now:()=>clock});
   assert.equal(other.requests,1);assert.equal(other.root.dataset.lab,'free');
   const billing=await run({token:'other-member',status:{isLab:true},path:'/account',search:'?billing=return',cache,now:()=>clock});
   assert.equal(billing.requests,1);assert.match(billing.urls[0],/refresh=1/);
@@ -106,12 +110,12 @@ async function run({ token = null, status = {isLab:false}, path = '/', mode = ''
   assert.equal(denial.requests,beforeInvalidation+1);
   const expiringCache=new Map();
   clock=100000;
-  await run({token:'expiring',status:{isLab:true,status:'trialing',trialEnd:105},cache:expiringCache,now:()=>clock});
+  await run({token:'expiring',path:'/vault',status:{isLab:true,status:'trialing',trialEnd:105},cache:expiringCache,now:()=>clock});
   clock=106000;
-  const expired=await run({token:'expiring',status:{isLab:false},cache:expiringCache,now:()=>clock});
+  const expired=await run({token:'expiring',path:'/vault',status:{isLab:false},cache:expiringCache,now:()=>clock});
   assert.equal(expired.requests,1);assert.equal(expired.root.dataset.lab,'free');
   const unavailableCache=new Map();
-  await run({token:'offline',status:{isLab:true},cache:unavailableCache,now:()=>clock});
+  await run({token:'offline',path:'/vault',status:{isLab:true},cache:unavailableCache,now:()=>clock});
   clock+=31000;
   const offline=await run({token:'offline',failure:true,path:'/vault',cache:unavailableCache,now:()=>clock});
   assert.equal(offline.root.dataset.lab,'unknown');assert.equal(offline.gate.dataset.state,'error');

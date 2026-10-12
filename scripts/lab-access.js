@@ -4,14 +4,14 @@
   const token = () => localStorage.getItem('elementle_token');
   const CACHE_KEY = 'elementle_lab_status_v1', CACHE_MS = 30000;
   let pending = null;
-  const api = { status: null, ready: null, refresh, checkResponse };
+  const api = { status: null, ready: null, refresh, checkResponse, consumeGame };
   function clearCache() {
     try { sessionStorage.removeItem(CACHE_KEY); } catch {}
   }
   function cachedStatus(auth) {
     try {
       const cached = JSON.parse(sessionStorage.getItem(CACHE_KEY) || 'null');
-      if (cached?.auth === auth && cached.expires > Date.now() && typeof cached.status?.isLab === 'boolean') return cached.status;
+      if (cached?.auth === auth && cached.expires > Date.now() && typeof cached.status?.isLab === 'boolean' && !(billingPage && cached.status.accessOnly)) return cached.status;
     } catch {}
     return null;
   }
@@ -20,6 +20,31 @@
     const end = status.status === 'past_due' ? status.paymentGraceUntil : status.status === 'trialing' ? status.trialEnd : status.currentPeriodEnd;
     if (status.isLab && end) expires = Math.min(expires, end * 1000);
     try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({auth, status, expires})); } catch {}
+  }
+  function useLocalStatus() {
+    if (pending) return pending.promise;
+    const auth = token();
+    api.status = auth ? cachedStatus(auth) : {isLab:false,status:'none',trialEligible:true,canManage:false};
+    document.documentElement.dataset.lab = api.status ? (api.status.isLab ? 'active' : 'free') : 'unknown';
+    api.ready = Promise.resolve(api.status);
+    if (api.status) window.dispatchEvent(new CustomEvent('elementle:lab-change', {detail:api.status}));
+    return api.ready;
+  }
+  function consumeGame(data) {
+    const capacity = data?.streakFreezes?.capacity;
+    const auth = token();
+    if (!auth || ![1,2].includes(capacity) || pending) return;
+    const isLab = capacity === 2;
+    const status = api.status && api.status.isLab === isLab ? api.status : {isLab,status:isLab?'active':'none',accessOnly:true};
+    api.status = status;
+    saveStatus(auth, status);
+    api.ready = Promise.resolve(status);
+    document.documentElement.dataset.lab = isLab ? 'active' : 'free';
+    if (isLab && adsLoaded) { location.reload(); return; }
+    window.dispatchEvent(new CustomEvent('elementle:lab-change', {detail:status}));
+  }
+  function checkIfNeeded(force = false) {
+    return dailyMain && !gatedFeature() ? useLocalStatus() : refresh(force, !force);
   }
   function checkResponse(response) {
     if (response.status !== 402) return;
@@ -141,9 +166,10 @@
     api.ready.catch(() => {});
     return api.ready;
   }
+  const dailyMain = ['/', '/index.html'].includes(location.pathname) && !gatedFeature();
   const billingPage = ['/lab', '/account', '/account.html'].includes(location.pathname.replace(/\/+$/, ''));
   const returningFromStripe = new URLSearchParams(location.search).has('checkout') || new URLSearchParams(location.search).get('billing') === 'return';
-  refresh(returningFromStripe, true);
+  if (dailyMain) useLocalStatus(); else refresh(returningFromStripe, true);
   function updateBadge() {
     document.querySelectorAll('.js-lab-account-status').forEach(node => {
       node.textContent = api.status ? (api.status.isLab ? (api.status.status === 'trialing' ? 'Elementle Lab · Free trial' : 'Elementle Lab member') : 'Free account · Explore Elementle Lab') : 'Elementle Lab';
@@ -156,7 +182,7 @@
     else if (!api.status) showGate(feature, 'checking');
     try {
       const status = await api.ready;
-      if (status !== api.status || feature !== gatedFeature()) return;
+      if (!status || status !== api.status || feature !== gatedFeature()) return;
       updateBadge();
       if (feature && !status.isLab) {
         showGate(feature);
@@ -179,24 +205,24 @@
     clearCache();
     api.status = null;
     if (adsLoaded) { location.reload(); return; }
-    refresh().then(updatePage).catch(() => {});
+    checkIfNeeded().then(updatePage).catch(() => {});
   });
   window.addEventListener('elementle:lab-change', () => {
     updateBadge();
     if (document.readyState !== 'loading') updatePage();
   });
-  window.addEventListener('hashchange', () => { refresh(false, true).then(updatePage).catch(updatePage); });
-  window.addEventListener('pageshow', event => { if (event.persisted) refresh(billingPage, !billingPage).then(updatePage).catch(updatePage); });
-  window.addEventListener('focus', () => { refresh(false, true).then(updatePage).catch(updatePage); });
+  window.addEventListener('hashchange', () => { checkIfNeeded().then(updatePage).catch(updatePage); });
+  window.addEventListener('pageshow', event => { if (event.persisted) checkIfNeeded(billingPage).then(updatePage).catch(updatePage); });
+  window.addEventListener('focus', () => { checkIfNeeded().then(updatePage).catch(updatePage); });
   window.addEventListener('storage', event => {
     if (event.key === 'elementle_token') window.dispatchEvent(new CustomEvent('elementle:auth-change'));
     else if (event.key === 'elementle_lab_revision') { clearCache(); refresh().then(updatePage).catch(updatePage); }
   });
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) refresh(false, true).then(updatePage).catch(updatePage);
+    if (!document.hidden) checkIfNeeded().then(updatePage).catch(updatePage);
   });
   window.setInterval?.(() => {
-    if (!document.hidden && token()) refresh(false, true).then(updatePage).catch(updatePage);
+    if (!dailyMain && !document.hidden && token()) refresh(false, true).then(updatePage).catch(updatePage);
   }, CACHE_MS);
   document.addEventListener('DOMContentLoaded', updatePage);
 })();

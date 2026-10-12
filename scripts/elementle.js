@@ -771,7 +771,7 @@ async function processGuess() {
           if (data.readOnly || data.frozen) setDailyReadOnly(true, data.lockReason);
           throw new Error(data.error || 'Could not save your game');
         }
-        if (token === getAuthToken()) window.ElementleFreezes?.consume(data);
+        if (token === getAuthToken()) { window.ElementleFreezes?.consume(data); window.ElementleLab?.consumeGame?.(data); }
         localStorage.setItem('elementle_stats_revision', String(Date.now()));
         window.dispatchEvent(new Event('elementle:game-complete'));
         return data;
@@ -1094,7 +1094,7 @@ function setDailyReadOnly(readOnly, reason = 'frozen') {
 
 function applyServerGameState(data, options) {
   options = options || {};
-  if (!practice) window.ElementleFreezes?.consume(data);
+  if (!practice) { window.ElementleFreezes?.consume(data); window.ElementleLab?.consumeGame?.(data); }
   if (!practice) {
     gameStorage.setItem('hintUsed:' + getTodayDateInt(), String(Boolean(data.hintUsed)));
     gameStorage.setItem('hintUsedAtGuess:' + getTodayDateInt(), String(data.hintUsedAtGuess ?? 0));
