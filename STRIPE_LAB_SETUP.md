@@ -96,8 +96,9 @@ navigation in the same tab. Cache entries are tied to the signed-in token and
 expire no later than the known trial, subscription or payment-grace end. Reading
 an entry does not extend its lifetime. Concurrent checks are deduplicated.
 
-Account and Lab billing views, Stripe returns and manual billing refreshes bypass
-the cache and synchronize with Stripe. Ordinary visible-page checks run every
+Ordinary Account and Lab visits reuse the short-lived database-status cache.
+Stripe Checkout/portal returns and manual billing refreshes bypass the cache and
+synchronize with Stripe. Portal return URLs include `?billing=return`. Ordinary visible-page checks run every
 30 seconds against the backend database; they do not call Stripe. Returning to a
 visible page rechecks an expired entry. Login/logout invalidates cached status,
 and billing refreshes signal other tabs to invalidate their cache. A paid-feature
@@ -109,3 +110,25 @@ request against current database entitlement. External billing changes become
 visible after their webhook reaches the API and the next status check, generally
 within 30 seconds on a visible page; instantaneous updates while offline cannot
 be guaranteed. Deploying this cache requires only the frontend changes.
+
+
+## Billing latency diagnostics
+
+The Flask API logs `[billing timing]` for billing and paid-feature routes, including
+`total_ms`, `stripe_ms`, `stripe_calls` and `db_read_ms`. `db_read_ms` measures the
+membership read including connection setup and close; it is not the total SQL time
+of a full synchronization. The frontend proxy logs `[billing proxy]`, including
+its total upstream time, and forwards the backend's `Server-Timing` header.
+These logs omit authorization, email addresses, request bodies and Stripe URLs.
+
+Ordinary membership checks read the database without calling Stripe. Account/Lab
+page entry no longer initiates a full Stripe synchronization; webhooks update saved
+status, while billing returns and explicit refreshes still synchronize. Stripe API
+calls reuse an HTTP session per worker thread to avoid repeated connection setup.
+
+When Flask is on Railway and MySQL is on an external VM, each database operation
+crosses that network link. If `db_read_ms` dominates, check database reachability
+and locate the API near MySQL. A slow proxy with a fast backend can indicate HTTP
+network delay or request queueing before Flask handles the request. Large
+`stripe_ms` points to Stripe calls. These timings do not measure the subsequent
+loading of Stripe's own hosted page after redirect.

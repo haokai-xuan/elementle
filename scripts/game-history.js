@@ -2,7 +2,35 @@
 (() => {
   const $ = id => document.getElementById(id);
   const date = new URLSearchParams(location.search).get('date') || '';
-  let requestId = 0;
+  let requestId = 0, inFlight = null;
+  const cacheKey = 'elementle_saved_game_' + date;
+  function readCache(token) {
+    try {
+      const entry = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
+      if (entry?.token === token && entry.expires > Date.now()) return entry.data;
+    } catch {}
+    return null;
+  }
+  async function requestGame(token, force) {
+    const cached = !force && readCache(token);
+    if (cached) return cached;
+    if (inFlight?.token === token) return inFlight.promise;
+    const promise = (async () => {
+      const response = await fetch('/api/game/history?localDate=' + date, {cache:'no-store',headers:{Authorization:'Bearer '+token},
+        signal:typeof AbortSignal !== 'undefined' ? AbortSignal.timeout(12000) : undefined});
+      const data = await response.json().catch(() => {throw new Error('Saved games are temporarily unavailable. Please try again.');});
+      if (!response.ok) throw new Error(response.status === 401 ? 'Sign in again to view your saved game.' : data.error || 'Unable to load your saved game.');
+      if (!data.answer || !Array.isArray(data.guesses)) throw new Error('This saved game is unavailable.');
+      if (token === localStorage.getItem('elementle_token')) {
+        try { sessionStorage.setItem(cacheKey, JSON.stringify({token, expires:Date.now()+300000, data})); } catch {}
+      }
+      return data;
+    })();
+    inFlight = {token, promise};
+    try { return await promise; }
+    catch (error) {try { sessionStorage.removeItem(cacheKey); } catch {} throw error;}
+    finally {if (inFlight?.promise === promise) inFlight = null;}
+  }
   const make = (tag, className, text) => {
     const node = document.createElement(tag); node.className = className; node.textContent = text; return node;
   };
@@ -42,7 +70,8 @@
     $('saved-game-analysis').href = '/analysis?date=' + date;
     $('saved-game-content').hidden = false;
   }
-  async function load() {
+  async function load(force = false) {
+    force = force === true;
     const id = ++requestId;
     const token = localStorage.getItem('elementle_token');
     window.ElementleGameResult.close();
@@ -59,11 +88,8 @@
     }
     $('saved-game-retry').hidden = false;
     try {
-      const response = await fetch('/api/game/history?localDate=' + date, {cache:'no-store',headers:{Authorization:'Bearer '+token}});
-      const data = await response.json().catch(() => {throw new Error('Saved games are temporarily unavailable. Please try again.');});
+      const data = await requestGame(token, force);
       if (id !== requestId || token !== localStorage.getItem('elementle_token')) return;
-      if (!response.ok) throw new Error(response.status === 401 ? 'Sign in again to view your saved game.' : data.error || 'Unable to load your saved game.');
-      if (!data.answer || !Array.isArray(data.guesses)) throw new Error('This saved game is unavailable.');
       renderGame(data); $('saved-game-status').textContent = '';
     } catch (error) {
       if (id !== requestId || token !== localStorage.getItem('elementle_token')) return;
@@ -71,8 +97,8 @@
       $('saved-game-signin').hidden = !/Sign in/.test(error.message);
     }
   }
-  $('saved-game-retry').addEventListener('click', load);
-  window.addEventListener('elementle:auth-change', load);
+  $('saved-game-retry').addEventListener('click', () => load(true));
+  window.addEventListener('elementle:auth-change', () => load(true));
   window.addEventListener('pageshow', event => {if(event.persisted) load();});
   load();
 })();

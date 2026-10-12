@@ -32,17 +32,17 @@
       }
     });
   }
-  async function refresh() {
+  async function refresh(force = false) {
     if (!section() || !localStorage.getItem('elementle_token') || loading) return;
     loading = true;
-    try { render(await window.ElementleLab.refresh(true)); }
+    try { render(await window.ElementleLab.refresh(force, !force)); }
     catch { const root=section();if(root){root.querySelector('[data-billing="status"]').textContent='Billing unavailable';root.querySelector('[data-billing="note"]').textContent='Unable to load billing details. Try Refresh billing details in a moment.';} }
     finally { loading=false; }
   }
   document.addEventListener('click', async event => {
     const button = event.target.closest?.('[data-billing-action]');
     if (!button || !section() || button.disabled || portalOpening) return;
-    if (button.dataset.billingAction === 'refresh') { await refresh(); return; }
+    if (button.dataset.billingAction === 'refresh') { await refresh(true); return; }
     const auth=localStorage.getItem('elementle_token');
     if (!auth) return;
     portalOpening=true;
@@ -62,7 +62,7 @@
     if(window.ElementleLab?.status)render(window.ElementleLab.status);
     refresh();
   });
-  window.addEventListener('pageshow',event=>{if(event.persisted){portalOpening=false;if(window.ElementleLab?.status)render(window.ElementleLab.status);refresh();}});
+  window.addEventListener('pageshow',event=>{if(event.persisted){portalOpening=false;if(window.ElementleLab?.status)render(window.ElementleLab.status);refresh(true);}});
   if(window.ElementleLab?.status)render(window.ElementleLab.status);
   refresh();
 })();

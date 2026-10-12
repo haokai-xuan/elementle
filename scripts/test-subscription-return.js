@@ -21,7 +21,7 @@ async function scenario(search='') {
   await events.pageshow({persisted:true});
   assert.doesNotMatch(node('lab-message').textContent,/Opening secure/);
   assert.equal(button.disabled,false);
-  assert.equal(requests,2);
+  assert.equal(requests,1);
   if(search)assert.match(node('lab-message').textContent,/Checkout canceled/);
 }
 (async()=>{await scenario();await scenario('?checkout=canceled');console.log('Back-navigation clears Stripe opening message, reenables controls, and refreshes membership.');})().catch(error=>{console.error(error);process.exitCode=1;});

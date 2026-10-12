@@ -8,7 +8,7 @@ const localStorage = { getItem: key => values.get(key) || null, setItem: (key,va
 const events = {};
 const window = { addEventListener: (name,fn) => events[name] = fn, dispatchEvent: event => events[event.type]?.(event) };
 function element() {
-  return { children:[], textContent:'', attrs:{}, replaceChildren() { this.children=[]; }, append(child) { this.children.push(child); }, setAttribute(key,value) { this.attrs[key]=value; }, addEventListener() {} };
+  return { children:[], textContent:'', attrs:{}, style:{}, replaceChildren(...children) { this.children=children; }, append(child) { this.children.push(child); }, setAttribute(key,value) { this.attrs[key]=value; }, addEventListener() {} };
 }
 const nodes = Object.fromEntries(['lab-archives','archive-status','archive-month','archive-prev','archive-next','archive-days'].map(key=>['#'+key,element()]));
 const pending = [];
@@ -50,6 +50,24 @@ async function main() {
   localStorage.setItem('elementle_token','different-account');
   events.storage({key:'elementle_token'});
   assert.equal(findDay().className,''); // Guest progress does not leak into an account.
+  // Free membership never requests a paid archive endpoint.
+  window.ElementleLab={ready:Promise.resolve({isLab:false})};
+  const requestsBeforeFree=pending.length;
+  events.focus();await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(pending.length,requestsBeforeFree);
+  assert.equal(nodes['#archive-status'].children[0].href,'/lab');
+  // A newly activated subscription makes the calendar fetch eligibility again.
+  window.ElementleLab.ready=Promise.resolve({isLab:true});
+  events['elementle:lab-change']({detail:{isLab:true}});
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(pending.length,requestsBeforeFree+1);
+  pending.at(-1)({ok:true,json:async()=>snapshot});
+  await new Promise(resolve=>setImmediate(resolve));
+  const beforeCached=pending.length;events.focus();await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(pending.length,beforeCached); // Recent verified availability skips a repeat fetch.
+  const saved=window.ElementleArchiveProgress.read();saved.snapshotAt=Date.now()-31000;
+  localStorage.setItem(window.ElementleArchiveProgress.prefix+'different-account',JSON.stringify(saved));
+  events.focus();await new Promise(resolve=>setImmediate(resolve));assert.equal(pending.length,beforeCached+1);
   console.log('Archive return navigation, immediate progress, stale-response protection, completion and account isolation pass.');
 }
 main().catch(error=>{console.error(error);process.exitCode=1;});

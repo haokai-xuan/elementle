@@ -3,6 +3,7 @@ const playMode = playParams.get('mode') === 'freeplay' ? 'freeplay' : playParams
 const practice = playMode !== 'daily';
 const playDate = playParams.get('date');
 let practiceGame = null;
+let practiceLoadPromise = null;
 let dailyReadOnly = false;
 let dailyLockReason = null;
 let loadedDailyDate = 0;
@@ -57,6 +58,7 @@ function updatePracticeSyncUI() {
 }
 function savePracticeQueue() {
   gameStorage.setItem('pendingGuesses', JSON.stringify(pendingPracticeGuesses));
+  if (practiceGame) gameStorage.setItem('practiceSnapshot', JSON.stringify(practiceGame));
   if (playMode === 'archive' && practiceGame) {
     const completed = guessedCorrectly === 'true' || Number(numberOfGuesses) >= 8 || practiceGame.completed;
     window.ElementleArchiveProgress.publish(playDate, completed, pendingPracticeGuesses.length > 0);
@@ -91,7 +93,23 @@ async function syncPracticeQueue() {
     updatePracticeSyncUI();
   }
 }
+function restorePracticePreview() {
+  try {
+    const snapshot = JSON.parse(gameStorage.getItem('practiceSnapshot') || 'null');
+    if (!snapshot?.id || snapshot.id !== gameStorage.getItem('sessionId') || !Array.isArray(snapshot.guesses)) return;
+    const mystery = getElementFromAtomicNumber(snapshot.atomic_number);
+    if (!mystery) return;
+    mysteryElementCache = mystery;
+    renderFromLocalCache();
+  } catch {}
+}
 async function loadPractice(newRound = false) {
+  if (practiceLoadPromise) return practiceLoadPromise;
+  practiceLoadPromise = loadPracticeState(newRound);
+  try { return await practiceLoadPromise; }
+  finally { practiceLoadPromise = null; }
+}
+async function loadPracticeState(newRound = false) {
   if (playMode === 'archive' && Number(playDate) >= getTodayDateInt()) { location.replace('/'); return; }
   practiceGame = await practiceRequest('start', { mode: playMode, date: playDate, localDate: getTodayDateInt(), gameId: playMode === 'freeplay' && !newRound ? gameStorage.getItem('sessionId') : null });
   gameStorage.setItem('sessionId', practiceGame.id);
@@ -1560,10 +1578,11 @@ async function initializeGame() {
   if (practice) updateModeUI();
   inputElement.disabled = true;
   guessButtonElement.disabled = true;
-  hintButton.disabled = !practice && Boolean(getAuthToken());
+  hintButton.disabled = practice || Boolean(getAuthToken());
+  if (practice) restorePracticePreview();
 
   try {
-    if (practice) await loadPractice(); else await setMysteryElementOfTheDay();
+    if (practice) { await loadPractice(); hintButton.disabled = false; } else await setMysteryElementOfTheDay();
   } catch (error) { createPopup(error.message); return; }
   if (!getMysteryElement()) return;
 

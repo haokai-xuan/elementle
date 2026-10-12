@@ -107,7 +107,8 @@
       if (!auth) return { isLab: false, status: 'none', trialEligible: true, canManage: false };
       if (cached) return cached;
       const response = await fetch('/api/billing/status' + (force ? '?refresh=1' : ''), {
-        headers: { Authorization: 'Bearer ' + auth }, cache: 'no-store'
+        headers: { Authorization: 'Bearer ' + auth }, cache: 'no-store',
+        signal: typeof AbortSignal !== 'undefined' ? AbortSignal.timeout(force ? 45000 : 12000) : undefined
       });
       if (!response.ok) throw new Error('Unable to verify membership. Please retry.');
       return response.json();
@@ -141,7 +142,8 @@
     return api.ready;
   }
   const billingPage = ['/lab', '/account', '/account.html'].includes(location.pathname.replace(/\/+$/, ''));
-  refresh(billingPage, true);
+  const returningFromStripe = new URLSearchParams(location.search).has('checkout') || new URLSearchParams(location.search).get('billing') === 'return';
+  refresh(returningFromStripe, true);
   function updateBadge() {
     document.querySelectorAll('.js-lab-account-status').forEach(node => {
       node.textContent = api.status ? (api.status.isLab ? (api.status.status === 'trialing' ? 'Elementle Lab · Free trial' : 'Elementle Lab member') : 'Free account · Explore Elementle Lab') : 'Elementle Lab';
@@ -185,7 +187,7 @@
   });
   window.addEventListener('hashchange', () => { refresh(false, true).then(updatePage).catch(updatePage); });
   window.addEventListener('pageshow', event => { if (event.persisted) refresh(billingPage, !billingPage).then(updatePage).catch(updatePage); });
-  window.addEventListener('focus', () => { refresh(billingPage, !billingPage).then(updatePage).catch(updatePage); });
+  window.addEventListener('focus', () => { refresh(false, true).then(updatePage).catch(updatePage); });
   window.addEventListener('storage', event => {
     if (event.key === 'elementle_token') window.dispatchEvent(new CustomEvent('elementle:auth-change'));
     else if (event.key === 'elementle_lab_revision') { clearCache(); refresh().then(updatePage).catch(updatePage); }

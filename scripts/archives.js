@@ -40,6 +40,14 @@
     grid.setAttribute('data-weeks', String(weeks));
     while (grid.children.length < weeks * 7) grid.append(document.createElement('span'));
   }
+  function showSubscriptionLink() {
+    const link = document.createElement('a');
+    link.href = '/lab';
+    link.textContent = 'Unlock archives with Elementle Lab · Start a 7-day free trial →';
+    link.style.color = '#8ec987';
+    status.replaceChildren(link);
+  }
+  let previousMembership = null;
   async function refresh() {
     const id = ++requestId;
     availabilityVerified = false;
@@ -48,6 +56,23 @@
     if (data.dates.length) status.textContent = '';
     render();
     try {
+      // Personal statistics take priority over the archive calendar.
+      if (window.ElementleStatsReady) await window.ElementleStatsReady;
+      if (window.ElementleLab) {
+        const membership = await window.ElementleLab.ready;
+        if (id !== requestId) return;
+        previousMembership = membership.isLab;
+        if (!membership.isLab) { showSubscriptionLink(); return; }
+      }
+      if (id !== requestId) return;
+      const cached = progressStore.read();
+      if (window.ElementleLab && cached.snapshot && cached.snapshotAt && Date.now() - cached.snapshotAt >= 0 && Date.now() - cached.snapshotAt < 30000 && new Date(cached.snapshotAt).toDateString() === new Date().toDateString()) {
+        data = cached.snapshot;
+        availabilityVerified = true;
+        render();
+        status.textContent = '';
+        return;
+      }
       const today = new Date();
       const date = today.getFullYear()*10000 + (today.getMonth()+1)*100 + today.getDate();
       const token = localStorage.getItem('elementle_token');
@@ -59,11 +84,7 @@
       if (id !== requestId) return;
       window.ElementleLab?.checkResponse?.(response);
       if (response.status === 401 || response.status === 402) {
-        const link = document.createElement('a');
-        link.href = '/lab';
-        link.textContent = 'Unlock archives with Elementle Lab · Start a 7-day free trial →';
-        link.style.color = '#8ec987';
-        status.replaceChildren(link);
+        showSubscriptionLink();
         return;
       }
       if (!response.ok) throw new Error(snapshot.error || 'Unable to load archives');
@@ -83,6 +104,10 @@
   window.addEventListener('pageshow', event => { if (event.persisted) refresh(); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
   window.addEventListener('focus', refresh);
+  window.addEventListener('elementle:auth-change', refresh);
+  window.addEventListener('elementle:lab-change', event => {
+    if (event.detail.isLab !== previousMembership) refresh();
+  });
   window.addEventListener('elementle:archive-progress', render);
   window.addEventListener('storage', event => {
     if (event.key === 'elementle_token' || event.key === 'elementle_guest_id' || event.key?.startsWith(progressStore.prefix)) refresh();

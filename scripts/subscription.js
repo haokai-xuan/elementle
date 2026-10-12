@@ -47,7 +47,7 @@
   if (query.has('feature')) message.textContent = 'This feature is included with Elementle Lab. Start your 7-day free trial to unlock it.';
   if (query.get('checkout') === 'canceled') message.textContent = 'Checkout canceled. You can choose a plan whenever you’re ready.';
   try {
-    const data = await (localStorage.getItem('elementle_token') ? window.ElementleLab.refresh(true) : window.ElementleLab.ready);
+    const data = await window.ElementleLab.ready;
     render(data);
     if (query.get('checkout') === 'success' && !data.isLab) message.textContent = 'Stripe is confirming your subscription. Refresh this page in a moment to check your membership.';
   } catch (error) { membership.textContent = 'Membership unavailable'; message.textContent = error.message; }

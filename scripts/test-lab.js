@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const source = fs.readFileSync(__dirname + '/lab-access.js', 'utf8');
-async function run({ token = null, status = {isLab:false}, path = '/', mode = '', hash = '', failure = false, cache = new Map(), now = () => Date.now() }) {
+async function run({ token = null, status = {isLab:false}, path = '/', mode = '', hash = '', failure = false, cache = new Map(), now = () => Date.now(), search = '' }) {
   const events = {}, dom = {}, scripts = [], redirects = [], root = {dataset:{}};
   let requests=0, tick;
   const urls=[];
@@ -30,7 +30,7 @@ async function run({ token = null, status = {isLab:false}, path = '/', mode = ''
     Date:class extends Date {static now(){return now();}},
     localStorage:{getItem:()=>token},
     sessionStorage:{getItem:key=>cache.get(key),setItem:(key,value)=>cache.set(key,value),removeItem:key=>cache.delete(key)},
-    location:{pathname:path, hash, search:mode ? '?mode='+mode : '', replace:url=>redirects.push(url),reload:()=>redirects.push('reload')},
+    location:{pathname:path, hash, search:search || (mode ? '?mode='+mode : ''), replace:url=>redirects.push(url),reload:()=>redirects.push('reload')},
     fetch:async(url)=>{urls.push(url);requests++;return {ok:!failure,json:async()=>status};},
     document
   });
@@ -87,8 +87,10 @@ async function run({ token = null, status = {isLab:false}, path = '/', mode = ''
   assert.equal(cached.main.inert,true);
   const other=await run({token:'other-member',status:{isLab:false},cache,now:()=>clock});
   assert.equal(other.requests,1);assert.equal(other.root.dataset.lab,'free');
-  const billing=await run({token:'other-member',status:{isLab:true},path:'/account',cache,now:()=>clock});
+  const billing=await run({token:'other-member',status:{isLab:true},path:'/account',search:'?billing=return',cache,now:()=>clock});
   assert.equal(billing.requests,1);assert.match(billing.urls[0],/refresh=1/);
+  const ordinaryBilling=await run({token:'other-member',status:{isLab:true},path:'/account',cache,now:()=>clock});
+  assert.equal(ordinaryBilling.requests,0);
   const before=billing.requests;
   await Promise.all([billing.window.ElementleLab.refresh(true),billing.window.ElementleLab.refresh(true)]);
   assert.equal(billing.requests,before+1);

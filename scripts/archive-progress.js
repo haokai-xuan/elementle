@@ -24,6 +24,7 @@
     cache(snapshot) {
       const value = read();
       value.snapshot = snapshot;
+      value.snapshotAt = Date.now();
       save(value);
     },
     merge(snapshot) {

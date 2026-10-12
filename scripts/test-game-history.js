@@ -9,11 +9,12 @@ class Node {
   addEventListener(name,fn){this.listeners[name]=fn;}
 }
 const nodes=new Map(),events={};const get=id=>{if(!nodes.has(id))nodes.set(id,new Node());return nodes.get(id);};
-let token='valid',response,rating,requests=0;
+let token='valid',response,rating,requests=0,clock=Date.now();
+const cache=new Map();
 const game={answer:{name:'Iron',symbol:'Fe',atomicNumber:26,family:'Transition Metal'},
  guesses:[{name:'Oxygen',symbol:'O',atomicNumber:8,family:'Nonmetal'},{name:'Iron',symbol:'Fe',atomicNumber:26,family:'Transition Metal'}],
  won:true,numGuesses:2,hintUsed:true,hintUsedAtGuess:1,isLab:false,elELO:{rating:420,oldRating:400,change:20}};
-const context=vm.createContext({URLSearchParams,Date,location:{search:'?date=20261010'},localStorage:{getItem:()=>token},
+const context=vm.createContext({URLSearchParams,Date:class extends Date {static now(){return clock;}},sessionStorage:{getItem:key=>cache.get(key),setItem:(key,value)=>cache.set(key,value),removeItem:key=>cache.delete(key)},location:{search:'?date=20261010'},localStorage:{getItem:()=>token},
  window:{ElementleGameResult:{close(){},renderElo:(root,result)=>rating=result.elo},addEventListener:(event,fn)=>events[event]=fn},
  document:{getElementById:get,createElement:()=>new Node()},fetch:async(url,options)=>{requests++;assert.equal(url,'/api/game/history?localDate=20261010');assert.equal(options.headers.Authorization,'Bearer valid');return response;}});
 const settle=()=>new Promise(resolve=>setImmediate(resolve));
@@ -22,6 +23,8 @@ const settle=()=>new Promise(resolve=>setImmediate(resolve));
  assert.ok(page.includes('saved-game-guesses'));assert.ok(!page.includes('src="/scripts/elementle.js"'));assert.ok(!page.includes('src="/scripts/stats.js"'));
  response={ok:true,json:async()=>game};vm.runInContext(fs.readFileSync(require.resolve('./game-history.js'),'utf8'),context);await settle();
  assert.equal(get('saved-game-content').hidden,false);assert.equal(rating.change,20);
+ const firstCount=requests;await events.pageshow({persisted:true});await settle();assert.equal(requests,firstCount);
+ clock+=300001;await events.pageshow({persisted:true});await settle();assert.equal(requests,firstCount+1);
  const cards=get('saved-game-guesses').children;assert.equal(cards.length,8);
  assert.equal(cards[0].children[0].children[0].textContent,'⬆️');assert.equal(cards[1].classes.has('correct-card'),true);
  assert.equal(cards[1].children[1].children[0].style.color,'rgb(83, 141, 78)');
@@ -31,7 +34,8 @@ const settle=()=>new Promise(resolve=>setImmediate(resolve));
  response={ok:false,json:async()=>{throw new SyntaxError('Unexpected token <');}};await get('saved-game-retry').listeners.click();
  assert.match(get('saved-game-status').textContent,/temporarily unavailable/);assert.equal(get('saved-game-content').hidden,true);
  let release;response={ok:true,json:()=>new Promise(resolve=>release=resolve)};const pending=get('saved-game-retry').listeners.click();await settle();
- token=null;events['elementle:auth-change']();release(game);await pending;
+ const duringPending=requests;const duplicate=get('saved-game-retry').listeners.click();await settle();assert.equal(requests,duringPending);
+ token=null;events['elementle:auth-change']();release(game);await Promise.all([pending,duplicate]);
  assert.equal(get('saved-game-content').hidden,true);assert.equal(get('saved-game-signin').hidden,false);
  const count=requests;await get('saved-game-retry').listeners.click();assert.equal(requests,count);
  // A stale Flask deployment returning HTML must still yield JSON from the Node proxy.

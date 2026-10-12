@@ -347,7 +347,9 @@ async function cachedStatsRequest(key, scope, ttl, request) {
   const flightKey = storageKey + ':' + scope;
   if (!statsRequestsInFlight.has(flightKey)) {
     const pending = request().then(data => {
-      const entry = { scope, expiresAt: Date.now() + ttl, data };
+      // Do not replay one-time freeze notifications from a cached stats response.
+      const cachedData = key === 'personal' && data.streakFreezes ? {...data, streakFreezes:{...data.streakFreezes, used:0, earned:false}} : data;
+      const entry = { scope, expiresAt: Date.now() + ttl, data:cachedData };
       statsRequestMemory.set(storageKey, entry);
       try { sessionStorage.setItem(storageKey, JSON.stringify(entry)); } catch {}
       return data;
@@ -540,9 +542,8 @@ async function initializeStats() {
   root.addEventListener('elementle:elo-layout', () => syncStatsSwipeViewportHeight(root));
   let token = localStorage.getItem('elementle_token');
   renderStatsPage(root, !!token);
-  initializeCommunityDistribution(root, 'today');
   let updateCalendar = initializeStreakCalendar(root);
-  let requestId = 0;
+  let requestId = 0, personalRevision = 0;
   async function refresh() {
     const auth = localStorage.getItem('elementle_token');
     if (auth !== token) {
@@ -553,15 +554,19 @@ async function initializeStats() {
       updateCalendar = initializeStreakCalendar(root);
     }
     const id = ++requestId;
-    void window.ElementleElo.refreshLeaderboard(root);
+    if (!root.querySelector('.js-elelo-board').hidden) void window.ElementleElo.refreshLeaderboard(root);
     if (!auth) return;
     const status = root.querySelector('.js-stats-status');
     try {
-      const response = await fetch('/api/user/stats?localDate=' + getLocalDay().key, {
-        cache:'no-store', headers: {Authorization:'Bearer ' + auth}
+      const day = getLocalDay().key;
+      const scope = await accountCacheScope(auth, day) + ':' + personalRevision + ':' + (localStorage.getItem('elementle_lab_revision') || '');
+      const data = await cachedStatsRequest('personal', scope, 30000, async () => {
+        const response = await fetch('/api/user/stats?localDate=' + day, {
+          cache:'no-store', headers: {Authorization:'Bearer ' + auth}, signal:AbortSignal.timeout(12000)
+        });
+        if (!response.ok) throw new Error('Unable to load statistics');
+        return response.json();
       });
-      if (!response.ok) throw new Error('Unable to load statistics');
-      const data = await response.json();
       if (id !== requestId || auth !== localStorage.getItem('elementle_token')) return;
       updateStatValues(root, {wins:data.totalWins || 0, played:data.totalGamesPlayed || 0,
         streak:data.currentStreak || 0, best:data.maxStreak || 0, rate:(data.winRate || 0) + '%',
@@ -581,10 +586,13 @@ async function initializeStats() {
   window.addEventListener('focus', refresh);
   window.addEventListener('pageshow', event => {if (event.persisted) refresh();});
   window.addEventListener('elementle:auth-change', refresh);
-  window.addEventListener('elementle:game-complete', refresh);
+  window.addEventListener('elementle:game-complete', () => { personalRevision++; refresh(); });
   window.addEventListener('storage', event => {if (['elementle_token','elementle_stats_revision'].includes(event.key)) refresh();});
   document.addEventListener('visibilitychange', () => {if (!document.hidden) refresh();});
   setInterval(() => {if (!document.hidden) refresh();}, 60000);
-  await refresh();
+  const initial = refresh();
+  window.ElementleStatsReady = initial;
+  await initial;
+  initializeCommunityDistribution(root, 'today');
 }
 initializeStats();
