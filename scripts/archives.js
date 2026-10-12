@@ -57,6 +57,7 @@
       });
       const snapshot = await response.json();
       if (id !== requestId) return;
+      window.ElementleLab?.checkResponse?.(response);
       if (response.status === 401 || response.status === 402) {
         const link = document.createElement('a');
         link.href = '/lab';

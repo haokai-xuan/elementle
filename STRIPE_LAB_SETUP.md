@@ -87,3 +87,25 @@ The restricted live key rejected the icon upload during setup because it lacks F
 Apply `011_lab_vault_start.sql`, then `012_lab_vault_local_date.sql`, once each before deploying the updated `lab_billing.py` and `vault.py`. These add `lab_accounts.first_subscribed_at`, `vault_start_date` and `vault_timezone`. Stripe synchronization records the earliest confirmed Lab subscription start, including a free trial, and never moves it forward on cancellation or resubscription. Incomplete checkouts do not establish a start date.
 
 Legacy accounts are backfilled from Stripe subscription history on billing refresh or the first Vault visit. New checkouts record the browser’s IANA timezone on the Stripe subscription. The first confirmed subscription fixes `vault_start_date` in that timezone; later timezone changes and resubscriptions cannot change it. Legacy subscriptions without timezone metadata use UTC because the original timezone cannot be recovered. The Vault filters daily games from this fixed calendar date; it no longer uses the global `VAULT_START_DATE` for registered users. Games during membership gaps after the original date still count when the user returns. No new cron job is required.
+
+
+## Browser membership status cache
+
+The frontend reuses authenticated Lab status for at most 30 seconds across page
+navigation in the same tab. Cache entries are tied to the signed-in token and
+expire no later than the known trial, subscription or payment-grace end. Reading
+an entry does not extend its lifetime. Concurrent checks are deduplicated.
+
+Account and Lab billing views, Stripe returns and manual billing refreshes bypass
+the cache and synchronize with Stripe. Ordinary visible-page checks run every
+30 seconds against the backend database; they do not call Stripe. Returning to a
+visible page rechecks an expired entry. Login/logout invalidates cached status,
+and billing refreshes signal other tabs to invalidate their cache. A paid-feature
+HTTP 402 response clears the cache and rechecks immediately. Failed checks clear
+cached membership and display the verification error on protected pages.
+
+Caching controls presentation only. The backend still verifies every paid-feature
+request against current database entitlement. External billing changes become
+visible after their webhook reaches the API and the next status check, generally
+within 30 seconds on a visible page; instantaneous updates while offline cannot
+be guaranteed. Deploying this cache requires only the frontend changes.

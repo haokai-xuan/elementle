@@ -43,6 +43,7 @@
   if (!guest) {guest=crypto.randomUUID();localStorage.setItem('elementle_guest_id',guest);}
   try {
    const res=await fetch('/api/vault',{headers:token?{Authorization:'Bearer '+token}:{'X-Guest-ID':guest},cache:'no-store',signal:AbortSignal.timeout(12000)});
+      window.ElementleLab?.checkResponse?.(res);
    if (!res.ok) throw new Error();
    const data=await res.json();
    render(data,!token);

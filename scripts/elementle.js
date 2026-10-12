@@ -25,6 +25,7 @@ async function practiceRequest(path, body) {
     ...(body ? { body: JSON.stringify(body) } : {})
   });
   const data = await res.json();
+  window.ElementleLab?.checkResponse?.(res);
   if (!res.ok) throw new Error(data.error || 'Unable to load lab');
   return data;
 }

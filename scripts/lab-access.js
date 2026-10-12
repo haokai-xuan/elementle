@@ -2,7 +2,30 @@
   let sequence = 0, adsLoaded = false, gate = null, previousFocus = null;
   const lockedNodes = new Map();
   const token = () => localStorage.getItem('elementle_token');
-  const api = { status: null, ready: null, refresh };
+  const CACHE_KEY = 'elementle_lab_status_v1', CACHE_MS = 30000;
+  let pending = null;
+  const api = { status: null, ready: null, refresh, checkResponse };
+  function clearCache() {
+    try { sessionStorage.removeItem(CACHE_KEY); } catch {}
+  }
+  function cachedStatus(auth) {
+    try {
+      const cached = JSON.parse(sessionStorage.getItem(CACHE_KEY) || 'null');
+      if (cached?.auth === auth && cached.expires > Date.now() && typeof cached.status?.isLab === 'boolean') return cached.status;
+    } catch {}
+    return null;
+  }
+  function saveStatus(auth, status) {
+    let expires = Date.now() + CACHE_MS;
+    const end = status.status === 'past_due' ? status.paymentGraceUntil : status.status === 'trialing' ? status.trialEnd : status.currentPeriodEnd;
+    if (status.isLab && end) expires = Math.min(expires, end * 1000);
+    try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({auth, status, expires})); } catch {}
+  }
+  function checkResponse(response) {
+    if (response.status !== 402) return;
+    clearCache();
+    refresh().then(updatePage).catch(updatePage);
+  }
   window.ElementleLab = api;
   const stylesheet = document.createElement('link');
   stylesheet.rel = 'stylesheet';
@@ -74,10 +97,15 @@
     back.href = feature === 'archive' && location.pathname.startsWith('/stats') ? '/stats' : '/';
     back.textContent = back.href.endsWith('/stats') ? 'Back to stats' : 'Back to game';
   }
-  function refresh(force = false) {
-    const version = ++sequence, auth = token();
+  function refresh(force = false, useCache = false) {
+    const auth = token();
+    // A forced Stripe refresh supersedes an ordinary database check.
+    if (pending?.auth === auth && (!force || pending.force)) return pending.promise;
+    const version = ++sequence;
+    const cached = !force && useCache && auth ? cachedStatus(auth) : null;
     api.ready = (async () => {
       if (!auth) return { isLab: false, status: 'none', trialEligible: true, canManage: false };
+      if (cached) return cached;
       const response = await fetch('/api/billing/status' + (force ? '?refresh=1' : ''), {
         headers: { Authorization: 'Bearer ' + auth }, cache: 'no-store'
       });
@@ -87,15 +115,33 @@
       if (version !== sequence) return api.ready;
       if (auth !== token()) return refresh();
       api.status = status;
+      if (auth && !cached) saveStatus(auth, status); else if (!auth) clearCache();
+      if (force && auth) {
+        try { localStorage.setItem('elementle_lab_revision', Date.now() + ':' + Math.random()); } catch {}
+      }
+      if (status.isLab && adsLoaded) location.reload();
       document.documentElement.dataset.lab = status.isLab ? 'active' : 'free';
       window.dispatchEvent(new CustomEvent('elementle:lab-change', { detail: status }));
       return status;
+    });
+    const promise = api.ready;
+    pending = { auth, force, promise };
+    promise.then(() => {
+      if (pending?.promise === promise) pending = null;
+    }, () => {
+      if (pending?.promise === promise) pending = null;
+      if (version === sequence) {
+        clearCache();
+        api.status = null;
+        document.documentElement.dataset.lab = 'unknown';
+      }
     });
     // Consumers can report a failure; logged-in membership failures never load ads.
     api.ready.catch(() => {});
     return api.ready;
   }
-  refresh();
+  const billingPage = ['/lab', '/account', '/account.html'].includes(location.pathname.replace(/\/+$/, ''));
+  refresh(billingPage, true);
   function updateBadge() {
     document.querySelectorAll('.js-lab-account-status').forEach(node => {
       node.textContent = api.status ? (api.status.isLab ? (api.status.status === 'trialing' ? 'Elementle Lab · Free trial' : 'Elementle Lab member') : 'Free account · Explore Elementle Lab') : 'Elementle Lab';
@@ -128,6 +174,8 @@
     }
   }
   window.addEventListener('elementle:auth-change', () => {
+    clearCache();
+    api.status = null;
     if (adsLoaded) { location.reload(); return; }
     refresh().then(updatePage).catch(() => {});
   });
@@ -135,7 +183,18 @@
     updateBadge();
     if (document.readyState !== 'loading') updatePage();
   });
-  window.addEventListener('hashchange', updatePage);
-  window.addEventListener('pageshow', event => { if (event.persisted) refresh().then(updatePage).catch(() => {}); });
+  window.addEventListener('hashchange', () => { refresh(false, true).then(updatePage).catch(updatePage); });
+  window.addEventListener('pageshow', event => { if (event.persisted) refresh(billingPage, !billingPage).then(updatePage).catch(updatePage); });
+  window.addEventListener('focus', () => { refresh(billingPage, !billingPage).then(updatePage).catch(updatePage); });
+  window.addEventListener('storage', event => {
+    if (event.key === 'elementle_token') window.dispatchEvent(new CustomEvent('elementle:auth-change'));
+    else if (event.key === 'elementle_lab_revision') { clearCache(); refresh().then(updatePage).catch(updatePage); }
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) refresh(false, true).then(updatePage).catch(updatePage);
+  });
+  window.setInterval?.(() => {
+    if (!document.hidden && token()) refresh(false, true).then(updatePage).catch(updatePage);
+  }, CACHE_MS);
   document.addEventListener('DOMContentLoaded', updatePage);
 })();

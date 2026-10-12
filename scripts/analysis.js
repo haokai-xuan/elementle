@@ -201,6 +201,7 @@
         if (!body) throw new Error('Finish a daily game, then press Game analysis to bring your guesses here.');
       }
       const response = await fetch('/api/game/analysis', {method:'POST', headers:{'Content-Type':'application/json', ...(token ? {Authorization:'Bearer '+token} : {})}, body:JSON.stringify(body), signal:AbortSignal.timeout(25000)});
+      window.ElementleLab?.checkResponse?.(response);
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Analysis is unavailable. Please retry.');
       const remaining = revealAt - performance.now();
