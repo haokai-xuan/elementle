@@ -465,7 +465,7 @@ hintButton.addEventListener('click', async (event) => {
           body: JSON.stringify({ localDate: getTodayDateInt() })
         });
         if (!res.ok) {
-          const data = await res.json();
+          const data = await res.json().catch(() => ({error:'Could not save hint use. Please try again.'}));
           if (data.readOnly || data.frozen) setDailyReadOnly(true, data.lockReason);
           throw new Error(data.error || 'Hint could not be saved');
         }
@@ -476,7 +476,7 @@ hintButton.addEventListener('click', async (event) => {
       hintContainer.classList.remove('hint-visible');
       hintContainer.setAttribute('aria-hidden', 'true');
       hintButton.setAttribute('aria-expanded', 'false');
-      createPopup('Could not save hint use. Please try again.');
+      createPopup(error.message || 'Could not save hint use. Please try again.');
       return;
     } finally {
       hintButton.disabled = dailyReloadPending || (dailyReadOnly && numberOfGuesses < 8 && guessedCorrectly !== 'true');
@@ -1597,13 +1597,14 @@ async function initializeGame() {
       inputElement.focus();
     }
   }
-
+  return true;
 }
 
 // This script is loaded at the end of <body>, so all game DOM nodes already
 // exist. Starting here avoids waiting for non-essential resources such as ads,
 // web fonts, images, and analytics before the game API requests begin.
-initializeGame();
+window.ElementlePendingGameSave = () => Promise.allSettled([_pendingGuessPromise, _gameStateSyncPromise].filter(Boolean));
+window.ElementleGameReady = initializeGame();
 
 // Daily guests keep a per-puzzle ledger; account records come from the API.
 function recordVaultDaily(won = guessedCorrectly === 'true') {
