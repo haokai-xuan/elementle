@@ -1,4 +1,9 @@
 .freeplay-nav { font-size: 29px; }
+.lab-nav { text-decoration: none; }
+.nav-dropdown-divider { height: 1px; margin: 7px 16px; background: rgba(255, 255, 255, .15); }
+.lab-nav-icon { width: 22px; height: 22px; object-fit: contain; flex-shrink: 0; }
+.lab-nav:hover .nav-icon-circle, .lab-nav:focus-visible .nav-icon-circle { background: #b88a2a; color: #ffe4a0; }
+.nav-dropdown-item.lab-nav:hover, .nav-dropdown-item.lab-nav:focus-visible { background: #b88a2a; color: #fff4d1; }
 .lab-archives { position: relative; overflow: hidden; max-width: 600px; margin: 50px auto 32px; padding: 28px; border: 1px solid #538d4e; border-radius: 20px; background: linear-gradient(135deg,#242424ee,#191919f5); color:#c9d6c7; box-shadow: 0 0 45px #62a55c12; }
 .lab-archives::before { content:''; position:absolute; inset:0; pointer-events:none; background: repeating-linear-gradient(0deg,transparent 0 39px,#62a55c08 40px); }
 .lab-orbit { position:absolute; right:-20px; top:0; font-size:180px; color:#62a55c12; animation:lab-spin 28s linear infinite; pointer-events:none; }

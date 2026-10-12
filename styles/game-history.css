@@ -1,0 +1,17 @@
+.saved-game-main {padding:30px 20px 55px;}
+.saved-game-heading {text-align:center;margin:0 auto 24px;}
+.saved-game-heading h1 {font-size:32px;margin:7px 0;}
+.saved-game-eyebrow {color:#aaa;font-size:13px;letter-spacing:2px;}
+.saved-game-heading a {display:inline-block;color:#77bd70;margin-top:12px;font-size:18px;}
+#saved-game-date,#saved-game-outcome {font-size:19px;color:#ccc;}
+#saved-game-status,#saved-game-recovery {text-align:center;}
+#saved-game-status:empty {display:none;}
+#saved-game-recovery button,#saved-game-recovery a {display:inline-block;margin:12px;padding:10px 18px;border:1px solid #666;background:#333;color:white;border-radius:8px;font:inherit;cursor:pointer;text-decoration:none;}
+#saved-game-signin[hidden],#saved-game-recovery[hidden],#saved-game-content[hidden],#saved-game-analysis[hidden] {display:none;}
+.saved-game-summary {max-width:420px;margin:0 auto;text-align:center;}
+.saved-game-summary .game-result-elo {margin-top:16px;}
+.saved-game-main .grid-container {margin-top:30px;}
+.saved-game-main .element-grid {max-width:1060px;}
+.saved-game-analysis {display:flex;align-items:center;justify-content:center;gap:9px;width:max-content;margin:24px auto 0;text-decoration:none;color:white;}
+#saved-game-hint {text-align:center;margin:20px 0;color:#aaa;font-size:17px;}
+.saved-game-main .element-slot-number {color:#777;}

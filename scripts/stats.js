@@ -181,9 +181,9 @@ function renderStatsPage(root, loading) {
         <div class="lab-heading"><h2 id="streak-calendar-title">Streak calendar</h2></div>
         <p class="js-freeze-guest" ${loading ? 'hidden' : ''}><a href="/account">Sign in</a> to earn streak freezes and keep your daily calendar across devices.</p>
         <div class="js-freeze-account calendar-body" ${loading ? '' : 'hidden'}>
-          <div class="calendar-intro"><div class="calendar-intro-content"><div class="freeze-summary"><span class="freeze-count">❄ <strong class="js-freeze-count" title="Every ten new daily solves earns one freeze. Milestones reached at capacity are not banked.">— / 2</strong><small> freezes</small></span><span class="js-freeze-progress-label">Loading…</span></div>
+          <div class="calendar-intro"><div class="calendar-intro-content"><div class="freeze-summary"><span class="freeze-count">❄ <strong class="js-freeze-count" title="Every ten new daily solves earns one freeze. Milestones reached at capacity are not banked.">— / —</strong><small> freezes</small></span><span class="js-freeze-progress-label">Loading…</span></div>
           <progress class="freeze-progress js-freeze-progress" max="10" value="0" aria-label="Daily solves towards your next freeze"></progress>
-          <p>Earn a freeze every 10 daily solves, up to two. Freezes protect failed days and fully covered absences. Protected days preserve your streak without adding wins.</p></div></div>
+          <p>Earn a freeze every 10 daily solves. Store one on a free account, or two with Elementle Lab. Freezes protect failed days and fully covered absences. Protected days preserve your streak without adding wins.</p></div></div>
           <div class="lab-controls"><button class="js-streak-prev" aria-label="Previous month">←</button><h3 class="js-streak-month"></h3><button class="js-streak-next" aria-label="Next month">→</button></div>
           <div class="lab-week" aria-hidden="true"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>
           <div class="lab-days js-streak-days"></div>
@@ -262,9 +262,9 @@ async function loadLeaderboard(root) {
   list.innerHTML = '<li class="leaderboard-loading">Loading<span class="loading-dots"></span></li>';
 
   try {
-    const res = await fetch(API_BASE + '/leaderboard/current_streaks');
+    const res = await fetch(API_BASE + '/leaderboard/current_streaks', {cache:'no-store'});
     if (!res.ok) throw new Error('Failed to load leaderboard');
-    const data = await res.json(); // [["avsangelschick",42], ["gmeowser",27], ["LucaGiordano",27], ...]
+    const data = await res.json(); // [[username, streak, isLab], ...]; old two-value rows remain supported.
 
     if (!Array.isArray(data) || data.length === 0) {
       list.innerHTML = '<li class="leaderboard-empty">No active streaks yet</li>';
@@ -278,7 +278,7 @@ async function loadLeaderboard(root) {
       ? window.getAuthUser()?.username
       : null;
 
-    list.innerHTML = data.map(([username, streak], index) => {
+    list.innerHTML = data.map(([username, streak, isLab], index) => {
       // Dense ranking: ties share a rank; next distinct streak value increments by 1 (no skipping)
       if (streak !== lastStreak) {
         lastRank += 1;
@@ -292,7 +292,7 @@ async function loadLeaderboard(root) {
       return `
         <li class="leaderboard-row${rankClass}${currentUserClass}" style="--row-i: ${index}"${isCurrentUser ? ' aria-current="true"' : ''}>
           <div class="leaderboard-rank">${rank}</div>
-          <div class="leaderboard-username">${escapeHtmlText(username)}</div>
+          <div class="leaderboard-username"><span class="leaderboard-name-text">${escapeHtmlText(username)}</span>${isLab === true ? '<img class="leaderboard-lab-icon" src="/images/lab_icon.png" width="18" height="18" alt="Elementle Lab member" title="Elementle Lab member">' : ''}</div>
           <div class="leaderboard-streak"><i class="fa-solid fa-fire"></i>${streak}</div>
         </li>
       `;
@@ -475,6 +475,7 @@ function initializeStreakCalendar(root) {
   let currentMonth = month.getTime();
   let history = {};
   let analyzableDates = new Set();
+  let ratings = new Map();
   let ready = false;
   const first = new Date(2026, 6, 1);
   function render() {
@@ -496,17 +497,19 @@ function initializeStreakCalendar(root) {
       const symbol = { solved:'✓', missed:'−', failed:'×', frozen:'❄' }[state] || '';
       const cell = document.createElement('button');
       cell.type = 'button';
-      const analyzable = ready && analyzableDates.has(key) && key <= today;
+      const analyzable = ready && (analyzableDates.has(key) || ratings.has(key)) && key <= today;
       cell.className = state + (key === today ? ' today' : '') + (analyzable ? ' analyzable' : '');
       cell.disabled = !analyzable;
       cell.innerHTML = '<span class="day-number">' + n + '</span>' + '<span class="day-symbol" aria-hidden="true">' + symbol + '</span>';
       const label = { solved:'Solved', missed:'Missed', failed:'Failed without a freeze', frozen:'Streak freeze used' }[state] || (key === today ? 'Not completed yet' : 'No result');
       cell.setAttribute('aria-label', new Date(month.getFullYear(),month.getMonth(),n).toLocaleDateString() + ': ' + label);
-      cell.title = label + (analyzable ? ' · Analyze this game with elBot' : '');
+      cell.title = label + (analyzable ? ' · View game result and elELO' : '');
       if (analyzable) {
         cell.innerHTML += '<span class="analysis-magnifier" aria-hidden="true">⌕</span>';
         cell.setAttribute('aria-label', cell.title + ' · ' + new Date(month.getFullYear(),month.getMonth(),n).toLocaleDateString());
-        cell.onclick = () => { location.assign('/analysis?date=' + key); };
+        cell.onclick = () => {
+          window.ElementleGameResult.openHistory({localDate:key, title:'Daily game result', historical:true, elo:ratings.get(key)});
+        };
       }
       if (key === today) cell.setAttribute('aria-current','date');
       grid.append(cell);
@@ -522,6 +525,7 @@ function initializeStreakCalendar(root) {
     const f = data.streakFreezes;
     ready = true;
     history = data.calendar || {};
+    ratings = new Map((data.elELO?.history || []).map(entry => [String(entry.date).replace(/-/g, ''), entry]));
     analyzableDates = new Set(data.analyzableDates || Object.keys(history).filter(key => ['solved','failed'].includes(history[key])));
     root.querySelector('.js-freeze-count').textContent = f ? f.available + ' / ' + f.capacity : '— / 2';
     root.querySelector('.js-freeze-progress').value = f?.progress || 0;

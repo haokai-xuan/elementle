@@ -131,7 +131,9 @@
         if(entry.username===username) li.setAttribute('aria-current','true');
         const rank=document.createElement('span');rank.className='leaderboard-rank';rank.textContent=entry.rank;
         const image=document.createElement('img');image.src=symbol(entry.tier);image.alt=entry.tier;image.className='tier-symbol';
-        const name=document.createElement('span');name.className='leaderboard-username';name.textContent=entry.username;
+        const name=document.createElement('span');name.className='leaderboard-username';
+        const nameText=document.createElement('span');nameText.className='leaderboard-name-text';nameText.textContent=entry.username;name.append(nameText);
+        if(entry.isLab===true) {const lab=document.createElement('img');lab.className='leaderboard-lab-icon';lab.src='/images/lab_icon.png';lab.width=18;lab.height=18;lab.alt='Elementle Lab member';lab.title='Elementle Lab member';name.append(lab);}
         const rating=document.createElement('strong');rating.className='leaderboard-streak';rating.textContent=Number(entry.rating).toFixed(2);
         li.append(rank,image,name,rating);list.append(li);
       }

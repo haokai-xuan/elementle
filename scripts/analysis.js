@@ -134,6 +134,9 @@
     if (event.key === 'ArrowRight' && turn < result.steps.length-1) { event.preventDefault(); select(turn+1); }
   });
   function display(data) {
+    const mode = data.mode || 'daily';
+    $('analysis-context').textContent = (mode === 'archive' ? 'YOUR ARCHIVE GAME' : mode === 'freeplay' ? 'YOUR FREEPLAY GAME' : 'YOUR DAILY GAME') + ' / ANALYSIS';
+    $('analysis-back').href = mode === 'archive' ? '/?mode=archive&date=' + data.archiveDate : mode === 'freeplay' ? '/?mode=freeplay' : '/';
     result = data; turn = 0; before = false;
     const labels = { rating:'Game Rating', efficiency:'Guess efficiency', information:'Information gain', independence:'Independence' };
     $('analysis-scores').replaceChildren(...Object.entries(labels).map(([key,label]) => {
@@ -179,10 +182,15 @@
     $('analysis-content').hidden = true;
     speak('Connecting the clues…', 'I’m comparing your decisions with every available guess.', 'thinking');
     try {
-      const date = new URLSearchParams(location.search).get('date');
+      const params = new URLSearchParams(location.search);
+      const date = params.get('date');
+      const gameId = params.get('gameId');
       const token = localStorage.getItem('elementle_token');
       let body;
-      if (token) body = {localDate:date};
+      if (gameId) {
+        if (!token) throw new Error('Sign in to analyze your saved Lab game.');
+        body = {gameId};
+      } else if (token) body = {localDate:date};
       else {
         const saved = JSON.parse(sessionStorage.getItem('elementle_analysis') || 'null');
         if (saved && saved.localDate === date) body = saved;

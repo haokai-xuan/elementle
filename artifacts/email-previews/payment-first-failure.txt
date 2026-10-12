@@ -1,0 +1,16 @@
+ELEMENTLE LAB
+
+Your Lab payment failed — action needed
+
+We could not collect your Elementle Lab payment of 1.99 USD using visa ending in 4242.
+
+Payments can fail because of insufficient funds, an expired card, an issuer decline, or required authentication. Your bank may have more details.
+
+Lab remains available during your three-day grace period, ending on October 14, 2026 at 02:06 UTC. Stripe is scheduled to retry after three days. If the retry fails or payment is not recovered by the end of the grace period, Lab access ends.
+
+Sign in to your account, choose Update payment method, and provide a valid payment method through Stripe. Complete any bank authentication and settle the outstanding invoice in Manage billing. Access is restored when Stripe confirms recovery.
+
+For a hard decline or a missing payment method, Stripe may require a new payment method before it can retry. If you need help, contact help@elementlegame.com.
+
+Manage subscription: https://elementlegame.com/account
+Help: help@elementlegame.com

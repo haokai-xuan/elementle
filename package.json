@@ -13,9 +13,10 @@
     "test:freezes": "node scripts/test-streak-freezes.js",
     "test:archives": "node scripts/test-archive-progress.js",
     "test:vault": "node scripts/test-vault.js",
-    "test:analysis": "node scripts/test-analysis.js",
-    "test:post-game": "node scripts/test-post-game.js",
-    "test:guest-results": "node scripts/test-guest-results.js"
+    "test:analysis": "node scripts/test-analysis.js && node scripts/test-practice-analysis.js",
+    "test:post-game": "node scripts/test-post-game.js && node scripts/test-game-result.js && node scripts/test-game-history.js",
+    "test:guest-results": "node scripts/test-guest-results.js",
+    "test:lab": "node scripts/test-lab.js && node scripts/test-account-billing.js && node scripts/test-subscription-return.js && node scripts/test-leaderboard-lab.js"
   },
   "dependencies": {
     "dotenv": "^16.4.5",

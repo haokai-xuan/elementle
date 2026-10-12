@@ -30,6 +30,7 @@ async function practiceRequest(path, body) {
 }
 let pendingPracticeGuesses = [];
 let practiceSyncing = false;
+let practiceSyncPromise = null;
 let practiceSyncFailed = false;
 function updateModeUI() {
   document.body.dataset.mode = playMode;
@@ -48,6 +49,8 @@ function updatePracticeSyncUI() {
   const button = document.querySelector('.practice-sync');
   button.hidden = !practiceSyncFailed;
   button.textContent = 'Save interrupted · Retry';
+  const analysis = document.querySelector('.js-analysis-button');
+  if (analysis) analysis.disabled = pendingPracticeGuesses.length > 0 || practiceSyncing || !practiceGame?.completed;
   const next = document.querySelector('#next-experiment');
   if (next) { next.disabled = pendingPracticeGuesses.length > 0; next.textContent = pendingPracticeGuesses.length ? 'Saving experiment…' : 'Next experiment ↻'; }
 }
@@ -59,6 +62,12 @@ function savePracticeQueue() {
   }
 }
 async function flushPracticeQueue() {
+  if (practiceSyncPromise) return practiceSyncPromise;
+  practiceSyncPromise = syncPracticeQueue();
+  try { return await practiceSyncPromise; }
+  finally { practiceSyncPromise = null; }
+}
+async function syncPracticeQueue() {
   if (practiceSyncing || !practiceGame) return;
   practiceSyncing = true;
   practiceSyncFailed = false;
@@ -85,6 +94,7 @@ async function loadPractice(newRound = false) {
   if (playMode === 'archive' && Number(playDate) >= getTodayDateInt()) { location.replace('/'); return; }
   practiceGame = await practiceRequest('start', { mode: playMode, date: playDate, localDate: getTodayDateInt(), gameId: playMode === 'freeplay' && !newRound ? gameStorage.getItem('sessionId') : null });
   gameStorage.setItem('sessionId', practiceGame.id);
+  gameStorage.setItem('hintUsed:' + practiceGame.id, String(practiceGame.hint_used));
   mysteryElementCache = getElementFromAtomicNumber(practiceGame.atomic_number);
   pendingPracticeGuesses = newRound ? [] : JSON.parse(gameStorage.getItem('pendingGuesses') || '[]');
   // A reply may have been lost after commit. Keep only guesses not yet acknowledged.
@@ -410,9 +420,9 @@ hintButton.addEventListener('click', async (event) => {
     return;
   }
 
-  const hintKey = 'hintUsed:' + getTodayDateInt();
-  if (!completed && !practice && gameStorage.getItem(hintKey) !== 'true') {
-    if (!await confirmHintInGame()) return;
+  const hintKey = 'hintUsed:' + (practice ? practiceGame.id : getTodayDateInt());
+  if (!completed && gameStorage.getItem(hintKey) !== 'true') {
+    if (!practice && !await confirmHintInGame()) return;
     hintButton.disabled = true;
     try {
       const pending = _pendingGuessPromise || _gameStateSyncPromise;
@@ -425,7 +435,11 @@ hintButton.addEventListener('click', async (event) => {
       }
       if (dailyReadOnly) return;
       const token = getAuthToken();
-      if (token) {
+      if (practice) {
+        await flushPracticeQueue();
+        if (pendingPracticeGuesses.length) throw new Error('Save your guesses before using a hint');
+        practiceGame = await practiceRequest('hint', { gameId: practiceGame.id, localDate: getTodayDateInt() });
+      } else if (token) {
         const res = await fetch(API_BASE + '/game/hint', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
@@ -1234,8 +1248,8 @@ function displayResults() {
   hintContainer.classList.remove('hint-visible');
   hintContainer.setAttribute('aria-hidden', 'true');
   hintButton.setAttribute('aria-expanded', 'false');
-  if (!practice) {
-    window.dispatchEvent(new Event('elementle:game-complete'));
+  if (!practice) window.dispatchEvent(new Event('elementle:game-complete'));
+  {
     document.querySelector('.correct-guess-container').classList.add('has-game-analysis');
     if (!document.querySelector('.js-analysis-button')) {
       const button = document.createElement('button');
@@ -1243,6 +1257,12 @@ function displayResults() {
       button.innerHTML = '<img class="analysis-button-icon" src="/images/elbot_frames/idle_01.png" width="24" height="24" alt="" aria-hidden="true"><span>Analyze with el<span class="elbot-brand">B</span>ot</span>';
       button.addEventListener('click', async () => {
         button.disabled = true;
+        if (practice) {
+          await flushPracticeQueue();
+          if (pendingPracticeGuesses.length || !practiceGame?.completed) { updatePracticeSyncUI(); return; }
+          location.assign('/analysis?gameId=' + encodeURIComponent(practiceGame.id));
+          return;
+        }
         const pending = _pendingGuessPromise || _gameStateSyncPromise;
         if (pending) await pending.catch(() => {});
         const date = String(getTodayDateInt());
@@ -1412,6 +1432,15 @@ function displayResults() {
 
 function showGameResult(won, guesses) {
   const title = getGameResultMessage(won, guesses);
+  if (!practice && window.ElementleGameResult) {
+    const token = getAuthToken();
+    const date = getTodayDateInt();
+    window.ElementleGameResult.schedule({
+      won, guesses, title, localDate: date, guest: !token,
+      onAnalysis: () => document.querySelector('.js-analysis-button')?.click()
+    }, _pendingGuessPromise, () => token === getAuthToken() && date === getTodayDateInt());
+    return;
+  }
   const detail = won ? 'Solved in ' + guesses + ' / 8 guesses.' : 'All eight guesses used. A new element awaits tomorrow.';
   if (window.ElementleFreezes) window.ElementleFreezes.notice(title, detail, won ? 'win' : 'loss');
   else createPopup(title);

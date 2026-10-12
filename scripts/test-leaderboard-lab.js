@@ -1,0 +1,20 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const vm=require('node:vm');
+const source=fs.readFileSync(__dirname+'/stats.js','utf8');
+const start=source.indexOf('async function loadLeaderboard(');
+const fn=source.slice(start,source.indexOf('\n}',start)+2);
+const escapeStart=source.indexOf('function escapeHtmlText(');
+const escapeFn=source.slice(escapeStart,source.indexOf('\n}',escapeStart)+2);
+const list={innerHTML:''};
+const data=[['<Lab player>',12,true],['Free player',12,false],['Legacy player',10]];
+const context={console,document:{createElement:()=>({textContent:'',get innerHTML(){return this.textContent.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}})},window:{getAuthUser:()=>({username:'<Lab player>'})},API_BASE:'/api',_leaderboardLoaded:false,fetch:async()=>({ok:true,json:async()=>data})};
+vm.createContext(context);vm.runInContext(escapeFn+'\n'+fn,context);
+(async()=>{
+  await context.loadLeaderboard({querySelector:()=>list});
+  assert.equal((list.innerHTML.match(/class="leaderboard-lab-icon"/g)||[]).length,1);
+  assert.match(list.innerHTML,/&lt;Lab player&gt;/);
+  assert.equal((list.innerHTML.match(/class="leaderboard-rank">1</g)||[]).length,2);
+  assert.match(list.innerHTML,/leaderboard-rank">2</);
+  console.log('Streak Lab badges use backend flags, retain ties, support old responses, and escape player names.');
+})().catch(error=>{console.error(error);process.exitCode=1;});

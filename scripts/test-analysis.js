@@ -18,7 +18,7 @@ const result = { answer:118, won:true, hintUsed:false, referenceGuesses:4, refer
   {guess:26,optimal:26,before:[26,118],after:[118],quality:100,feedback:['gray','gray','up','diff'],expectedBits:1,optimalBits:1,correct:false,possible:true},
   {guess:118,optimal:118,before:[118],after:[118],quality:100,feedback:['green','green','same','same'],expectedBits:0,optimalBits:0,correct:true,possible:true}
 ]};
-async function run({fail=false,token=null,missing=false,rating=91,knownMistake=false,idleChance=1,reducedMotion=false,deferReveal=false,elELO=null}={}) {
+async function run({fail=false,token=null,missing=false,rating=91,knownMistake=false,idleChance=1,reducedMotion=false,deferReveal=false,elELO=null,gameId=null,mode='daily'}={}) {
   const ids = new Map(), cells = data.map(e => { const n = new Node(); n.dataset={number:String(e.number)}; return n; });
   const get = id => { if(!ids.has(id)) ids.set(id,new Node()); return ids.get(id); };
   get('analysis-elements').textContent = JSON.stringify(data);
@@ -33,10 +33,10 @@ async function run({fail=false,token=null,missing=false,rating=91,knownMistake=f
     setInterval:fn=>{const id=++timerId;intervals.set(id,fn);return id;},clearInterval:id=>intervals.delete(id),
     performance:{now:()=>0},
     setTimeout:(fn,ms)=>{delays.push(ms);const id=++timerId;timers.set(id,fn);return id;},clearTimeout:id=>timers.delete(id),
-    URLSearchParams,location:{search:'?date=20261008'},AbortSignal,
+    URLSearchParams,location:{search:gameId ? '?gameId='+gameId : '?date=20261008'},AbortSignal,
     localStorage:{getItem:key=>key==='elementle_token' ? token : null},
     sessionStorage:{getItem:()=>missing ? null : JSON.stringify({localDate:'20261008',guesses:[1,26,118],hintUsed:false,hintAt:0})},
-    fetch:async(url,options)=>{ request={url,options}; return {ok:!fail,json:async()=>fail ? {error:'Service offline'} : {...result,elELO,scores:{...result.scores,rating},steps:knownMistake ? result.steps.map((step,i)=>i===1 ? {...step,before:[118],guess:32,optimal:118,quality:0,possible:false,expectedBits:0,optimalBits:0} : step) : result.steps}}; }
+    fetch:async(url,options)=>{ request={url,options}; return {ok:!fail,json:async()=>fail ? {error:'Service offline'} : {...result,mode,archiveDate:20261007,elELO,scores:{...result.scores,rating},steps:knownMistake ? result.steps.map((step,i)=>i===1 ? {...step,before:[118],guess:32,optimal:118,quality:0,possible:false,expectedBits:0,optimalBits:0} : step) : result.steps}}; }
   };
   vm.runInNewContext(fs.readFileSync(require.resolve('./analysis.js'),'utf8'),context);
   await new Promise(resolve=>setImmediate(resolve));
@@ -47,7 +47,7 @@ async function run({fail=false,token=null,missing=false,rating=91,knownMistake=f
   return {get,cells,request,delays,setChance:value=>{chance=value;},fireTimer:()=>{const [id,fn]=timers.entries().next().value;timers.delete(id);fn();},fireFrame:()=>intervals.values().next().value()};
 }
 (async()=>{
-  for (const [chance,delay] of [[0,2000],[.5,3500],[1,5000]]) {
+  for (const [chance,delay] of [[0,3000],[.5,5000],[1,7000]]) {
     const thinking = await run({idleChance:chance,deferReveal:true});
     assert.equal(thinking.delays[0],delay);
     assert.equal(thinking.get('analysis-content').hidden,true);
@@ -113,6 +113,13 @@ async function run({fail=false,token=null,missing=false,rating=91,knownMistake=f
   const account = await run({token:'test-token'});
   assert.equal(account.request.options.headers.Authorization,'Bearer test-token');
   assert.deepEqual(JSON.parse(account.request.options.body),{localDate:'20261008'});
+  for (const mode of ['freeplay','archive']) {
+    const practice=await run({token:'test-token',gameId:'saved-game',mode});
+    assert.deepEqual(JSON.parse(practice.request.options.body),{gameId:'saved-game'});
+    assert.match(practice.get('analysis-context').textContent,new RegExp(mode.toUpperCase()));
+    assert.equal(practice.get('analysis-back').href,mode==='archive'?'/?mode=archive&date=20261007':'/?mode=freeplay');
+    assert.equal(practice.get('analysis-scores').children.length,4);
+  }
   const rated = await run({token:'test-token',elELO:{rating:409.6,oldRating:400,change:9.6,tier:'Lab Apprentice'}});
   const eloCard = rated.get('analysis-scores').children[4];
   assert.equal(eloCard.children[0].textContent, 'elELO · Lab Apprentice');

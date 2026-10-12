@@ -2157,6 +2157,11 @@ body.modal-open {
 }
 
 .auth-btn-outline:hover {
+  border-color: #8ec987;
+  color: #8ec987;
+}
+
+.auth-btn-outline.js-auth-logout:hover {
   border-color: #f87171;
   color: #f87171;
 }
@@ -2613,3 +2618,7 @@ body.modal-open {
 .timebox .js-hours,.timebox .js-minutes,.timebox .js-seconds { width:2ch; min-width:2ch; font-variant-numeric:tabular-nums; }
 @keyframes postGameEnter { from { opacity:0; transform:translateY(7px); } to { opacity:1; transform:translateY(0); } }
 @media(prefers-reduced-motion:reduce) { .correct-guess-container.post-game-ready,.timebox.post-game-ready { animation:none; } }
+
+.leaderboard-username { display:flex; align-items:center; gap:7px; }
+.leaderboard-name-text { min-width:0; overflow:hidden; text-overflow:ellipsis; }
+.leaderboard-lab-icon { width:18px; height:18px; flex-shrink:0; object-fit:contain; border-radius:4px; }

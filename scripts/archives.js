@@ -57,6 +57,14 @@
       });
       const snapshot = await response.json();
       if (id !== requestId) return;
+      if (response.status === 401 || response.status === 402) {
+        const link = document.createElement('a');
+        link.href = '/lab';
+        link.textContent = 'Unlock archives with Elementle Lab · Start a 7-day free trial →';
+        link.style.color = '#8ec987';
+        status.replaceChildren(link);
+        return;
+      }
       if (!response.ok) throw new Error(snapshot.error || 'Unable to load archives');
       data = snapshot;
       availabilityVerified = true;

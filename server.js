@@ -12,6 +12,7 @@ const API_KEY = process.env.API_KEY || '';
 
 app.use(express.json());
 require('./lib/social-auth')(app, { apiBaseUrl: API_BASE_URL, apiKey: API_KEY });
+require('./lib/lab-proxy')(app, { apiBaseUrl: API_BASE_URL, apiKey: API_KEY });
 
 function sendHtmlPage(name) {
   const html = readPage(__dirname, name);
@@ -25,13 +26,15 @@ function redirectDropHtml(to) {
   };
 }
 
-for (const name of ['how-to-play', 'stats', 'account', 'about', 'disclaimer', 'terms_of_service_and_privacy']) {
+for (const name of ['lab', 'how-to-play', 'stats', 'account', 'about', 'disclaimer', 'terms_of_service_and_privacy']) {
   app.get(`/${name}.html`, redirectDropHtml(`/${name}`));
   app.get(`/${name}`, sendHtmlPage(name));
 }
 app.get(['/', '/index.html'], sendHtmlPage('index'));
 const analysisPage = require('./lib/analysis-page')(__dirname);
 app.get('/analysis', (req, res) => res.type('html').send(analysisPage));
+const gameHistoryPage = require('./lib/game-history-page')(__dirname);
+app.get('/game-history', (req, res) => res.type('html').send(gameHistoryPage));
 
 app.use(express.static(path.join(__dirname)));
 
@@ -208,7 +211,7 @@ function gameHeaders(req, extra = {}) {
   return headers;
 }
 
-for (const endpoint of ['archives', 'start', 'guess']) {
+for (const endpoint of ['archives', 'start', 'guess', 'hint']) {
   const method = endpoint === 'archives' ? 'get' : 'post';
   app[method]('/api/practice/' + endpoint, async (req, res) => {
     try {
@@ -245,6 +248,21 @@ app.get('/api/user/stats', async (req, res) => {
   } catch (err) {
     console.error('[proxy] /api/user/stats:', err.message);
     res.status(502).json({ error: 'Upstream error', detail: err.message });
+  }
+});
+
+app.get('/api/game/history', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  const localDate = req.query.localDate;
+  if (!/^\d{8}$/.test(String(localDate || ''))) return res.status(400).json({error:'localDate must be YYYYMMDD'});
+  try {
+    const upstream = await fetch(`${API_BASE_URL}/game/history?localDate=${encodeURIComponent(localDate)}`, {headers:gameHeaders(req)});
+    const data = await upstream.json().catch(() => null);
+    if (!data) return res.status(502).json({error:'Saved games are temporarily unavailable. Please try again.'});
+    res.status(upstream.status).json(data);
+  } catch (err) {
+    console.error('[proxy] /api/game/history:', err.message);
+    res.status(502).json({error:'Unable to load this saved game. Please retry.'});
   }
 });
 

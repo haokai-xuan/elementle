@@ -1,0 +1,37 @@
+.lab-access-locked { overflow: hidden; }
+.lab-access-gate {
+  position: fixed; inset: 0; z-index: 30000;
+  display: grid; place-items: center; overflow-y: auto;
+  padding: 24px; background: rgba(8, 15, 10, .7);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  animation: lab-access-fade .3s ease both;
+}
+.lab-access-box {
+  box-sizing: border-box; width: 100%; max-width: 440px;
+  margin: auto; padding: 34px 28px; text-align: center;
+  color: #e7eee3; background: linear-gradient(145deg, #273424, #161e17);
+  border: 1px solid #8ec98766; border-radius: 20px;
+  box-shadow: 0 24px 90px #0008, 0 0 45px #62a55c15;
+  font-family: inherit; animation: lab-access-rise .45s cubic-bezier(.2,.7,.2,1) both;
+}
+.lab-access-box > img { object-fit: contain; border-radius: 12px; }
+.lab-access-box:focus { outline: none; }
+.lab-access-eyebrow { color: #8ec987; font: 11px monospace; letter-spacing: 3px; margin: 18px 0 12px; }
+.lab-access-box h2 { font-size: clamp(23px, 5vw, 29px); line-height: 1.25; margin: 0 0 16px; }
+#lab-access-description { color: #bfccbb; font-size: 15px; line-height: 1.65; margin: 0 0 26px; }
+.lab-access-subscribe, .lab-access-retry {
+  display: block; width: 100%; box-sizing: border-box;
+  border: 0; padding: 14px 18px; border-radius: 9px;
+  color: #162515; background: #8ec987; text-decoration: none;
+  font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
+  transition: background .2s, transform .2s;
+}
+.lab-access-subscribe:hover, .lab-access-retry:hover { background: #a8dfa1; transform: translateY(-1px); }
+.lab-access-back { display: inline-block; margin-top: 20px; color: #bfccbb; font-size: 14px; text-underline-offset: 4px; }
+.lab-access-back:hover { color: #8ec987; }
+.lab-access-box a:focus-visible, .lab-access-box button:focus-visible { outline: 2px solid #e1f6d9; outline-offset: 4px; }
+.lab-access-gate [hidden] { display: none !important; }
+@keyframes lab-access-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lab-access-rise { from { opacity: 0; transform: translateY(20px) scale(.96); } to { opacity: 1; transform: none; } }
+@media (max-width: 480px) { .lab-access-gate { padding: 18px; } .lab-access-box { padding: 28px 22px; } }
+@media (prefers-reduced-motion: reduce) { .lab-access-gate, .lab-access-box { animation: none; } .lab-access-subscribe, .lab-access-retry { transition: none; } }

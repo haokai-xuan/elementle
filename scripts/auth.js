@@ -10,6 +10,7 @@
     if (token) localStorage.setItem(TOKEN_KEY, token);
     else localStorage.removeItem(TOKEN_KEY);
     window.dispatchEvent(new Event("elementle:auth-change"));
+    if (token && (new URLSearchParams(location.search).get('returnTo') === '/lab' || sessionStorage.getItem('elementle_lab_return') === '1')) { sessionStorage.removeItem('elementle_lab_return'); location.assign('/lab'); }
   }
 
   function decodeJwtPayload(token) {
@@ -55,6 +56,7 @@
     const user = getUser();
     root.innerHTML = user ? renderAccountPanel(user) : renderAuthForms(activeTab === 'signup' ? 'signup' : 'login');
     bindAuthEvents(root, user);
+    window.dispatchEvent(new Event("elementle:account-render"));
   }
 
   function renderAccountPanel(user) {
@@ -67,8 +69,18 @@
           <p class="auth-account-email">${escapeHtml(user.email)}</p>
         </div>
         ${user.provider !== 'password' ? '<p class="auth-help-text">Sign in with ' + escapeHtml(user.provider === 'google' ? 'Google' : user.provider) + '. This account has no Elementle password to reset.</p>' : ''}
+        <section class="account-billing" aria-labelledby="account-billing-heading">
+          <h2 id="account-billing-heading">Elementle Lab</h2>
+          <dl><div><dt>Subscription status</dt><dd data-billing="status">Loading…</dd></div>
+          <div><dt>Subscription type</dt><dd data-billing="plan">—</dd></div>
+          <div><dt>Next billing date</dt><dd data-billing="next">—</dd></div>
+          <div><dt>Billing method</dt><dd data-billing="method">—</dd></div></dl>
+          <p class="account-billing-note" data-billing="note" role="status" aria-live="polite"></p>
+          <div class="account-billing-actions"><button class="auth-btn auth-btn-outline" type="button" data-billing-action="payment_method_update" disabled>Update payment method</button>
+          <button class="auth-btn auth-btn-outline" type="button" data-billing-action="manage" disabled>Manage billing</button>
+          <button class="account-billing-refresh" type="button" data-billing-action="refresh">Refresh billing details</button></div>
+        </section>
         <button type="button" class="auth-btn auth-btn-outline js-auth-logout">Log out</button>
-        <a class="modal-back-button" href="/">Back to game</a>
       </div>`;
   }
 
@@ -120,7 +132,6 @@
             <button type="button" class="auth-btn auth-btn-primary js-auth-reset-request">Send reset email</button>
           </form>
         </div>
-        <a class="modal-back-button" href="/">Back to game</a>
       </div>`;
   }
 

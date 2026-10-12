@@ -171,3 +171,7 @@
 .major-stats-card .stats-grid { margin-bottom:0; }
 .major-stats-card .stat-item { background:#303030; }
 @media (max-width:480px) { .major-stats-card { padding:.8rem; } }
+
+.account-billing{margin:24px 0;padding:20px 0;border-top:1px solid #538d4e66;border-bottom:1px solid #538d4e66;text-align:left}.account-billing h2{font-size:18px;margin:0 0 16px;color:#8ec987}.account-billing dl{margin:0}.account-billing dl>div{display:grid;grid-template-columns:1fr 1.25fr;gap:12px;padding:9px 0;line-height:1.6;font-size:13px}.account-billing dt{color:#aab5a7}.account-billing dd{margin:0;color:#e4eadf;overflow-wrap:anywhere}.account-billing-note{font-size:12px;line-height:1.8;color:#becaba}.account-billing-actions{display:grid;gap:10px}.account-billing-refresh{background:none;border:0;color:#8ec987;cursor:pointer;font:inherit;font-size:12px;padding:8px}.account-billing [hidden]{display:none!important}.account-billing button:disabled{opacity:.55;cursor:wait}
+
+.account-billing .auth-btn-outline:disabled { background:#282828; border-color:#414141; color:#858585; opacity:1; cursor:not-allowed; transform:none; }

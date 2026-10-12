@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Google Analytics consent defaults for EEA/UK/CH visitors. -->
+  
+  
+  
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Revisit your saved daily Elementle game and elELO result.">
+  <meta name="robots" content="noindex,follow">
+  <title>Your saved game | Elementle</title>
+  
+  <link rel="stylesheet" href="/styles/elementle.css">
+<link rel="stylesheet" href="/styles/game-result.css">
+  <link rel="icon" type="image/png" href="/images/favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer">
+  <link rel="stylesheet" href="/styles/pages.css">
+  <link rel="stylesheet" href="/styles/lab.css">
+  <link rel="stylesheet" href="/styles/footer.css">
+  
+<link rel="stylesheet" href="/styles/streak-freezes.css">
+<link rel="stylesheet" href="/styles/game-history.css"></head>
+<body class="detail-page">
+<header class="detail-header"><a class="nav-text" href="/" aria-label="Elementle home">ELEME<span class="green-letter">N</span>TLE</a><nav aria-label="Main navigation"><a href="/">Play</a><a href="/how-to-play">Help</a><a href="/elements">Elements</a><a href="/stats">Stats</a><a href="/account">Account</a></nav></header>
+<main class="saved-game-main">
+    <header class="saved-game-heading"><p class="saved-game-eyebrow">YOUR DAILY GAME</p><h1 id="saved-game-title">Saved game</h1><p id="saved-game-date"></p><a href="/stats#streak-calendar-title">← Streak calendar</a></header>
+    <p id="saved-game-status" role="status">Loading your saved game…</p>
+    <div id="saved-game-recovery" hidden><a href="/account" id="saved-game-signin" hidden>Sign in</a><button type="button" id="saved-game-retry">Retry</button></div>
+    <div id="saved-game-content" hidden>
+      <section class="saved-game-summary" aria-label="Daily game result"><p id="saved-game-outcome"></p>
+        <div class="game-result-elo"><span class="game-result-elo-label">elELO</span><strong class="game-result-rating"></strong>
+          <span class="game-result-change"><span class="game-result-arrow" aria-hidden="true"></span><span class="game-result-delta"></span></span><p class="game-result-rating-note"></p>
+        </div>
+      </section>
+      <div class="grid-container"><div class="element-grid" id="saved-game-guesses" aria-label="Saved guesses in order"></div></div>
+      <p id="saved-game-hint" hidden></p>
+      <a id="saved-game-analysis" class="share-button saved-game-analysis" hidden><img src="/images/elbot_frames/idle_01.png" width="24" height="24" alt="">Analyze with elBot</a>
+    </div>
+  </main>
+  <footer>
+  <div class="footer-container">
+    <div class="social-icons">
+      <a href="https://github.com/haokai-xuan/elementle" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+      <a href="https://x.com/elementlegame" target="_blank" rel="noopener noreferrer" aria-label="X"><i class="fa-brands fa-x-twitter"></i></a>
+      <a href="https://www.reddit.com/r/elementle/" target="_blank" rel="noopener noreferrer" aria-label="Reddit"><i class="fa-brands fa-reddit"></i></a>
+      <a href="https://discord.gg/XUq8D4zryp" target="_blank" rel="noopener noreferrer" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>
+    </div>
+    <nav class="footer-nav" aria-label="Footer navigation">
+      <ul aria-label="Explore">
+        <li><a href="/">Home</a></li>
+        <li><a href="/how-to-play">How to Play</a></li>
+        <li><a href="/elements">Elements</a></li>
+        <li><a href="/lab">Elementle Lab</a></li>
+      </ul>
+      <ul aria-label="Information">
+        <li><a href="/about">About</a></li>
+        <li><a href="mailto:help@elementlegame.com">Contact</a></li>
+      </ul>
+      <ul aria-label="Legal and privacy">
+        <li><a href="/terms_of_service_and_privacy">Terms &amp; Privacy</a></li>
+        <li><a href="/disclaimer">Disclaimer</a></li>
+        <li><a class="js-privacy-settings" href="/terms_of_service_and_privacy#advertising-and-cookies">Privacy choices</a></li>
+      </ul>
+    </nav>
+  </div>
+  <div class="footer-bottom"><p>&copy; <span class="js-current-year">2026</span> Elementle</p></div>
+</footer>
+
+
+
+
+
+
+
+
+
+<script>const localStorage={getItem:()=> 'preview'};const fetch=async()=>({ok:true,json:async()=>({"answer":{"name":"Iron","symbol":"Fe","atomicNumber":26,"family":"Transition Metal"},"guesses":[{"name":"Oxygen","symbol":"O","atomicNumber":8,"family":"Nonmetal"},{"name":"Carbon","symbol":"C","atomicNumber":6,"family":"Nonmetal"},{"name":"Iron","symbol":"Fe","atomicNumber":26,"family":"Transition Metal"}],"won":true,"numGuesses":3,"hintUsed":true,"hintUsedAtGuess":1,"isLab":true,"elELO":{"oldRating":1042.5,"rating":1067.25,"change":24.75}})});</script><script src="/scripts/game-result.js"></script><script src="/scripts/game-history.js"></script></body>
+</html>
