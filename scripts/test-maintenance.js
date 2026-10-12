@@ -13,7 +13,7 @@ test('every website route serves only the branded maintenance page', async () =>
     const res = await fetch(base + route);
     assert.equal(res.status, 503, route);
     assert.match(res.headers.get('content-type'), /text\/html/);
-    assert.match(await res.text(), /The lab is under maintenance/);
+    assert.match(await res.text(), /The site is under maintenance/);
     assert.match(res.headers.get('cache-control'), /no-store/);
     assert.equal(res.headers.get('retry-after'), '60');
     assert.equal(res.headers.get('x-robots-tag'), 'noindex, nofollow');
@@ -32,7 +32,7 @@ test('static game assets and source files cannot bypass maintenance', async () =
   for (const route of ['/index.html', '/scripts/elementle.js', '/styles/elementle.css', '/data/elements.js', '/server.js']) {
     const res = await fetch(base + route);
     assert.equal(res.status, 503);
-    assert.match(await res.text(), /The lab is under maintenance/);
+    assert.match(await res.text(), /The site is under maintenance/);
   }
 });
 test('health checks succeed without an API or database connection', async () => {
