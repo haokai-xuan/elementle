@@ -37,3 +37,6 @@
   .vault-element-hero .element-eyebrow { font-size:11px; }
   .tier-milestones { flex-wrap:wrap; }
 }
+
+.door-label > .vault-atom { display:inline-block; width:1em; height:1em; vertical-align:middle; }
+.vault-atom svg { display:block; width:100%; height:100%; }
