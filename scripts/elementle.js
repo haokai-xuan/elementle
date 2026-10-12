@@ -1571,6 +1571,7 @@ function scheduleMidnightReload() {
 }
 
 async function initializeGame() {
+  document.body.classList.add('game-loading');
   if (!practice) {
     loadedDailyDate = getTodayDateInt();
     scheduleMidnightReload();
@@ -1584,6 +1585,7 @@ async function initializeGame() {
   try {
     if (practice) { await loadPractice(); hintButton.disabled = false; } else await setMysteryElementOfTheDay();
   } catch (error) { createPopup(error.message); return; }
+  finally { document.body.classList.remove('game-loading'); }
   if (!getMysteryElement()) return;
 
   if (checkDailyDateLock()) return;

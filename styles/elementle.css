@@ -1207,12 +1207,14 @@ body.modal-open {
   }
 }
 
-.element.shimmer {
+.element.shimmer,
+.game-loading .element:not(.guessed-element) {
   overflow: hidden;
   position: relative;
 }
 
-.element.shimmer::after {
+.element.shimmer::after,
+.game-loading .element:not(.guessed-element)::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -2638,3 +2640,6 @@ body.modal-open {
 .leaderboard-username { display:flex; align-items:center; gap:7px; }
 .leaderboard-name-text { min-width:0; overflow:hidden; text-overflow:ellipsis; }
 .leaderboard-lab-icon { width:18px; height:18px; flex-shrink:0; object-fit:contain; border-radius:4px; }
+
+.game-loading .element:not(.guessed-element)::after { display:block; }
+@media (prefers-reduced-motion:reduce) { .element.shimmer::after,.game-loading .element:not(.guessed-element)::after { animation:none; } }
