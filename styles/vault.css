@@ -12,7 +12,7 @@
 .vault-entering .vault-progress > span { animation-play-state: paused; }
 .vault-progress > span { transform-origin: left center; }
 .vault-entry.zooming { pointer-events: none; will-change: transform, opacity; }
-.vault-entry.opening .vault-door { transition-duration: 1.8s; }
+.vault-entry.opening .vault-door { transition-duration: .8s; }
 .vault-entry.opening .vault-corridor { animation: none; }
 .vault-entry .vault-door, .vault-entry .vault-wheel { will-change: transform; }
 @media (max-width: 700px) { .vault-entry { transform-origin: 50% 38%; } }
@@ -40,3 +40,13 @@
 
 .door-label > .vault-atom { display:inline-block; width:1em; height:1em; vertical-align:middle; }
 .vault-atom svg { display:block; width:100%; height:100%; }
+.vault-loading { display:flex; align-items:center; justify-content:center; gap:12px; padding:60px 20px; animation:vault-load-fade .3s ease-out both; }
+.vault-loading::before,.vault-status-loading::before { content:""; display:inline-block; flex:0 0 auto; width:16px; height:16px; border:2px solid #8ec98744; border-top-color:#8ec987; border-radius:50%; animation:vault-load-spin .8s linear infinite; }
+.vault-status-loading::before { width:10px; height:10px; margin-right:7px; vertical-align:-2px; }
+.vault-is-loading .vault-summary,.vault-is-loading .vault-proficiency,.vault-is-loading .vault-stats { opacity:.65; animation:vault-load-pulse 1.5s ease-in-out infinite; }
+.vault-entry.verified .vault-wheel { transition-duration:.5s; }
+.vault-entry.verified .vault-bolts i { transition-duration:.25s; transition-delay:.1s; }
+@keyframes vault-load-spin { to { transform:rotate(360deg); } }
+@keyframes vault-load-pulse { 50% { opacity:.4; } }
+@keyframes vault-load-fade { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:none; } }
+@media(prefers-reduced-motion:reduce) { .vault-loading,.vault-loading::before,.vault-status-loading::before,.vault-is-loading .vault-summary,.vault-is-loading .vault-proficiency,.vault-is-loading .vault-stats { animation:none; } .vault-entry.verified .vault-wheel,.vault-entry.verified .vault-bolts i { transition:none; } }

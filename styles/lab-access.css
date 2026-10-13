@@ -31,7 +31,15 @@
 .lab-access-back:hover { color: #8ec987; }
 .lab-access-box a:focus-visible, .lab-access-box button:focus-visible { outline: 2px solid #e1f6d9; outline-offset: 4px; }
 .lab-access-gate [hidden] { display: none !important; }
+.lab-access-gate[data-state="checking"] .lab-access-box > img { animation:lab-access-breathe 1.6s ease-in-out infinite; }
+.lab-access-gate[data-state="checking"] h2::before { content:""; display:inline-block; width:16px; height:16px; margin-right:10px; border:2px solid #8ec98744; border-top-color:#8ec987; border-radius:50%; vertical-align:1px; animation:lab-access-spin .8s linear infinite; }
+.lab-access-gate[data-state="checking"] .lab-access-box { position:relative; overflow:hidden; }
+.lab-access-gate[data-state="checking"] .lab-access-box::after { content:""; position:absolute; left:0; bottom:0; width:40%; height:2px; background:#8ec987; animation:lab-access-sweep 1.5s ease-in-out infinite; }
+@keyframes lab-access-spin { to { transform:rotate(360deg); } }
+@keyframes lab-access-breathe { 50% { opacity:.65; transform:scale(.96); } }
+@keyframes lab-access-sweep { from { transform:translateX(-100%); } to { transform:translateX(350%); } }
 @keyframes lab-access-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes lab-access-rise { from { opacity: 0; transform: translateY(20px) scale(.96); } to { opacity: 1; transform: none; } }
 @media (max-width: 480px) { .lab-access-gate { padding: 18px; } .lab-access-box { padding: 28px 22px; } }
 @media (prefers-reduced-motion: reduce) { .lab-access-gate, .lab-access-box { animation: none; } .lab-access-subscribe, .lab-access-retry { transition: none; } }
+@media(prefers-reduced-motion:reduce) { .lab-access-gate[data-state="checking"] .lab-access-box > img,.lab-access-gate[data-state="checking"] h2::before,.lab-access-gate[data-state="checking"] .lab-access-box::after { animation:none; } }

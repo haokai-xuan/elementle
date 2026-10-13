@@ -37,23 +37,50 @@
   }
   content.querySelectorAll('.tier-help button').forEach(button=>button.onclick=()=>button.setAttribute('aria-expanded',String(button.getAttribute('aria-expanded')!=='true')));
  }
- async function load() {
-  const token=localStorage.getItem('elementle_token');
+ const cacheKey='elementle_vault_snapshot_v1';
+ let requestId=0;
+ function scope() {
+  return [localStorage.getItem('elementle_token'),new Date().toDateString(),localStorage.getItem('elementle_stats_revision'),localStorage.getItem('elementle_lab_revision')];
+ }
+ async function load(force=false) {
+  const id=++requestId, owner=scope(), token=owner[0];
+  const current=()=>id===requestId && JSON.stringify(scope())===JSON.stringify(owner);
+  content.setAttribute('aria-busy','true');
+  content.classList.add('vault-is-loading');
   let guest=localStorage.getItem('elementle_guest_id');
   if (!guest) {guest=crypto.randomUUID();localStorage.setItem('elementle_guest_id',guest);}
   try {
+   if (!force && token) {
+    try {
+     const saved=JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
+     if(saved && JSON.stringify(saved.owner)===JSON.stringify(owner) && Date.now()>=saved.at && Date.now()-saved.at<300000) {
+      render(saved.data,false);return true;
+     }
+    } catch {}
+   }
    const res=await fetch('/api/vault',{headers:token?{Authorization:'Bearer '+token}:{'X-Guest-ID':guest},cache:'no-store',signal:AbortSignal.timeout(12000)});
-      window.ElementleLab?.checkResponse?.(res);
+   if (!current()) return false;
+   window.ElementleLab?.checkResponse?.(res);
    if (!res.ok) throw new Error();
    const data=await res.json();
+   if (!current()) return false;
+   if(token)try{sessionStorage.setItem(cacheKey,JSON.stringify({owner,at:Date.now(),data}));}catch{}
    render(data,!token);
+   return true;
   } catch {
+   if(!current())return false;
+   try{sessionStorage.removeItem(cacheKey);}catch{}
    content.innerHTML='<section class="vault-empty"><h1>Your vault couldn’t load</h1><p>Your progress hasn’t been changed. Please try again.</p><button class="vault-button" id="retry-vault">Retry</button><a class="vault-back" href="/account">Sign in to your account →</a></section>';
-   document.getElementById('retry-vault').onclick=load;
+   document.getElementById('retry-vault').onclick=()=>{ready=load(true);};
+   return false;
+  } finally {
+   if(current()){content.classList.remove('vault-is-loading');content.setAttribute('aria-busy','false');}
   }
  }
  // Fetch and render all 118 cells while the door is still closed.
- const ready = load();
+ let ready = load();
+ window.addEventListener('elementle:auth-change',()=>{ready=load();});
+ window.addEventListener('storage',event=>{if(['elementle_stats_revision','elementle_lab_revision'].includes(event.key))ready=load();});
  const entry = document.querySelector('.vault-entry');
  if (entry) {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -80,12 +107,24 @@
    verify.onclick = async () => {
     verify.disabled = true;
     entry.classList.add('scanning');
+    status.classList.add('vault-status-loading');
+    status.setAttribute('aria-busy','true');
     status.textContent = 'Verifying identity…';
-    await pause(650);
+    await pause(200);
     if (cancelled) return;
     status.textContent = 'Identity verified · Preparing your collection…';
     // Never rebuild the table in the middle of the camera movement.
-    await ready;
+    const loaded = await ready;
+    status.classList.remove('vault-status-loading');
+    status.setAttribute('aria-busy','false');
+    if (!loaded) {
+     status.textContent='Connection interrupted · Try again';
+     entry.classList.remove('scanning');
+     verify.disabled=false;
+     verify.textContent='Retry connection →';
+     ready=load(true);
+     return;
+    }
     if (cancelled) return;
     entry.classList.add('verified');
     status.textContent = 'Identity verified · Access granted';
@@ -95,15 +134,15 @@
     const tableHeading = content.querySelector('.vault-table-heading');
     if (tableHeading) window.scrollTo({ top: window.scrollY + tableHeading.getBoundingClientRect().top - 24, behavior: 'instant' });
     main.style.willChange = 'transform, opacity';
-    await pause(950);
+    await pause(250);
     if (cancelled) return;
     entry.classList.add('opening');
     // Overlap the zoom with the door swing.
-    await pause(1000);
+    await pause(300);
     if (cancelled) return;
     document.body.classList.add('vault-revealing');
     entry.classList.add('zooming');
-    const timing = { duration: 1350, easing: 'cubic-bezier(.22,.61,.36,1)', fill: 'both' };
+    const timing = { duration: 700, easing: 'cubic-bezier(.22,.61,.36,1)', fill: 'both' };
     animations = [
      entry.animate([
       { transform: 'scale(1)', opacity: 1 },

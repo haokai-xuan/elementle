@@ -15,6 +15,7 @@ async function run({ token = null, status = {isLab:false}, path = '/', mode = ''
     querySelector(selector) { return this.nodes[selector] ||= new Node(selector.startsWith('a')?'a':'div'); }
     querySelectorAll() { return ['.lab-access-subscribe','.lab-access-retry','.lab-access-back'].map(selector=>this.querySelector(selector)); }
     addEventListener(name,fn) { this.events[name]=fn; }
+    setAttribute(name,value) { (this.attributes ||= {})[name]=value; }
     focus() { document.activeElement=this; }
   }
   const main=new Node('main'), body=new Node('body');body.append(main);
