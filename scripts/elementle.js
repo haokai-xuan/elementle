@@ -19,12 +19,15 @@ const gameStorage = practice ? {
 } : localStorage;
 async function practiceRequest(path, body) {
   const token = getAuthToken();
-  const res = await fetch('/api/practice/' + path, {
+  const early = window.ElementlePracticeBootstrap;
+  const reuse = path === 'start' && early && !early.consumed && early.token === token && JSON.stringify(early.body) === JSON.stringify(body);
+  if (reuse) early.consumed = true;
+  const res = await (reuse ? early.promise : fetch('/api/practice/' + path, {
     method: body ? 'POST' : 'GET',
     signal: typeof AbortSignal.timeout === 'function' ? AbortSignal.timeout(12000) : undefined,
     headers: { 'Content-Type': 'application/json', 'X-Guest-ID': guestId, ...(token ? { Authorization: 'Bearer ' + token } : {}) },
     ...(body ? { body: JSON.stringify(body) } : {})
-  });
+  }));
   const data = await res.json();
   window.ElementleLab?.checkResponse?.(res);
   if (!res.ok) throw new Error(data.error || 'Unable to load lab');
@@ -78,7 +81,7 @@ async function syncPracticeQueue() {
   try {
     while (pendingPracticeGuesses.length) {
       const entry = pendingPracticeGuesses[0];
-      const state = await practiceRequest('guess', { gameId: practiceGame.id, guess: entry.guess, guessNumber: entry.number, localDate: getTodayDateInt() });
+      const state = await practiceRequest('guess', { gameId: practiceGame.id, guess: entry.guess, guessNumber: entry.number, localDate: getTodayDateInt(), ...(practiceGame.draft ? { freeplay: { atomicNumber: practiceGame.atomic_number } } : {}) });
       practiceGame = state;
       pendingPracticeGuesses.shift();
       savePracticeQueue();
@@ -111,7 +114,21 @@ async function loadPractice(newRound = false) {
 }
 async function loadPracticeState(newRound = false) {
   if (playMode === 'archive' && Number(playDate) >= getTodayDateInt()) { location.replace('/'); return; }
-  practiceGame = await practiceRequest('start', { mode: playMode, date: playDate, localDate: getTodayDateInt(), gameId: playMode === 'freeplay' && !newRound ? gameStorage.getItem('sessionId') : null });
+  let draft = null;
+  if (playMode === 'freeplay') {
+    try { draft = JSON.parse(gameStorage.getItem('practiceSnapshot') || 'null'); } catch {}
+    if (newRound || !gameStorage.getItem('sessionId')) {
+      const previous = practiceGame?.atomic_number || draft?.atomic_number || Number(gameStorage.getItem('lastFreeplayAtomic'));
+      const candidates = Array.from({length:118}, (_,i)=>i+1).filter(n=>n!==previous);
+      draft = {id:crypto.randomUUID(),atomic_number:candidates[Math.floor(Math.random()*candidates.length)],guesses:[],won:false,completed:false,hint_used:false,hint_used_at_guess:null,draft:true};
+      gameStorage.setItem('sessionId', draft.id);
+      gameStorage.setItem('lastFreeplayAtomic', String(draft.atomic_number));
+      gameStorage.setItem('practiceSnapshot', JSON.stringify(draft));
+      gameStorage.setItem('pendingGuesses','[]');
+    }
+  }
+  const localDraft = playMode === 'freeplay' && draft?.draft && draft.id === gameStorage.getItem('sessionId') && Number.isInteger(draft.atomic_number) && draft.atomic_number >= 1 && draft.atomic_number <= 118 && Array.isArray(draft.guesses);
+  practiceGame = localDraft ? draft : await practiceRequest('start', { mode: playMode, date: playDate, localDate: getTodayDateInt(), gameId: playMode === 'freeplay' && !newRound ? gameStorage.getItem('sessionId') : null });
   gameStorage.setItem('sessionId', practiceGame.id);
   gameStorage.setItem('hintUsed:' + practiceGame.id, String(practiceGame.hint_used));
   mysteryElementCache = getElementFromAtomicNumber(practiceGame.atomic_number);
@@ -448,6 +465,8 @@ hintButton.addEventListener('click', async (event) => {
   if (!completed && gameStorage.getItem(hintKey) !== 'true') {
     if (!practice && !await confirmHintInGame()) return;
     hintButton.disabled = true;
+    hintButton.classList.add('hint-loading');
+    hintButton.setAttribute('aria-busy', 'true');
     try {
       const pending = _pendingGuessPromise || _gameStateSyncPromise;
       if (pending) await pending;
@@ -460,9 +479,9 @@ hintButton.addEventListener('click', async (event) => {
       if (dailyReadOnly) return;
       const token = getAuthToken();
       if (practice) {
-        await flushPracticeQueue();
+        if (pendingPracticeGuesses.length || practiceSyncPromise) await flushPracticeQueue();
         if (pendingPracticeGuesses.length) throw new Error('Save your guesses before using a hint');
-        practiceGame = await practiceRequest('hint', { gameId: practiceGame.id, localDate: getTodayDateInt() });
+        practiceGame = await practiceRequest('hint', { gameId: practiceGame.id, localDate: getTodayDateInt(), ...(practiceGame.draft ? { freeplay: { atomicNumber: practiceGame.atomic_number } } : {}) });
       } else if (token) {
         const res = await fetch(API_BASE + '/game/hint', {
           method: 'POST',
@@ -475,6 +494,7 @@ hintButton.addEventListener('click', async (event) => {
           throw new Error(data.error || 'Hint could not be saved');
         }
       }
+      if (practice) savePracticeQueue();
       gameStorage.setItem(hintKey, 'true');
       gameStorage.setItem('hintUsedAtGuess:' + getTodayDateInt(), String(numberOfGuesses || 0));
     } catch (error) {
@@ -484,6 +504,8 @@ hintButton.addEventListener('click', async (event) => {
       createPopup(error.message || 'Could not save hint use. Please try again.');
       return;
     } finally {
+      hintButton.classList.remove('hint-loading');
+      hintButton.setAttribute('aria-busy', 'false');
       hintButton.disabled = dailyReloadPending || (dailyReadOnly && numberOfGuesses < 8 && guessedCorrectly !== 'true');
     }
   }
@@ -688,7 +710,7 @@ let _gameStateSyncPromise = null;
 
 async function processGuess() {
   if (checkDailyDateLock()) return;
-  if (dailyReadOnly || _guessInFlight || inputElement.disabled || !getMysteryElement() || numberOfGuesses >= 8 || guessedCorrectly === 'true') return;
+  if (dailyReadOnly || _guessInFlight || inputElement.disabled || (practice && hintButton.disabled) || !getMysteryElement() || numberOfGuesses >= 8 || guessedCorrectly === 'true') return;
 
   const inputValue = inputElement.value.trim();
   const guessedElement = elements.find(element => element.name.toLowerCase() === inputValue.toLowerCase());
@@ -1343,16 +1365,23 @@ function displayResults() {
 
   if (guessedCorrectly === 'false') {
     const m = getMysteryElement();
-    revealAnswerElement.innerHTML = `<div class="reveal-answer">
-      <div class="reveal-answer-badge">
-        <span class="reveal-answer-badge-symbol">${m.symbol}</span>
-        <span class="reveal-answer-badge-num">${m.atomicNumber}</span>
-      </div>
-      <div>
-        <div class="reveal-answer-name">${m.name}</div>
-        <div class="reveal-answer-label">${m.family}</div>
-      </div>
-    </div>`;
+    // A save response can render results again; keep the reveal's animation once.
+    if (!revealAnswerElement.querySelector('.reveal-answer') || revealAnswerElement.dataset.answer !== String(m.atomicNumber)) {
+      revealAnswerElement.dataset.answer = String(m.atomicNumber);
+      revealAnswerElement.setAttribute('role', 'status');
+      revealAnswerElement.setAttribute('aria-live', 'polite');
+      revealAnswerElement.innerHTML = `<div class="reveal-answer${practice ? '' : ' reveal-answer--daily'}">
+        <div class="reveal-answer-badge" aria-hidden="true">
+          <span class="reveal-answer-badge-num">${m.atomicNumber}</span>
+          <span class="reveal-answer-badge-symbol">${m.symbol}</span>
+        </div>
+        <div class="reveal-answer-copy">
+          <div class="reveal-answer-eyebrow">${practice ? 'The element was' : 'Today’s element'}</div>
+          <div class="reveal-answer-name">${m.name}</div>
+          <div class="reveal-answer-label">${m.family}</div>
+        </div>
+      </div>`;
+    }
   }
 
   if (practice) {

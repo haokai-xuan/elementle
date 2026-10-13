@@ -13,6 +13,7 @@ async function run(mode) {
     playMode:mode,playDate:mode==='archive'?'20261007':null,practice:true,
     practiceGame:null,practiceLoadPromise:null,pendingPracticeGuesses:[],numberOfGuesses:0,guessedCorrectly:'false',
     mysteryElementCache:null,location:{replace(){}},
+    crypto:{randomUUID:()=> 'local-round'},
     gameStorage:{getItem:key=>values.get(key),setItem:(key,value)=>values.set(key,value)},
     window:{ElementleArchiveProgress:{publish(){}}},
     getTodayDateInt:()=>20261012,
@@ -31,9 +32,11 @@ async function run(mode) {
   assert.equal(context.practiceGame.id,'round-one');
   if(mode==='freeplay') {
     const next=vm.runInContext('loadPractice(true)',context);
-    assert.equal(calls.length,2);assert.equal(calls[1].gameId,null);
-    resolveStart({...snapshot,id:'round-two',guesses:[]});await next;
-    assert.equal(values.get('sessionId'),'round-two');
+    await next;
+    assert.equal(calls.length,1); // A new experiment needs no server request.
+    assert.equal(values.get('sessionId'),'local-round');
+    assert.equal(context.practiceGame.draft,true);
+    assert.notEqual(context.practiceGame.atomic_number,26);
   }
   values.set('sessionId','another-round');vm.runInContext('restorePracticePreview()',context);
   assert.equal(previews,mode==='freeplay'?3:2); // No preview from the wrong round.

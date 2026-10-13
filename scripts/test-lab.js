@@ -2,9 +2,10 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const source = fs.readFileSync(__dirname + '/lab-access.js', 'utf8');
-async function run({ token = null, status = {isLab:false}, path = '/', mode = '', hash = '', failure = false, cache = new Map(), now = () => Date.now(), search = '' }) {
+async function run({ token = null, status = {isLab:false}, path = '/', mode = '', hash = '', failure = false, cache = new Map(), now = () => Date.now(), search = '', deferred = false, beforeReady }) {
   const events = {}, dom = {}, scripts = [], redirects = [], root = {dataset:{}};
   let requests=0, tick;
+  let release;
   const urls=[];
   let document;
   class Node {
@@ -31,9 +32,10 @@ async function run({ token = null, status = {isLab:false}, path = '/', mode = ''
     localStorage:{getItem:()=>token},
     sessionStorage:{getItem:key=>cache.get(key),setItem:(key,value)=>cache.set(key,value),removeItem:key=>cache.delete(key)},
     location:{pathname:path, hash, search:search || (mode ? '?mode='+mode : ''), replace:url=>redirects.push(url),reload:()=>redirects.push('reload')},
-    fetch:async(url)=>{urls.push(url);requests++;return {ok:!failure,json:async()=>status};},
+    fetch:async(url)=>{urls.push(url);requests++;if(deferred)await new Promise(resolve=>release=resolve);return {ok:!failure,json:async()=>status};},
     document
   });
+  if(beforeReady)await beforeReady({window,root,body,main,document,dom,release});
   try{await window.ElementleLab.ready;}catch{}
   document.readyState='complete';await dom.DOMContentLoaded();
   return {window,scripts,redirects,get requests(){return requests;},tick,urls,cache,root,events,body,main,gate:body.children.find(node=>node.className==='lab-access-gate')};
@@ -84,6 +86,27 @@ async function run({ token = null, status = {isLab:false}, path = '/', mode = ''
   await run({token:'member',path:'/vault',status:{isLab:true},cache,now:()=>clock});
   const cached=await run({token:'member',status:{isLab:false},path:'/vault',cache,now:()=>clock});
   assert.equal(cached.requests,0);assert.equal(cached.root.dataset.lab,'active');
+  await run({token:'member',path:'/vault',cache,now:()=>clock,beforeReady:async({window,root,body,main,document,dom})=>{
+    assert.equal(window.ElementleLab.status.isLab,true); // Cached access is applied synchronously.
+    assert.equal(root.dataset.lab,'active');
+    document.readyState='complete';await dom.DOMContentLoaded();
+    assert.equal(body.children.length,1);assert.equal(main.inert,false); // No checking-overlay flash.
+  }});
+  const staleCache=new Map(cache);
+  await run({token:'member',path:'/vault',cache:staleCache,now:()=>clock+31000,status:{isLab:false},deferred:true,beforeReady:async({window,body,main,document,dom,release})=>{
+    assert.equal(window.ElementleLab.loading,true);
+    document.readyState='complete';await dom.DOMContentLoaded();
+    assert.equal(body.children.length,1);assert.equal(main.inert,false); // Revalidation leaves recent access usable.
+    release();
+  }}).then(result=>{
+    assert.equal(result.requests,1);assert.equal(result.main.inert,true); // Confirmed revocation is applied immediately.
+  });
+  await run({token:'member',path:'/vault',cache:new Map(cache),now:()=>clock+301000,deferred:true,beforeReady:async({window,body,main,document,dom,release})=>{
+    assert.equal(window.ElementleLab.status,null);
+    document.readyState='complete';dom.DOMContentLoaded();
+    assert.equal(body.children.length,2);assert.equal(main.inert,true); // A cache older than five minutes cannot unlock the UI.
+    release();
+  }});
   clock+=10000;cached.tick();await new Promise(resolve=>setImmediate(resolve));
   assert.equal(cached.requests,0);
   clock+=21000;cached.tick();await new Promise(resolve=>setImmediate(resolve));

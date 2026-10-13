@@ -2643,3 +2643,21 @@ body.modal-open {
 
 .game-loading .element:not(.guessed-element)::after { display:block; }
 @media (prefers-reduced-motion:reduce) { .element.shimmer::after,.game-loading .element:not(.guessed-element)::after { animation:none; } }
+.hint-button.hint-loading { cursor:wait; position:relative; }
+.hint-button.hint-loading svg, .hint-button.hint-loading img { opacity:.25; }
+.hint-button.hint-loading::after { content:""; position:absolute; width:16px; height:16px; left:calc(50% - 10px); top:calc(50% - 10px); border:2px solid #8ec98755; border-top-color:#8ec987; border-radius:50%; animation:hintLoadingSpin .75s linear infinite; }
+@keyframes hintLoadingSpin { to { transform:rotate(360deg); } }
+@media(prefers-reduced-motion:reduce) { .hint-button.hint-loading::after { animation:none; } }
+/* Keep the answer reveal in the same compact, neutral style as game controls. */
+.reveal-answer-container:has(.reveal-answer--daily) { margin:24px 0; }
+.reveal-answer-container:has(.reveal-answer--daily) + .grid-container { margin-top:0; }
+.reveal-answer--daily { display:flex; width:max-content; min-width:min(320px,100%); max-width:100%; box-sizing:border-box; margin:0 auto; padding:10px 16px; gap:16px; text-align:left; background:#2a2a2a; border:1px solid #ffffff1a; box-shadow:none; border-radius:10px; animation:answerRevealEnter .3s ease-out both; }
+.reveal-answer--daily .reveal-answer-badge { width:52px; height:56px; box-sizing:border-box; border-radius:7px; background:#538d4e; }
+.reveal-answer--daily .reveal-answer-badge-num { margin:0 0 5px; font-size:.65rem; font-variant-numeric:tabular-nums; }
+.reveal-answer--daily .reveal-answer-badge-symbol { font-size:1.4rem; }
+.reveal-answer-copy { min-width:0; }
+.reveal-answer-eyebrow { color:#a7a7a7; font-size:.7rem; font-weight:400; margin-bottom:3px; }
+.reveal-answer--daily .reveal-answer-name { font-size:1.1rem; line-height:1.2; white-space:nowrap; font-weight:600; }
+.reveal-answer--daily .reveal-answer-label { margin-top:3px; color:#999; font-size:.75rem; line-height:1.4; white-space:nowrap; }
+@keyframes answerRevealEnter { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+@media(prefers-reduced-motion:reduce) { .reveal-answer--daily { animation:none; } }

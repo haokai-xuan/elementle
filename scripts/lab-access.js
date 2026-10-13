@@ -8,10 +8,15 @@
   function clearCache() {
     try { sessionStorage.removeItem(CACHE_KEY); } catch {}
   }
-  function cachedStatus(auth) {
+  function cachedStatus(auth, allowStale = false) {
     try {
       const cached = JSON.parse(sessionStorage.getItem(CACHE_KEY) || 'null');
-      if (cached?.auth === auth && cached.expires > Date.now() && typeof cached.status?.isLab === 'boolean' && !(billingPage && cached.status.accessOnly)) return cached.status;
+      if (cached?.auth !== auth || typeof cached.status?.isLab !== 'boolean' || (billingPage && cached.status.accessOnly)) return null;
+      const now = Date.now(), status = cached.status;
+      const end = status.status === 'past_due' ? status.paymentGraceUntil : status.status === 'trialing' ? status.trialEnd : status.currentPeriodEnd;
+      if (status.isLab && end && end * 1000 <= now) return null;
+      const checkedAt = cached.checkedAt ?? cached.expires - CACHE_MS;
+      if (cached.expires > now || (allowStale && now >= checkedAt && now - checkedAt < 300000)) return status;
     } catch {}
     return null;
   }
@@ -19,7 +24,7 @@
     let expires = Date.now() + CACHE_MS;
     const end = status.status === 'past_due' ? status.paymentGraceUntil : status.status === 'trialing' ? status.trialEnd : status.currentPeriodEnd;
     if (status.isLab && end) expires = Math.min(expires, end * 1000);
-    try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({auth, status, expires})); } catch {}
+    try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({auth, status, expires, checkedAt:Date.now()})); } catch {}
   }
   function useLocalStatus() {
     if (pending) return pending.promise;
@@ -49,7 +54,10 @@
   function checkResponse(response) {
     if (response.status !== 402) return;
     clearCache();
+    api.status = null;
+    document.documentElement.dataset.lab = 'unknown';
     refresh().then(updatePage).catch(updatePage);
+    updatePage();
   }
   window.ElementleLab = api;
   const stylesheet = document.createElement('link');
@@ -128,6 +136,12 @@
     if (pending?.auth === auth && (!force || pending.force)) return pending.promise;
     const version = ++sequence;
     const cached = !force && useCache && auth ? cachedStatus(auth) : null;
+    // Apply cached access before rendering. Recently checked access can remain
+    // visible during revalidation; protected API requests still authorize it.
+    if (useCache || force) {
+      api.status = cached || (!force && !billingPage && auth ? cachedStatus(auth, true) : null);
+      document.documentElement.dataset.lab = api.status ? (api.status.isLab ? 'active' : 'free') : 'unknown';
+    }
     api.loading = Boolean(auth && !cached);
     window.dispatchEvent(new CustomEvent('elementle:lab-loading', {detail:{loading:api.loading}}));
     api.ready = (async () => {
@@ -169,6 +183,7 @@
     });
     // Consumers can report a failure; logged-in membership failures never load ads.
     api.ready.catch(() => {});
+    if (!api.status && document.readyState !== 'loading') updatePage();
     return api.ready;
   }
   const dailyMain = ['/', '/index.html'].includes(location.pathname) && !gatedFeature();
@@ -186,7 +201,7 @@
     if (!feature) removeGate();
     else if (!api.status) showGate(feature, 'checking');
     try {
-      const status = await api.ready;
+      const status = api.status || await api.ready;
       if (!status || status !== api.status || feature !== gatedFeature()) return;
       updateBadge();
       if (feature && !status.isLab) {
