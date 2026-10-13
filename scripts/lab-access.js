@@ -49,7 +49,7 @@
     window.dispatchEvent(new CustomEvent('elementle:lab-change', {detail:status}));
   }
   function checkIfNeeded(force = false) {
-    return dailyMain && !gatedFeature() ? useLocalStatus() : refresh(force, !force);
+    return (dailyMain || passiveStats) && !gatedFeature() ? useLocalStatus() : refresh(force, !force);
   }
   function checkResponse(response) {
     if (response.status !== 402) return;
@@ -70,7 +70,6 @@
     if (path === '/vault' || path.startsWith('/vault/')) return 'vault';
     if (path === '/analysis') return 'analysis';
     if (['/', '/index.html'].includes(path) && ['archive', 'freeplay'].includes(mode)) return mode;
-    if (['/stats', '/stats.html'].includes(path) && location.hash === '#lab-archives') return 'archive';
     return null;
   }
   function removeGate() {
@@ -188,9 +187,10 @@
     return api.ready;
   }
   const dailyMain = ['/', '/index.html'].includes(location.pathname) && !gatedFeature();
+  const passiveStats = ['/stats', '/stats.html'].includes(location.pathname.replace(/\/+$/, ''));
   const billingPage = ['/lab', '/account', '/account.html'].includes(location.pathname.replace(/\/+$/, ''));
   const returningFromStripe = new URLSearchParams(location.search).has('checkout') || new URLSearchParams(location.search).get('billing') === 'return';
-  if (dailyMain) useLocalStatus(); else refresh(returningFromStripe, true);
+  if (dailyMain || passiveStats) useLocalStatus(); else refresh(returningFromStripe, true);
   function updateBadge() {
     document.querySelectorAll('.js-lab-account-status').forEach(node => {
       node.textContent = api.status ? (api.status.isLab ? (api.status.status === 'trialing' ? 'Elementle Lab · Free trial' : 'Elementle Lab member') : 'Free account · Explore Elementle Lab') : 'Elementle Lab';
@@ -243,7 +243,7 @@
     if (!document.hidden) checkIfNeeded().then(updatePage).catch(updatePage);
   });
   window.setInterval?.(() => {
-    if (!dailyMain && !document.hidden && token()) refresh(false, true).then(updatePage).catch(updatePage);
+    if (!dailyMain && !passiveStats && !document.hidden && token()) refresh(false, true).then(updatePage).catch(updatePage);
   }, CACHE_MS);
   document.addEventListener('DOMContentLoaded', updatePage);
 })();

@@ -1,5 +1,8 @@
 .result-notice { position:fixed; z-index:10000; top:22px; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:14px; width:max-content; max-width:calc(100vw - 32px); box-sizing:border-box; padding:16px 18px; border:1px solid #538d4e; border-radius:16px; background:linear-gradient(120deg,#263625f5,#1b211ff5); color:#f2f6f1; box-shadow:0 12px 38px #0006; backdrop-filter:blur(12px); animation:notice-arrive .25s ease-out; }
 .result-notice-icon { font-size:28px; color:#95cd8c; }
+.result-notice > div { min-width:0; flex:1; overflow-wrap:anywhere; }
+.result-notice-icon,.result-notice button { flex-shrink:0; }
+@media(max-width:600px) { .result-notice { top:max(16px,env(safe-area-inset-top)); padding:12px 14px; gap:10px; } .result-notice strong { font-size:16px; } }
 .result-notice strong,.result-notice span:not(.result-notice-icon) { display:block; }
 .result-notice strong { font-size:18px; margin-bottom:4px; }
 .result-notice div span { font-size:13px; line-height:1.5; color:#c9d6c7; }

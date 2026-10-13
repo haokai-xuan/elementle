@@ -1041,7 +1041,11 @@ a.additional-info:active,
   font-weight: 600;
   letter-spacing: 0.02em;
   text-align: center;
-  white-space: nowrap;
+  white-space: normal;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
   z-index: 9999;
   pointer-events: none;
   transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
@@ -2661,3 +2665,5 @@ body.modal-open {
 .reveal-answer .reveal-answer-label { margin-top:3px; color:#999; font-size:.75rem; line-height:1.4; white-space:nowrap; }
 @keyframes answerRevealEnter { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
 @media(prefers-reduced-motion:reduce) { .reveal-answer { animation:none; } }
+
+@media(max-width:600px) { .popup { top:max(16px,env(safe-area-inset-top)); padding:12px 16px; font-size:1rem; line-height:1.4; } }

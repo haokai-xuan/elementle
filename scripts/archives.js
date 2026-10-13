@@ -47,12 +47,12 @@
       button.setAttribute('data-date', date);
       const candidate = date < todayInt && date >= ARCHIVE_START_DATE;
       const confirmedDate = available.has(date) && !(current.archiveCutoff && Number(date) >= current.archiveCutoff);
-      const playable = candidate && confirmedDate && (availabilityVerified || usableSnapshot) && verificationState !== 'lab';
+      const playable = candidate && confirmedDate && (availabilityVerified || usableSnapshot);
       const checking = candidate && !playable && !availabilityVerified && verificationState === 'checking';
       const unverified = candidate && !playable && verificationState === 'error';
       button.disabled = !isToday && !playable;
       button.className = isToday ? 'today' : [progress || '',playable?'archive-available':'',checking?'archive-checking':'',unverified?'archive-unverified':''].filter(Boolean).join(' ');
-      button.title = isToday ? 'Play today’s daily puzzle' : playable ? 'Play archived puzzle' : date < ARCHIVE_START_DATE ? 'Archives start July 25, 2026' : date > todayInt ? 'Future date' : verificationState === 'lab' ? 'Elementle Lab is required' : checking ? 'Checking archive availability…' : unverified ? 'Availability could not be checked. Retry below.' : current.archiveCutoff && Number(date) >= current.archiveCutoff ? 'This day has not ended in every timezone yet' : 'No saved archive puzzle for this date';
+      button.title = isToday ? 'Play today’s daily puzzle' : playable ? 'Play archived puzzle' : date < ARCHIVE_START_DATE ? 'Archives start July 25, 2026' : date > todayInt ? 'Future date' : checking ? 'Checking archive availability…' : unverified ? 'Availability could not be checked. Retry below.' : current.archiveCutoff && Number(date) >= current.archiveCutoff ? 'This day has not ended in every timezone yet' : 'No saved archive puzzle for this date';
       if (isToday) button.setAttribute('aria-current', 'date');
       button.setAttribute('aria-label', `${month.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })} ${n}${isToday ? ', today — daily puzzle' : ''}${progress ? ', ' + progress : ''}, ${button.title}`);
       button.addEventListener('click', () => { if (button.disabled) return; location.href = isToday ? '/' : '/?mode=archive&date=' + date; });
@@ -62,14 +62,6 @@
     grid.setAttribute('data-weeks', String(weeks));
     while (grid.children.length < weeks * 7) grid.append(document.createElement('span'));
   }
-  function showSubscriptionLink() {
-    const link = document.createElement('a');
-    link.href = '/lab';
-    link.textContent = 'Unlock archives with Elementle Lab · Start a 7-day free trial →';
-    link.style.color = '#8ec987';
-    status.replaceChildren(link);
-  }
-  let previousMembership = null;
   async function refresh() {
     const id = ++requestId;
     availabilityVerified = false;
@@ -83,16 +75,9 @@
     status.textContent = usableSnapshot ? 'Updating archive availability…' : 'Checking archive availability…';
     render();
     try {
-      // The archive endpoint checks membership itself. Start it immediately rather
-      // than chaining it behind personal Stats and a separate billing request.
-      if (window.ElementleLab?.status) {
-        const membership = window.ElementleLab.status;
-        previousMembership = membership.isLab;
-        if (!membership.isLab) {verificationState='lab';usableSnapshot=false;render();showSubscriptionLink();return;}
-      }
       if (id !== requestId) return;
       const cached = progressStore.read();
-      if (window.ElementleLab?.status?.isLab && usableCache(cached)) {
+      if (usableCache(cached)) {
         data = cached.snapshot;
         availabilityVerified = true;
         verificationState='ready';
@@ -105,12 +90,6 @@
       const token = localStorage.getItem('elementle_token');
       const {response,snapshot} = await fetchSnapshot(date, token);
       if (id !== requestId) return;
-      window.ElementleLab?.checkResponse?.(response);
-      if (response.status === 401 || response.status === 402) {
-        verificationState='lab';usableSnapshot=false;render();
-        showSubscriptionLink();
-        return;
-      }
       if (!response.ok) throw new Error(snapshot.error || 'Unable to load archives');
       data = snapshot;
       availabilityVerified = true;
@@ -140,9 +119,6 @@
   window.addEventListener('focus', refresh);
   window.addEventListener('hashchange', () => {if(location.hash === '#lab-archives')refresh();});
   window.addEventListener('elementle:auth-change', refresh);
-  window.addEventListener('elementle:lab-change', event => {
-    if (event.detail.isLab !== previousMembership) refresh();
-  });
   window.addEventListener('elementle:archive-progress', render);
   window.addEventListener('storage', event => {
     if (event.key === 'elementle_token' || event.key === 'elementle_guest_id' || event.key?.startsWith(progressStore.prefix)) refresh();

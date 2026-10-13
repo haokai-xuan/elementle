@@ -59,6 +59,12 @@ function updatePracticeSyncUI() {
   const next = document.querySelector('#next-experiment');
   if (next) { next.disabled = pendingPracticeGuesses.length > 0; next.textContent = pendingPracticeGuesses.length ? 'Saving experiment…' : 'Next experiment ↻'; }
 }
+function restoreAnalysisButton() {
+  const button = document.querySelector('.js-analysis-button');
+  if (!button) return;
+  if (practice) { updatePracticeSyncUI(); return; }
+  button.disabled = dailyReloadPending || !(numberOfGuesses >= 8 || guessedCorrectly === 'true');
+}
 function savePracticeQueue() {
   gameStorage.setItem('pendingGuesses', JSON.stringify(pendingPracticeGuesses));
   if (practiceGame) gameStorage.setItem('practiceSnapshot', JSON.stringify(practiceGame));
@@ -1098,7 +1104,10 @@ function checkDailyDateLock() {
   return false;
 }
 window.addEventListener('focus', checkDailyDateLock);
-window.addEventListener('pageshow', checkDailyDateLock);
+window.addEventListener('pageshow', event => {
+  checkDailyDateLock();
+  if (event.persisted) restoreAnalysisButton();
+});
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden) checkDailyDateLock();
 });

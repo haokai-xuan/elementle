@@ -67,8 +67,8 @@ async function run({ token = null, status = {isLab:false}, path = '/', mode = ''
   assert.equal(paidAnalysis.gate,undefined);assert.equal(paidAnalysis.main.inert,false);
   assert.match(require('../lib/analysis-page')(require('node:path').resolve(__dirname,'..')),/src="\/scripts\/lab-access\.js"/);
   const legacy=await run({path:'/index.html',mode:'archive'});assert.equal(legacy.gate.dataset.state,'required');
-  const archives=await run({path:'/stats',hash:'#lab-archives'});assert.equal(archives.gate.dataset.state,'required');
-  assert.equal(archives.gate.querySelector('.lab-access-back').href,'/stats');
+  const archives=await run({path:'/stats',hash:'#lab-archives',token:'member'});assert.equal(archives.gate,undefined);assert.equal(archives.requests,0);
+  archives.events.focus();archives.tick();await new Promise(resolve=>setImmediate(resolve));assert.equal(archives.requests,0);
   const stats=await run({path:'/stats'});assert.equal(stats.gate,undefined);assert.equal(stats.main.inert,false);
   const unavailable=await run({path:'/vault',token:'jwt',failure:true});assert.equal(unavailable.gate.dataset.state,'error');
   assert.equal(unavailable.gate.querySelector('.lab-access-retry').hidden,false);

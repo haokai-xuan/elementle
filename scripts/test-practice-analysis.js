@@ -33,9 +33,11 @@ async function run(mode) {
     assert.equal(destination,'/analysis?mode=freeplay&localGameId=saved-round');
     const payload=JSON.parse(nodes.get('elementle_freeplay_analysis'));
     assert.deepEqual(payload.freeplay.guesses,[118]);assert.equal(payload.owner,'account');
-    assert.equal(calls,0);return;
+    assert.equal(calls,0);
+    vm.runInContext('restoreAnalysisButton()',context);assert.equal(button.disabled,false);return;
   }
   assert.equal(button.disabled,true,'Analysis waits for the saved terminal game');
+  vm.runInContext('restoreAnalysisButton()',context);assert.equal(button.disabled,true);
   const first=vm.runInContext('flushPracticeQueue()',context);
   const duplicate=vm.runInContext('flushPracticeQueue()',context);
   assert.equal(calls,1,'Concurrent callers share the existing save');
@@ -45,8 +47,15 @@ async function run(mode) {
   await button.click();
   assert.equal(destination,'/analysis?gameId=saved-round');
   assert.equal(calls,1);
+  vm.runInContext('restoreAnalysisButton()',context);assert.equal(button.disabled,false);
 }
 (async()=>{
+  const dailyButton={disabled:true};
+  const daily=vm.createContext({practice:false,dailyReloadPending:false,numberOfGuesses:8,guessedCorrectly:'false',document:{querySelector:()=>dailyButton}});
+  vm.runInContext(source.slice(source.indexOf('function restoreAnalysisButton()'),source.indexOf('function savePracticeQueue()')),daily);
+  daily.restoreAnalysisButton();assert.equal(dailyButton.disabled,false);
+  daily.dailyReloadPending=true;daily.restoreAnalysisButton();assert.equal(dailyButton.disabled,true);
+  assert.match(source,/if \(event.persisted\) restoreAnalysisButton\(\)/);
   await run('freeplay');await run('archive');
   console.log('Practice analysis: final-save gating, concurrent save deduplication, and saved-game navigation pass.');
 })().catch(error=>{console.error(error);process.exitCode=1;});
