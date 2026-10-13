@@ -112,6 +112,10 @@
     const section=root.querySelector('.elelo-card'), state=states.get(section);
     if(!state) return;
     const id=++state.request, button=section.querySelector('.js-elelo-leaders'), list=section.querySelector('.js-elelo-list'), retry=section.querySelector('.js-elelo-retry');
+    list.setAttribute('aria-busy','true');
+    button.classList?.toggle('stats-loading-indicator',true);
+    list.replaceChildren();
+    const loading=document.createElement('li');loading.className='leaderboard-loading stats-loading-indicator';loading.textContent='Loading leaders…';list.append(loading);
     try {
       const response=await fetch('/api/leaderboard/elelo',{cache:'no-store',signal:AbortSignal.timeout(12000)});
       if(!response.ok) throw Error('Unavailable');
@@ -140,6 +144,8 @@
     } catch {
       if(id!==state.request || root.querySelector('.elelo-card')!==section) return;
       if(!section.querySelector('.js-elelo-board').hidden) {list.replaceChildren();const li=document.createElement('li');li.className='leaderboard-error';li.textContent='Could not load elELO leaders.';list.append(li);retry.hidden=false;}
+    } finally {
+      if(id===state.request) {list.setAttribute('aria-busy','false');button.classList?.toggle('stats-loading-indicator',false);}
     }
   }
   function update(root, data) {

@@ -8,7 +8,23 @@
   let month = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   const first = new Date(2026, 6, 1);
   let requestId = 0;
-  let availabilityVerified = false;
+  let availabilityVerified = false, usableSnapshot = false, verificationState = 'checking';
+  let inFlight = null;
+  function usableCache(entry) {
+    return Boolean(entry.snapshot && entry.snapshotAt && Date.now()-entry.snapshotAt >= 0 && Date.now()-entry.snapshotAt < 300000 && new Date(entry.snapshotAt).toDateString() === new Date().toDateString());
+  }
+  async function fetchSnapshot(date, token) {
+    const owner = token || localStorage.getItem('elementle_guest_id');
+    const key = owner + ':' + date;
+    if (inFlight?.key === key) return inFlight.promise;
+    const promise = fetch('/api/practice/archives?localDate=' + date, {
+      cache:'no-store',
+      headers:{'X-Guest-ID':localStorage.getItem('elementle_guest_id'),...(token?{Authorization:'Bearer '+token}:{})},
+      signal:typeof AbortSignal !== 'undefined' ? AbortSignal.timeout(12000) : undefined
+    }).then(async response => ({response,snapshot:await response.json()}));
+    inFlight={key,promise};
+    try {return await promise;} finally {if(inFlight?.promise===promise)inFlight=null;}
+  }
   function render() {
     const today = new Date();
     const todayInt = String(today.getFullYear()*10000 + (today.getMonth()+1)*100 + today.getDate());
@@ -29,11 +45,16 @@
       const symbol = isToday ? '◦' : progress === 'complete' ? '✓' : progress ? '•' : '';
       button.innerHTML = '<span class="day-number">' + n + '</span><span class="day-symbol" aria-hidden="true">' + symbol + '</span>';
       button.setAttribute('data-date', date);
-      button.disabled = !isToday && (!availabilityVerified || !available.has(date) ||
-        (current.archiveCutoff && Number(date) >= current.archiveCutoff) || date > todayInt || date < ARCHIVE_START_DATE);
-      button.className = isToday ? 'today' : progress || '';
+      const candidate = date < todayInt && date >= ARCHIVE_START_DATE;
+      const confirmedDate = available.has(date) && !(current.archiveCutoff && Number(date) >= current.archiveCutoff);
+      const playable = candidate && confirmedDate && (availabilityVerified || usableSnapshot) && verificationState !== 'lab';
+      const checking = candidate && !playable && !availabilityVerified && verificationState === 'checking';
+      const unverified = candidate && !playable && verificationState === 'error';
+      button.disabled = !isToday && !playable;
+      button.className = isToday ? 'today' : [progress || '',playable?'archive-available':'',checking?'archive-checking':'',unverified?'archive-unverified':''].filter(Boolean).join(' ');
+      button.title = isToday ? 'Play today’s daily puzzle' : playable ? 'Play archived puzzle' : date < ARCHIVE_START_DATE ? 'Archives start July 25, 2026' : date > todayInt ? 'Future date' : verificationState === 'lab' ? 'Elementle Lab is required' : checking ? 'Checking archive availability…' : unverified ? 'Availability could not be checked. Retry below.' : current.archiveCutoff && Number(date) >= current.archiveCutoff ? 'This day has not ended in every timezone yet' : 'No saved archive puzzle for this date';
       if (isToday) button.setAttribute('aria-current', 'date');
-      button.setAttribute('aria-label', `${month.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })} ${n}${isToday ? ', today — daily puzzle' : ''}${progress ? ', ' + progress : ''}`);
+      button.setAttribute('aria-label', `${month.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })} ${n}${isToday ? ', today — daily puzzle' : ''}${progress ? ', ' + progress : ''}, ${button.title}`);
       button.addEventListener('click', () => { if (button.disabled) return; location.href = isToday ? '/' : '/?mode=archive&date=' + date; });
       grid.append(button);
     }
@@ -52,24 +73,29 @@
   async function refresh() {
     const id = ++requestId;
     availabilityVerified = false;
+    verificationState = 'checking';
+    const entry = progressStore.read();
+    usableSnapshot = usableCache(entry);
+    panel.setAttribute('aria-busy','true');
+    status.classList?.add('stats-loading-indicator');
     // Restore the newest local markers first, including when restored from the back/forward cache.
     data = progressStore.read().snapshot || { dates: [], progress: {} };
-    if (data.dates.length) status.textContent = '';
+    status.textContent = usableSnapshot ? 'Updating archive availability…' : 'Checking archive availability…';
     render();
     try {
-      // Personal statistics take priority over the archive calendar.
-      if (window.ElementleStatsReady) await window.ElementleStatsReady;
-      if (window.ElementleLab) {
-        const membership = await window.ElementleLab.ready;
-        if (id !== requestId) return;
+      // The archive endpoint checks membership itself. Start it immediately rather
+      // than chaining it behind personal Stats and a separate billing request.
+      if (window.ElementleLab?.status) {
+        const membership = window.ElementleLab.status;
         previousMembership = membership.isLab;
-        if (!membership.isLab) { showSubscriptionLink(); return; }
+        if (!membership.isLab) {verificationState='lab';usableSnapshot=false;render();showSubscriptionLink();return;}
       }
       if (id !== requestId) return;
       const cached = progressStore.read();
-      if (window.ElementleLab && cached.snapshot && cached.snapshotAt && Date.now() - cached.snapshotAt >= 0 && Date.now() - cached.snapshotAt < 30000 && new Date(cached.snapshotAt).toDateString() === new Date().toDateString()) {
+      if (window.ElementleLab?.status?.isLab && usableCache(cached)) {
         data = cached.snapshot;
         availabilityVerified = true;
+        verificationState='ready';
         render();
         status.textContent = '';
         return;
@@ -77,24 +103,31 @@
       const today = new Date();
       const date = today.getFullYear()*10000 + (today.getMonth()+1)*100 + today.getDate();
       const token = localStorage.getItem('elementle_token');
-      const response = await fetch('/api/practice/archives?localDate=' + date, {
-        cache: 'no-store',
-        headers: { 'X-Guest-ID': localStorage.getItem('elementle_guest_id'), ...(token ? { Authorization: 'Bearer ' + token } : {}) }
-      });
-      const snapshot = await response.json();
+      const {response,snapshot} = await fetchSnapshot(date, token);
       if (id !== requestId) return;
       window.ElementleLab?.checkResponse?.(response);
       if (response.status === 401 || response.status === 402) {
+        verificationState='lab';usableSnapshot=false;render();
         showSubscriptionLink();
         return;
       }
       if (!response.ok) throw new Error(snapshot.error || 'Unable to load archives');
       data = snapshot;
       availabilityVerified = true;
+      verificationState='ready';
+      usableSnapshot=true;
       progressStore.cache(snapshot);
       render();
       status.textContent = '';
-    } catch (error) { if (id === requestId) status.textContent = error.message; }
+    } catch (error) {
+      if (id === requestId) {
+        verificationState='error';render();
+        status.textContent=usableSnapshot?'Showing recently checked archives. Update failed. ': 'Could not check archive availability. ';
+        const retry=document.createElement('button');retry.type='button';retry.className='archive-retry';retry.textContent='Retry';retry.addEventListener('click',refresh);status.append(retry);
+      }
+    } finally {
+      if (id === requestId) {status.classList?.remove('stats-loading-indicator');panel.setAttribute('aria-busy','false');window.dispatchEvent(new Event('elementle:archives-ready'));}
+    }
   }
   function changeMonth(offset) {
     month = new Date(month.getFullYear(), month.getMonth() + offset, 1);
@@ -105,6 +138,7 @@
   window.addEventListener('pageshow', event => { if (event.persisted) refresh(); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
   window.addEventListener('focus', refresh);
+  window.addEventListener('hashchange', () => {if(location.hash === '#lab-archives')refresh();});
   window.addEventListener('elementle:auth-change', refresh);
   window.addEventListener('elementle:lab-change', event => {
     if (event.detail.isLab !== previousMembership) refresh();

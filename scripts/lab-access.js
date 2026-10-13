@@ -4,7 +4,7 @@
   const token = () => localStorage.getItem('elementle_token');
   const CACHE_KEY = 'elementle_lab_status_v1', CACHE_MS = 30000;
   let pending = null;
-  const api = { status: null, ready: null, refresh, checkResponse, consumeGame };
+  const api = { status: null, ready: null, loading: false, refresh, checkResponse, consumeGame };
   function clearCache() {
     try { sessionStorage.removeItem(CACHE_KEY); } catch {}
   }
@@ -128,6 +128,8 @@
     if (pending?.auth === auth && (!force || pending.force)) return pending.promise;
     const version = ++sequence;
     const cached = !force && useCache && auth ? cachedStatus(auth) : null;
+    api.loading = Boolean(auth && !cached);
+    window.dispatchEvent(new CustomEvent('elementle:lab-loading', {detail:{loading:api.loading}}));
     api.ready = (async () => {
       if (!auth) return { isLab: false, status: 'none', trialEligible: true, canManage: false };
       if (cached) return cached;
@@ -154,12 +156,15 @@
     pending = { auth, force, promise };
     promise.then(() => {
       if (pending?.promise === promise) pending = null;
+      if (version === sequence) { api.loading=false; window.dispatchEvent(new CustomEvent('elementle:lab-loading',{detail:{loading:false}})); }
     }, () => {
       if (pending?.promise === promise) pending = null;
       if (version === sequence) {
         clearCache();
         api.status = null;
         document.documentElement.dataset.lab = 'unknown';
+        api.loading=false;
+        window.dispatchEvent(new CustomEvent('elementle:lab-loading',{detail:{loading:false}}));
       }
     });
     // Consumers can report a failure; logged-in membership failures never load ads.

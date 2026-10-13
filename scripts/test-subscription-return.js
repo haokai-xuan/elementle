@@ -3,19 +3,28 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 async function scenario(search='') {
   const nodes={},events={},redirects=[];
-  const node=id=>nodes[id]||=( {textContent:'',hidden:false,disabled:false,dataset:{},addEventListener(name,fn){this[name]=fn;}} );
+  const node=id=>nodes[id]||=( {textContent:'',hidden:false,disabled:false,dataset:{},attrs:{},classes:new Set(),classList:{toggle(name,active){if(active)nodes[id].classes.add(name);else nodes[id].classes.delete(name);}},setAttribute(name,value){this.attrs[name]=value;},addEventListener(name,fn){this[name]=fn;}} );
   const button=node('monthly');button.dataset.plan='monthly';
-  let requests=0;
+  let requests=0,finishMembership,finishOpening;
   const free={status:'none',isLab:false,trialEligible:true,canManage:false};
-  const window={ElementleLab:{ready:Promise.resolve(free),refresh:async()=>{requests++;return free;}},addEventListener(name,fn){events[name]=fn;}};
-  await vm.runInNewContext(fs.readFileSync(__dirname+'/subscription.js','utf8'),{
+  const window={ElementleLab:{ready:new Promise(resolve=>finishMembership=resolve),refresh:async()=>{requests++;return free;}},addEventListener(name,fn){events[name]=fn;}};
+  const initialization=vm.runInNewContext(fs.readFileSync(__dirname+'/subscription.js','utf8'),{
     window,URL,URLSearchParams,Date,
     document:{getElementById:node,querySelectorAll:selector=>selector==='[data-plan]'?[button]:[]},
     localStorage:{getItem:()=> 'jwt'},sessionStorage:{setItem(){}},
     location:{search,assign:url=>redirects.push(url)},
-    fetch:async(url,options)=>{const body=JSON.parse(options.body);assert.equal(body.timezone,Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');return {ok:true,json:async()=>({url:'https://checkout.stripe.com/test'})};}
+    fetch:async(url,options)=>{const body=JSON.parse(options.body);assert.equal(body.timezone,Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');return new Promise(resolve=>finishOpening=resolve);}
   });
-  await button.click();
+  assert.equal(node('lab-membership').attrs['aria-busy'],'true');
+  finishMembership(free);await initialization;
+  assert.equal(node('lab-membership').attrs['aria-busy'],'false');
+  const opening=button.click();
+  assert.equal(button.attrs['aria-busy'],'true');
+  assert.equal(node('lab-message').classes.has('billing-loading'),true);
+  finishOpening({ok:true,json:async()=>({url:'https://checkout.stripe.com/test'})});
+  await opening;
+  assert.equal(button.attrs['aria-busy'],'false');
+  assert.equal(node('lab-message').classes.has('billing-loading'),false);
   assert.equal(node('lab-message').textContent,'Opening secure Stripe billing…');
   assert.equal(redirects.length,1);
   await events.pageshow({persisted:true});

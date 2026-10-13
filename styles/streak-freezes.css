@@ -101,3 +101,12 @@
   .streak-calendar .analysis-magnifier { top:3px; right:3px; width:clamp(8px,2.4vw,12px); height:clamp(8px,2.4vw,12px); }
   .streak-calendar .analyzable .day-number { transform:translateX(-4px); }
 }
+
+#archive-days button.archive-available { border-color:#62a55c; background:#2a382b; }
+#archive-days button.archive-checking:disabled,#archive-days button.archive-unverified:disabled { opacity:.85; position:relative; overflow:hidden; border-style:dashed; }
+#archive-days button.archive-checking::after { content:""; position:absolute; inset:0; background:linear-gradient(100deg,transparent 20%,#8ec98733 50%,transparent 80%); background-size:250% 100%; animation:statsShine 1.5s linear infinite; }
+#archive-days button.archive-unverified { border-color:#b59f3b; }
+.calendar-legend .archive-playable { color:#8ec987; }
+.archive-retry { border:0; background:transparent; color:#8ec987; padding:0 4px; font:inherit; text-decoration:underline; cursor:pointer; }
+#lab-archives .calendar-status:not(:empty) { height:auto; min-height:22px; white-space:normal; overflow:visible; }
+@media (prefers-reduced-motion:reduce) { #archive-days button.archive-checking::after { animation:none; } }

@@ -57,6 +57,14 @@ function updateDistributionBars(root, dist) {
 var _leaderboardLoaded = false;
 var _calendarSizeObserver;
 
+function setStatsLoading(root, active, initial = false) {
+  root.classList?.toggle('stats-is-loading', active);
+  root.classList?.toggle('stats-initial-loading', active && initial);
+  root.setAttribute?.('aria-busy', String(active));
+  const status = root.querySelector('.js-stats-status');
+  status?.classList?.toggle('stats-loading-indicator', active);
+}
+
 function renderStatsPage(root, loading) {
   var totalWins, totalGames, currentStreak, maxWinStreak, winRateDisplay;
 
@@ -419,6 +427,8 @@ function initializeCommunityDistribution(root, period) {
     const id = ++requestId;
     dateLabel.textContent = day.label + ' · All players · X = unsuccessful';
     status.textContent = 'Loading results…';
+    status.classList?.add('stats-loading-indicator');
+    section.setAttribute?.('aria-busy','true');
     bars.hidden = true;
     retry.hidden = true;
     try {
@@ -458,6 +468,8 @@ function initializeCommunityDistribution(root, period) {
       if (id !== requestId) return;
       status.textContent = 'Could not load ' + (isToday ? 'today’s' : 'yesterday’s') + ' results.';
       retry.hidden = false;
+    } finally {
+      if (id === requestId) {status.classList?.remove('stats-loading-indicator');section.setAttribute?.('aria-busy','false');}
     }
   }
 
@@ -544,11 +556,12 @@ async function initializeStats() {
   let token = localStorage.getItem('elementle_token');
   renderStatsPage(root, !!token);
   let updateCalendar = initializeStreakCalendar(root);
-  let requestId = 0, personalRevision = 0;
+  let requestId = 0, personalRevision = 0, hasLoaded = false;
   async function refresh() {
     const auth = localStorage.getItem('elementle_token');
     if (auth !== token) {
       token = auth;
+      hasLoaded = false;
       // Repaint account data immediately so another user's history never lingers.
       renderStatsPage(root, !!token);
       initializeCommunityDistribution(root, 'today');
@@ -556,8 +569,10 @@ async function initializeStats() {
     }
     const id = ++requestId;
     if (!root.querySelector('.js-elelo-board').hidden) void window.ElementleElo.refreshLeaderboard(root);
-    if (!auth) return;
+    if (!auth) {setStatsLoading(root,false);return;}
     const status = root.querySelector('.js-stats-status');
+    status.textContent = hasLoaded ? 'Updating statistics…' : 'Loading your statistics…';
+    setStatsLoading(root,true,!hasLoaded);
     try {
       const day = getLocalDay().key;
       const scope = await accountCacheScope(auth, day) + ':' + personalRevision + ':' + (localStorage.getItem('elementle_lab_revision') || '');
@@ -576,12 +591,15 @@ async function initializeStats() {
       updateCalendar(data);
       window.ElementleElo.update(root, data.elELO);
       syncStatsSwipeViewportHeight(root);
+      hasLoaded = true;
       status.textContent = '';
     } catch {
       if (id === requestId) {
         status.textContent = 'Could not load your statistics. We’ll try again when you return to this tab.';
         if(root.querySelector('.js-elelo-rating').textContent === '—') window.ElementleElo.update(root, null);
       }
+    } finally {
+      if (id === requestId && auth === localStorage.getItem('elementle_token')) setStatsLoading(root,false);
     }
   }
   window.addEventListener('focus', refresh);
@@ -591,7 +609,8 @@ async function initializeStats() {
   window.addEventListener('storage', event => {if (['elementle_token','elementle_stats_revision'].includes(event.key)) refresh();});
   document.addEventListener('visibilitychange', () => {if (!document.hidden) refresh();});
   setInterval(() => {if (!document.hidden) refresh();}, 60000);
-  const initial = refresh();
+  const archiveFirst = typeof location !== 'undefined' && location.hash === '#lab-archives';
+  const initial = archiveFirst ? new Promise(resolve => window.addEventListener('elementle:archives-ready', () => {refresh().then(resolve);}, {once:true})) : refresh();
   window.ElementleStatsReady = initial;
   await initial;
   initializeCommunityDistribution(root, 'today');

@@ -175,3 +175,19 @@
 .account-billing{margin:24px 0;padding:20px 0;border-top:1px solid #538d4e66;border-bottom:1px solid #538d4e66;text-align:left}.account-billing h2{font-size:18px;margin:0 0 16px;color:#8ec987}.account-billing dl{margin:0}.account-billing dl>div{display:grid;grid-template-columns:1fr 1.25fr;gap:12px;padding:9px 0;line-height:1.6;font-size:13px}.account-billing dt{color:#aab5a7}.account-billing dd{margin:0;color:#e4eadf;overflow-wrap:anywhere}.account-billing-note{font-size:12px;line-height:1.8;color:#becaba}.account-billing-actions{display:grid;gap:10px}.account-billing-refresh{background:none;border:0;color:#8ec987;cursor:pointer;font:inherit;font-size:12px;padding:8px}.account-billing [hidden]{display:none!important}.account-billing button:disabled{opacity:.55;cursor:wait}
 
 .account-billing .auth-btn-outline:disabled { background:#282828; border-color:#414141; color:#858585; opacity:1; cursor:not-allowed; transform:none; }
+
+/* Shared feedback for membership checks and secure billing redirects. */
+.billing-loading::before { content:""; display:inline-block; width:12px; height:12px; flex:0 0 12px; margin-right:8px; vertical-align:-2px; border:2px solid #8ec98755; border-top-color:currentColor; border-radius:50%; animation:billingSpin .75s linear infinite; }
+button.billing-loading { cursor:wait; }
+@keyframes billingSpin { to { transform:rotate(360deg); } }
+@media (prefers-reduced-motion:reduce) { .billing-loading::before { animation:none; } }
+
+/* Stats requests retain existing values while the current request is pending. */
+.stats-loading-indicator::before { content:""; display:inline-block; width:12px; height:12px; margin-right:8px; vertical-align:-2px; border:2px solid #8ec98755; border-top-color:#8ec987; border-radius:50%; animation:billingSpin .75s linear infinite; }
+.stats-is-loading .stat-value,.stats-is-loading .js-elelo-rating,.stats-is-loading .js-freeze-count { position:relative; overflow:hidden; }
+.stats-is-loading .stat-value::after,.stats-is-loading .js-elelo-rating::after,.stats-is-loading .js-freeze-count::after,.stats-initial-loading .js-streak-days button::after { content:""; position:absolute; inset:0; border-radius:6px; background:linear-gradient(100deg,transparent 20%,#8ec98722 45%,#d5f3cf33 50%,transparent 75%); background-size:250% 100%; animation:statsShine 1.5s linear infinite; pointer-events:none; }
+.stats-initial-loading .js-streak-days button { position:relative; overflow:hidden; }
+.stats-initial-loading .js-elelo-chart { opacity:.45; animation:statsPulse 1.5s ease-in-out infinite; }
+@keyframes statsShine { from {background-position:200% 0;} to {background-position:-100% 0;} }
+@keyframes statsPulse { 50% {opacity:.75;} }
+@media (prefers-reduced-motion:reduce) { .stats-loading-indicator::before,.stats-is-loading .stat-value::after,.stats-is-loading .js-elelo-rating::after,.stats-is-loading .js-freeze-count::after,.stats-initial-loading .js-streak-days button::after,.stats-initial-loading .js-elelo-chart { animation:none; } }

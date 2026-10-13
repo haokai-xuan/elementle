@@ -15,6 +15,11 @@
   window.ElementleBilling = { summary };
   function section() { return document.querySelector('.account-billing'); }
   let loading = false, portalOpening = false;
+  function indicate(node, active) {
+    node?.classList?.toggle('billing-loading', active);
+    node?.setAttribute?.('aria-busy', String(active));
+  }
+  window.addEventListener('elementle:lab-loading', event => indicate(section()?.querySelector('[data-billing="status"]'), event.detail.loading));
   function canManage(data) {
     const subscribed = data.isLab || ['trialing', 'active', 'past_due', 'unpaid', 'incomplete', 'paused', 'canceled'].includes(data.status);
     return Boolean(subscribed && data.canManage !== false);
@@ -23,7 +28,7 @@
     const root = section();
     if (!root || !localStorage.getItem('elementle_token')) return;
     const fields = summary(data);
-    for (const [name, value] of Object.entries(fields)) root.querySelector('[data-billing="'+name+'"]').textContent = value;
+    for (const [name, value] of Object.entries(fields)) if (!(portalOpening && name === 'note')) root.querySelector('[data-billing="'+name+'"]').textContent = value;
     root.querySelectorAll('[data-billing-action]').forEach(button => {
       if (button.dataset.billingAction !== 'refresh') {
         button.hidden = false;
@@ -35,9 +40,10 @@
   async function refresh(force = false) {
     if (!section() || !localStorage.getItem('elementle_token') || loading) return;
     loading = true;
+    indicate(section().querySelector('[data-billing="status"]'), true);
     try { render(await window.ElementleLab.refresh(force, !force)); }
     catch { const root=section();if(root){root.querySelector('[data-billing="status"]').textContent='Billing unavailable';root.querySelector('[data-billing="note"]').textContent='Unable to load billing details. Try Refresh billing details in a moment.';} }
-    finally { loading=false; }
+    finally { loading=false; indicate(section()?.querySelector('[data-billing="status"]'), false); }
   }
   document.addEventListener('click', async event => {
     const button = event.target.closest?.('[data-billing-action]');
@@ -46,6 +52,11 @@
     const auth=localStorage.getItem('elementle_token');
     if (!auth) return;
     portalOpening=true;
+    let portalError=null;
+    indicate(button, true);
+    const openingNote=section().querySelector('[data-billing="note"]');
+    openingNote.textContent='Opening secure Stripe billing…';
+    indicate(openingNote, true);
     section().querySelectorAll('[data-billing-action]').forEach(action => { if(action.dataset.billingAction !== 'refresh') action.disabled=true; });
     try {
       const response=await fetch('/api/billing/portal',{method:'POST',headers:{Authorization:'Bearer '+auth,'Content-Type':'application/json'},body:JSON.stringify(button.dataset.billingAction==='payment_method_update'?{flow:'payment_method_update'}:{})});
@@ -54,8 +65,8 @@
       const url=new URL(result.url);
       if(url.protocol!=='https:'||url.hostname!=='billing.stripe.com')throw new Error('Unexpected billing URL.');
       location.assign(url.href);
-    } catch(error){ if(section())section().querySelector('[data-billing="note"]').textContent=error.message; }
-    finally{portalOpening=false;if(window.ElementleLab?.status)render(window.ElementleLab.status);else button.disabled=false;}
+    } catch(error){ portalError=error.message; }
+    finally{portalOpening=false;indicate(button,false);indicate(section()?.querySelector('[data-billing="note"]'),false);if(window.ElementleLab?.status)render(window.ElementleLab.status);else button.disabled=false;if(portalError && section())section().querySelector('[data-billing="note"]').textContent=portalError;}
   });
   window.addEventListener('elementle:lab-change',event=>render(event.detail));
   window.addEventListener('elementle:account-render',()=>{
