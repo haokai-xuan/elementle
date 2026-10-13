@@ -12,7 +12,7 @@
 .vault-entering .vault-progress > span { animation-play-state: paused; }
 .vault-progress > span { transform-origin: left center; }
 .vault-entry.zooming { pointer-events: none; will-change: transform, opacity; }
-.vault-entry.opening .vault-door { transition-duration: .8s; }
+.vault-entry.opening .vault-door { transition-duration: 1.2s; }
 .vault-entry.opening .vault-corridor { animation: none; }
 .vault-entry .vault-door, .vault-entry .vault-wheel { will-change: transform; }
 @media (max-width: 700px) { .vault-entry { transform-origin: 50% 38%; } }

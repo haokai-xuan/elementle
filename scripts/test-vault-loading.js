@@ -38,6 +38,6 @@ const flush=()=>new Promise(resolve=>setImmediate(resolve));
  pending[3].resolve({ok:false});assert.equal(await vm.runInContext('ready',expired),false);
  assert.equal(cache.size,0);assert.equal(attrs['aria-busy'],'false');
  assert.match(source,/if \(!loaded\)/); // Failed loads never play the access-granted sequence.
- assert.match(source,/duration: 700/);
+ assert.match(source,/duration: 1400/);
  console.log('Vault loading animation state, shared collection cache, game invalidation, account isolation, expiry and failed connection handling pass.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

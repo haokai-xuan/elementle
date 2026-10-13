@@ -138,20 +138,20 @@
     if (cancelled) return;
     entry.classList.add('opening');
     // Overlap the zoom with the door swing.
-    await pause(300);
+    await pause(550);
     if (cancelled) return;
     document.body.classList.add('vault-revealing');
     entry.classList.add('zooming');
-    const timing = { duration: 700, easing: 'cubic-bezier(.22,.61,.36,1)', fill: 'both' };
+    const timing = { duration: 1400, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'both' };
     animations = [
      entry.animate([
       { transform: 'scale(1)', opacity: 1 },
-      { transform: 'scale(1.25)', opacity: .95, offset: .25 },
-      { transform: 'scale(2.8)', opacity: 0 }
+      { transform: 'scale(1.12)', opacity: .95, offset: .35 },
+      { transform: 'scale(2.2)', opacity: 0 }
      ], timing),
      main.animate([
-      { transform: 'scale(.82)', opacity: 0 },
-      { transform: 'scale(.88)', opacity: .25, offset: .25 },
+      { transform: 'scale(.94)', opacity: 0 },
+      { transform: 'scale(.96)', opacity: .35, offset: .35 },
       { transform: 'scale(1)', opacity: 1 }
      ], timing)
     ];
