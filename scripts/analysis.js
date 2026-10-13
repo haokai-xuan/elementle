@@ -187,7 +187,12 @@
       const gameId = params.get('gameId');
       const token = localStorage.getItem('elementle_token');
       let body;
-      if (gameId) {
+      if (params.get('mode') === 'freeplay') {
+        const saved=JSON.parse(sessionStorage.getItem('elementle_freeplay_analysis') || 'null');
+        if (!token) throw new Error('Sign in to analyze your Freeplay game.');
+        if (!saved || saved.owner!==token || saved.id!==params.get('localGameId')) throw new Error('Return to Freeplay and press Analyze with elBot to bring your game here.');
+        body={freeplay:saved.freeplay};
+      } else if (gameId) {
         if (!token) throw new Error('Sign in to analyze your saved Lab game.');
         body = {gameId};
       } else if (token) body = {localDate:date};

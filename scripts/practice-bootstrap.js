@@ -12,7 +12,10 @@
   const prefix=`elementle_${mode}_${date || 'session'}_${token}_`;
   if (mode==='freeplay') {
     if (!localStorage.getItem(prefix+'sessionId')) return;
-    try { if (JSON.parse(localStorage.getItem(prefix+'practiceSnapshot') || 'null')?.draft) return; } catch {}
+    try {
+      const saved=JSON.parse(localStorage.getItem(prefix+'practiceSnapshot') || 'null');
+      if (saved?.id===localStorage.getItem(prefix+'sessionId') && Number.isInteger(saved.atomic_number) && saved.atomic_number>=1 && saved.atomic_number<=118 && Array.isArray(saved.guesses)) return;
+    } catch {}
   }
   const body={mode,date,localDate,gameId:mode==='freeplay'?localStorage.getItem(prefix+'sessionId'):null};
   const promise=fetch('/api/practice/start',{

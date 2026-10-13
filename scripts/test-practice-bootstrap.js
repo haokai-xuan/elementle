@@ -35,7 +35,7 @@ async function run(mode,token='user-one') {
     vm.runInContext(source,context);
     assert.equal(calls.length,0); // Fresh freeplay waits until an action to save.
     values.set(`elementle_freeplay_session_${token}_sessionId`,'draft-round');
-    values.set(`elementle_freeplay_session_${token}_practiceSnapshot`,JSON.stringify({id:'draft-round',draft:true}));
+    values.set(`elementle_freeplay_session_${token}_practiceSnapshot`,JSON.stringify({id:'draft-round',draft:true,atomic_number:26,guesses:[]}));
     vm.runInContext(source,context);
     assert.equal(calls.length,0); // An unstarted local draft also needs no request.
   }

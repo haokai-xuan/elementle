@@ -26,14 +26,14 @@ async function run(mode) {
   vm.runInContext('restorePracticePreview()',context);
   assert.equal(previews,1);assert.equal(calls.length,0);assert.equal(context.practiceGame,null);
   const first=vm.runInContext('loadPractice()',context), duplicate=vm.runInContext('loadPractice()',context);
-  assert.equal(calls.length,1);
-  resolveStart(snapshot);await Promise.all([first,duplicate]);
+  assert.equal(calls.length,mode==='freeplay'?0:1);
+  if(mode!=='freeplay')resolveStart(snapshot);await Promise.all([first,duplicate]);
   assert.equal(JSON.parse(values.get('practiceSnapshot')).id,'round-one');
   assert.equal(context.practiceGame.id,'round-one');
   if(mode==='freeplay') {
     const next=vm.runInContext('loadPractice(true)',context);
     await next;
-    assert.equal(calls.length,1); // A new experiment needs no server request.
+    assert.equal(calls.length,mode==='freeplay'?0:1); // A new experiment needs no server request.
     assert.equal(values.get('sessionId'),'local-round');
     assert.equal(context.practiceGame.draft,true);
     assert.notEqual(context.practiceGame.atomic_number,26);

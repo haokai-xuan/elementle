@@ -74,6 +74,7 @@ async function flushPracticeQueue() {
   finally { practiceSyncPromise = null; }
 }
 async function syncPracticeQueue() {
+  if (playMode === 'freeplay') { updatePracticeSyncUI(); return; }
   if (practiceSyncing || !practiceGame) return;
   practiceSyncing = true;
   practiceSyncFailed = false;
@@ -127,7 +128,7 @@ async function loadPracticeState(newRound = false) {
       gameStorage.setItem('pendingGuesses','[]');
     }
   }
-  const localDraft = playMode === 'freeplay' && draft?.draft && draft.id === gameStorage.getItem('sessionId') && Number.isInteger(draft.atomic_number) && draft.atomic_number >= 1 && draft.atomic_number <= 118 && Array.isArray(draft.guesses);
+  const localDraft = playMode === 'freeplay' && draft && draft.id === gameStorage.getItem('sessionId') && Number.isInteger(draft.atomic_number) && draft.atomic_number >= 1 && draft.atomic_number <= 118 && Array.isArray(draft.guesses);
   practiceGame = localDraft ? draft : await practiceRequest('start', { mode: playMode, date: playDate, localDate: getTodayDateInt(), gameId: playMode === 'freeplay' && !newRound ? gameStorage.getItem('sessionId') : null });
   gameStorage.setItem('sessionId', practiceGame.id);
   gameStorage.setItem('hintUsed:' + practiceGame.id, String(practiceGame.hint_used));
@@ -136,10 +137,14 @@ async function loadPracticeState(newRound = false) {
   // A reply may have been lost after commit. Keep only guesses not yet acknowledged.
   pendingPracticeGuesses = pendingPracticeGuesses.filter(entry => practiceGame.guesses[entry.number - 1] !== entry.guess);
   if (practiceGame.completed) pendingPracticeGuesses = [];
-  savePracticeQueue();
+  if (playMode !== 'freeplay') savePracticeQueue();
   const merged = [...practiceGame.guesses];
   for (const entry of pendingPracticeGuesses) { if (entry.number === merged.length + 1) merged.push(entry.guess); }
   applyGameStateFromApi(merged, merged.length, merged.at(-1) === practiceGame.atomic_number);
+  if (playMode === 'freeplay') {
+    practiceGame = {...practiceGame, guesses:merged, won:merged.at(-1)===practiceGame.atomic_number, completed:merged.length>=8 || merged.at(-1)===practiceGame.atomic_number, localOnly:true};
+    pendingPracticeGuesses = [];
+  }
   savePracticeQueue();
   gameStorage.setItem('fadeInAppliedList', '[]');
   renderFromLocalCache();
@@ -478,7 +483,10 @@ hintButton.addEventListener('click', async (event) => {
       }
       if (dailyReadOnly) return;
       const token = getAuthToken();
-      if (practice) {
+      if (playMode === 'freeplay') {
+        practiceGame.hint_used = true;
+        practiceGame.hint_used_at_guess = Number(numberOfGuesses) || 0;
+      } else if (practice) {
         if (pendingPracticeGuesses.length || practiceSyncPromise) await flushPracticeQueue();
         if (pendingPracticeGuesses.length) throw new Error('Save your guesses before using a hint');
         practiceGame = await practiceRequest('hint', { gameId: practiceGame.id, localDate: getTodayDateInt(), ...(practiceGame.draft ? { freeplay: { atomicNumber: practiceGame.atomic_number } } : {}) });
@@ -741,7 +749,8 @@ async function processGuess() {
     const nextGuesses = [...guessesList.map(el => el.atomicNumber), guessedElement.atomicNumber];
     const won = guessedElement.atomicNumber === practiceGame.atomic_number;
     applyGameStateFromApi(nextGuesses, nextGuesses.length, won);
-    pendingPracticeGuesses.push({ guess: guessedElement.atomicNumber, number: nextGuesses.length });
+    if (playMode === 'freeplay') practiceGame = {...practiceGame, guesses:nextGuesses, won, completed:won || nextGuesses.length>=8, localOnly:true, draft:false};
+    else pendingPracticeGuesses.push({ guess: guessedElement.atomicNumber, number: nextGuesses.length });
     savePracticeQueue();
     removeAutocompleteDropdown();
     renderGuess({ animate: true });
@@ -1062,7 +1071,7 @@ function renderFromLocalCache() {
   if (cachedGuesses && cachedGuesses.length > 0) {
     _initialRenderDone = false;
     gameStorage.setItem('fadeInAppliedList', JSON.stringify([]));
-    renderGuess({ animate: true, stagger: true });
+    renderGuess({ animate: playMode !== 'freeplay', stagger: playMode !== 'freeplay' });
   } else {
     renderGuess();
   }
@@ -1305,6 +1314,12 @@ function displayResults() {
       button.innerHTML = '<img class="analysis-button-icon" src="/images/elbot_frames/idle_01.png" width="24" height="24" alt="" aria-hidden="true"><span>Analyze with el<span class="elbot-brand">B</span>ot</span>';
       button.addEventListener('click', async () => {
         button.disabled = true;
+        if (playMode === 'freeplay') {
+          if (!practiceGame?.completed) { updatePracticeSyncUI(); return; }
+          sessionStorage.setItem('elementle_freeplay_analysis', JSON.stringify({owner:getAuthToken(),id:practiceGame.id,freeplay:{atomicNumber:practiceGame.atomic_number,guesses:practiceGame.guesses,hintUsed:!!practiceGame.hint_used,hintAt:practiceGame.hint_used_at_guess}}));
+          location.assign('/analysis?mode=freeplay&localGameId=' + encodeURIComponent(practiceGame.id));
+          return;
+        }
         if (practice) {
           await flushPracticeQueue();
           if (pendingPracticeGuesses.length || !practiceGame?.completed) { updatePracticeSyncUI(); return; }
@@ -1370,7 +1385,7 @@ function displayResults() {
       revealAnswerElement.dataset.answer = String(m.atomicNumber);
       revealAnswerElement.setAttribute('role', 'status');
       revealAnswerElement.setAttribute('aria-live', 'polite');
-      revealAnswerElement.innerHTML = `<div class="reveal-answer${practice ? '' : ' reveal-answer--daily'}">
+      revealAnswerElement.innerHTML = `<div class="reveal-answer">
         <div class="reveal-answer-badge" aria-hidden="true">
           <span class="reveal-answer-badge-num">${m.atomicNumber}</span>
           <span class="reveal-answer-badge-symbol">${m.symbol}</span>
@@ -1486,6 +1501,7 @@ function displayResults() {
 
 
 function showGameResult(won, guesses) {
+  if (practice) return;
   const title = getGameResultMessage(won, guesses);
   if (!practice && window.ElementleGameResult) {
     const token = getAuthToken();
@@ -1616,7 +1632,7 @@ async function initializeGame() {
   inputElement.disabled = true;
   guessButtonElement.disabled = true;
   hintButton.disabled = practice || Boolean(getAuthToken());
-  if (practice) restorePracticePreview();
+  if (practice && playMode !== 'freeplay') restorePracticePreview();
 
   try {
     if (practice) { await loadPractice(); hintButton.disabled = false; } else await setMysteryElementOfTheDay();
@@ -1627,7 +1643,7 @@ async function initializeGame() {
   if (checkDailyDateLock()) return;
 
   if (numberOfGuesses >= 8 || guessedCorrectly === 'true') {
-    displayResults();
+    if (!practice) displayResults();
   } else {
     if (!dailyReadOnly) {
       inputElement.disabled = false;

@@ -32,7 +32,9 @@ const integration=vm.createContext({practice:false,_pendingGuessPromise:savedRes
   document:{querySelector:()=>null},window:{ElementleGameResult:{schedule:(...args)=>call=args},ElementleFreezes:{notice:()=>practiceNotice++}}});
 vm.runInContext(resultFunction,integration);vm.runInContext('showGameResult(true,4)',integration);
 assert.equal(call[0].guest,false);assert.equal(call[0].localDate,20261011);assert.equal(call[1],savedResponse);assert.equal(call[2](),true);
-integration.practice=true;vm.runInContext('showGameResult(true,4)',integration);assert.equal(practiceNotice,1);
+integration.practice=true;call=null;
+vm.runInContext('showGameResult(true,4); showGameResult(false,8)',integration);
+assert.equal(practiceNotice,0);assert.equal(call,null); // Practice modes never show daily completion notices.
 const api=context.window.ElementleGameResult;
 const current=()=>body.children.at(-1);
 const finishAnimation=()=>{let fn=[...frames.values()].at(-1);fn(0);fn=[...frames.values()].at(-1);fn(1100);};
