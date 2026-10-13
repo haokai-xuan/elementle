@@ -202,6 +202,11 @@ function getHintIndexForToday() {
 }
 
 async function fetchMysteryElementForDate(dateInt) {
+  const early = window.ElementleDailyBootstrap;
+  if (early && early.date === dateInt && !early.token) {
+    const data = await early.promise;
+    return data ? getElementFromAtomicNumber(data.atomic_number) : null;
+  }
   const res = await fetch(`${API_BASE}/mystery_element/${dateInt}`);
   if (!res.ok) return null;
   const data = await res.json();
@@ -1017,6 +1022,8 @@ async function fetchGameState(todayInt, token) {
 }
 
 async function fetchGameBootstrap(todayInt, token) {
+  const early = window.ElementleDailyBootstrap;
+  if (early && early.date === todayInt && early.token === token) return early.promise;
   const res = await fetch(
     API_BASE + '/game/bootstrap?localDate=' + encodeURIComponent(todayInt),
     { headers: { Authorization: 'Bearer ' + token } }
