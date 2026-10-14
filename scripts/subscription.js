@@ -25,7 +25,7 @@
     if (data.status === 'past_due' && data.isLab) {
       message.textContent = 'Your payment failed. Lab stays active until ' + new Date(data.paymentGraceUntil * 1000).toLocaleString() + '. Update your payment method before the three-day retry to keep access.';
     } else if (data.isLab && end) {
-      const date = new Date(end * 1000).toLocaleDateString(undefined, {month:'long',day:'numeric',year:'numeric'});
+      const date = new Date(end * 1000).toLocaleDateString(window.ElementleI18n?.locale, {month:'long',day:'numeric',year:'numeric'});
       message.textContent = data.cancelAtPeriodEnd ? 'Your Lab access ends on ' + date + '.' : data.status === 'trialing' ? 'Your free trial ends on ' + date + '. Manage billing below to cancel before your first charge.' : 'Your subscription renews on ' + date + '.';
     } else if (data.status === 'past_due' || data.status === 'unpaid') message.textContent = 'Your payment needs attention. Update your payment method in Manage subscription to restore Lab access.';
     else if (new URLSearchParams(location.search).get('checkout') === 'canceled') message.textContent = 'Checkout canceled. You can choose a plan whenever you’re ready.';

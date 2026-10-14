@@ -191,3 +191,19 @@ button.billing-loading { cursor:wait; }
 @keyframes statsShine { from {background-position:200% 0;} to {background-position:-100% 0;} }
 @keyframes statsPulse { 50% {opacity:.75;} }
 @media (prefers-reduced-motion:reduce) { .stats-loading-indicator::before,.stats-is-loading .stat-value::after,.stats-is-loading .js-elelo-rating::after,.stats-is-loading .js-freeze-count::after,.stats-initial-loading .js-streak-days button::after,.stats-initial-loading .js-elelo-chart { animation:none; } }
+
+/* Language preferences remain available to guests and signed-in players. */
+.account-settings { margin: 24px auto 0; max-width: 560px; text-align: left; }
+.account-settings h2 { margin: 0 0 20px; font-size: 1.35rem; }
+.account-settings .language-label { display: block; margin-bottom: 8px; font-weight: 600; }
+.language-picker { position: relative; }
+.language-picker summary { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border: 1px solid rgba(255,255,255,.25); border-radius: 10px; background: #18231d; color: #fff; cursor: pointer; list-style: none; }
+.language-picker summary::-webkit-details-marker { display: none; }
+.language-picker summary::after { content: ''; width: 7px; height: 7px; margin: 0 4px 4px 16px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); }
+.language-choice { display: flex; align-items: center; gap: 10px; min-height: 24px; line-height: 1.5; }
+.language-flag { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 28px; height: 24px; font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; font-size: 22px; line-height: 1; }
+.language-options { position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 20; padding: 6px; border: 1px solid rgba(255,255,255,.25); border-radius: 10px; background: #18231d; box-shadow: 0 8px 24px #0006; }
+.language-options button { width: 100%; padding: 9px 8px; border: 0; border-radius: 6px; background: transparent; color: #fff; font: inherit; text-align: left; cursor: pointer; }
+.language-options button:hover, .language-options button[aria-pressed="true"] { background: #8abd8326; }
+.language-picker summary:focus-visible, .language-options button:focus-visible { outline: 2px solid #8abd83; outline-offset: 3px; }
+.account-settings .auth-help-text { line-height: 1.6; margin-bottom: 0; }

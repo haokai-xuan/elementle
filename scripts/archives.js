@@ -31,7 +31,7 @@
     const last = new Date(today.getFullYear(), today.getMonth(), 1);
     const current = progressStore.merge(data);
     const available = new Set(current.dates.map(String));
-    document.querySelector('#archive-month').textContent = month.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+    document.querySelector('#archive-month').textContent = month.toLocaleDateString(window.ElementleI18n?.locale, { month: 'long', year: 'numeric' });
     document.querySelector('#archive-prev').disabled = month <= first;
     document.querySelector('#archive-next').disabled = month >= last;
     const grid = document.querySelector('#archive-days'); grid.replaceChildren();
@@ -54,7 +54,7 @@
       button.className = isToday ? 'today' : [progress || '',playable?'archive-available':'',checking?'archive-checking':'',unverified?'archive-unverified':''].filter(Boolean).join(' ');
       button.title = isToday ? 'Play today’s daily puzzle' : playable ? 'Play archived puzzle' : date < ARCHIVE_START_DATE ? 'Archives start July 25, 2026' : date > todayInt ? 'Future date' : checking ? 'Checking archive availability…' : unverified ? 'Availability could not be checked. Retry below.' : current.archiveCutoff && Number(date) >= current.archiveCutoff ? 'This day has not ended in every timezone yet' : 'No saved archive puzzle for this date';
       if (isToday) button.setAttribute('aria-current', 'date');
-      button.setAttribute('aria-label', `${month.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })} ${n}${isToday ? ', today — daily puzzle' : ''}${progress ? ', ' + progress : ''}, ${button.title}`);
+      button.setAttribute('aria-label', `${month.toLocaleDateString(window.ElementleI18n?.locale, { month: 'long', year: 'numeric' })} ${n}${isToday ? ', today — daily puzzle' : ''}${progress ? ', ' + progress : ''}, ${button.title}`);
       button.addEventListener('click', () => { if (button.disabled) return; location.href = isToday ? '/' : '/?mode=archive&date=' + date; });
       grid.append(button);
     }

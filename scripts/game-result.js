@@ -6,7 +6,7 @@
   let generation = 0;
   let frame;
   const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const number = value => Number(value).toLocaleString(undefined, {maximumFractionDigits: 2});
+  const number = value => Number(value).toLocaleString(window.ElementleI18n?.locale, {maximumFractionDigits: 2});
   function close() {
     generation++;
     cancelAnimationFrame(frame);
@@ -37,7 +37,7 @@
     const node = selector => dialog.querySelector(selector);
     node('#game-result-title').textContent = result.title || (result.won ? 'Element solved!' : 'Good try!');
     const date = String(result.localDate || '').replace(/-/g, '');
-    const formattedDate = /^\d{8}$/.test(date) ? new Date(+date.slice(0,4), +date.slice(4,6)-1, +date.slice(6,8)).toLocaleDateString(undefined, {month:'long',day:'numeric',year:'numeric'}) : '';
+    const formattedDate = /^\d{8}$/.test(date) ? new Date(+date.slice(0,4), +date.slice(4,6)-1, +date.slice(6,8)).toLocaleDateString(window.ElementleI18n?.locale, {month:'long',day:'numeric',year:'numeric'}) : '';
     node('.game-result-detail').textContent = result.guesses ? `${result.won ? 'Solved in' : 'Used'} ${result.guesses} / 8 guesses · ${formattedDate}` : formattedDate;
     renderElo(dialog, result);
     const analysis = node('.game-result-analysis');

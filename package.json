@@ -16,10 +16,17 @@
     "test:analysis": "node scripts/test-analysis.js && node scripts/test-practice-analysis.js && node scripts/test-practice-loading.js && node scripts/test-practice-bootstrap.js && node scripts/test-freeplay-draft.js",
     "test:post-game": "node scripts/test-post-game.js && node scripts/test-game-result.js && node scripts/test-game-history.js && node scripts/test-game-bootstrap.js",
     "test:guest-results": "node scripts/test-guest-results.js",
-    "test:lab": "node scripts/test-lab.js && node scripts/test-account-billing.js && node scripts/test-subscription-return.js && node scripts/test-leaderboard-lab.js && node scripts/test-billing-proxy.js"
+    "test:lab": "node scripts/test-lab.js && node scripts/test-account-billing.js && node scripts/test-subscription-return.js && node scripts/test-leaderboard-lab.js && node scripts/test-billing-proxy.js",
+    "test:i18n": "node scripts/test-i18n.js",
+    "i18n:extract": "node scripts/extract-i18n.js"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
     "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "acorn": "^8.19.0",
+    "acorn-walk": "^8.3.5",
+    "linkedom": "^0.18.13"
   }
 }

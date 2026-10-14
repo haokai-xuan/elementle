@@ -8,7 +8,7 @@
  const rules = ['Solve the element once','Solve it twice','Solve it 3 times, including 1 without hints','Solve it 5 times, including 3 without hints'];
  const lock = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V6a4 4 0 0 1 8 0v4M12 14v3"/></svg>';
  const empty = {encounters:0,solved:0,clean:0,tier:0};
- const date = value => value ? new Date(value + 'T12:00:00').toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}) : '—';
+ const date = value => value ? new Date(value + 'T12:00:00').toLocaleDateString(window.ElementleI18n?.locale,{year:'numeric',month:'short',day:'numeric'}) : '—';
  const pct = (n,d) => d ? (n / d * 100).toFixed(1).replace(/\.0$/,'') + '%' : '0%';
  function bar(value, label) { return `<div class="vault-progress" role="progressbar" aria-label="${label}" aria-valuenow="${value}" aria-valuemin="0" aria-valuemax="100"><span style="--progress:${value}%"></span></div>`; }
  function help() { return `<div class="tier-help"><button aria-label="Explain proficiency tiers" aria-expanded="false">?</button><div class="tier-tooltip" role="tooltip">${rules.map((r,i)=>`<p><strong>${icons[i+1]} ${names[i+1]}</strong><br>${r}</p>`).join('')}<p>Each element is counted in its highest earned tier.</p></div></div>`; }

@@ -81,7 +81,7 @@
     $('saved-game-signin').hidden = true;
     $('saved-game-status').textContent = 'Loading your saved game…';
     if (!/^\d{8}$/.test(date)) {$('saved-game-status').textContent = 'Choose a completed game from your streak calendar.';return;}
-    $('saved-game-date').textContent = new Date(+date.slice(0,4),+date.slice(4,6)-1,+date.slice(6,8)).toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'});
+    $('saved-game-date').textContent = new Date(+date.slice(0,4),+date.slice(4,6)-1,+date.slice(6,8)).toLocaleDateString(window.ElementleI18n?.locale,{month:'long',day:'numeric',year:'numeric'});
     if (!token) {
       $('saved-game-status').textContent = 'Sign in to view your saved game.';
       $('saved-game-recovery').hidden = false; $('saved-game-signin').hidden = false; $('saved-game-retry').hidden = true; return;

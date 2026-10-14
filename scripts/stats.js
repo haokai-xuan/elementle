@@ -325,7 +325,7 @@ function getLocalDay(offset = 0, now = new Date()) {
   const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset, 12);
   return {
     key: String(date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate()),
-    label: date.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })
+    label: date.toLocaleDateString(window.ElementleI18n?.locale, { month: 'long', day: 'numeric', year: 'numeric' })
   };
 }
 
@@ -443,7 +443,7 @@ function initializeCommunityDistribution(root, period) {
       }
       const max = Math.max(...distribution.map(bucket => bucket.count));
       bars.innerHTML = distribution.map(({ label, count }) => {
-        const percentage = (count / total * 100).toLocaleString(undefined, { maximumFractionDigits: 1 }) + '%';
+        const percentage = (count / total * 100).toLocaleString(window.ElementleI18n?.locale, { maximumFractionDigits: 1 }) + '%';
         return `
         <div class="bar-col" data-result-column="${label}" aria-label="${label === 'X' ? 'Unsuccessful' : label + ' guesses'}: ${percentage}">
           <span class="bar-count">${percentage}</span>
@@ -499,7 +499,7 @@ function initializeStreakCalendar(root) {
     const latestMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
     if (month.getTime() === currentMonth) month = new Date(latestMonth);
     currentMonth = latestMonth;
-    root.querySelector('.js-streak-month').textContent = month.toLocaleDateString(undefined, {month:'long',year:'numeric'});
+    root.querySelector('.js-streak-month').textContent = month.toLocaleDateString(window.ElementleI18n?.locale, {month:'long',year:'numeric'});
     root.querySelector('.js-streak-prev').disabled = month <= first;
     root.querySelector('.js-streak-next').disabled = month >= new Date(now.getFullYear(), now.getMonth(), 1);
     const grid = root.querySelector('.js-streak-days');
@@ -517,11 +517,11 @@ function initializeStreakCalendar(root) {
       cell.disabled = !analyzable;
       cell.innerHTML = '<span class="day-number">' + n + '</span>' + '<span class="day-symbol" aria-hidden="true">' + symbol + '</span>';
       const label = { solved:'Solved', missed:'Missed', failed:'Failed without a freeze', frozen:'Streak freeze used' }[state] || (key === today ? 'Not completed yet' : 'No result');
-      cell.setAttribute('aria-label', new Date(month.getFullYear(),month.getMonth(),n).toLocaleDateString() + ': ' + label);
+      cell.setAttribute('aria-label', new Date(month.getFullYear(),month.getMonth(),n).toLocaleDateString(window.ElementleI18n?.locale) + ': ' + label);
       cell.title = label + (analyzable ? ' · View game result and elELO' : '');
       if (analyzable) {
         cell.innerHTML += '<span class="analysis-magnifier" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></svg></span>';
-        cell.setAttribute('aria-label', cell.title + ' · ' + new Date(month.getFullYear(),month.getMonth(),n).toLocaleDateString());
+        cell.setAttribute('aria-label', cell.title + ' · ' + new Date(month.getFullYear(),month.getMonth(),n).toLocaleDateString(window.ElementleI18n?.locale));
         cell.onclick = () => {
           window.ElementleGameResult.openHistory({localDate:key, title:'Daily game result', historical:true, elo:ratings.get(key)});
         };

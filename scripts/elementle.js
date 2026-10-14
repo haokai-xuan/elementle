@@ -46,7 +46,7 @@ function updateModeUI() {
   document.querySelector('.mode-tools').hidden = !practice;
   const label = document.querySelector('.mode-file');
   const date = playDate && new Date(Number(playDate.slice(0,4)), Number(playDate.slice(4,6))-1, Number(playDate.slice(6,8)));
-  label.textContent = playMode === 'archive' && date && !isNaN(date) ? 'FILE: ' + date.toLocaleDateString(undefined, {month:'short',day:'numeric',year:'numeric'}).toUpperCase() : 'EXPERIMENT: ∞';
+  label.textContent = playMode === 'archive' && date && !isNaN(date) ? 'FILE: ' + date.toLocaleDateString(window.ElementleI18n?.locale, {month:'short',day:'numeric',year:'numeric'}).toUpperCase() : 'EXPERIMENT: ∞';
   document.title = playMode === 'archive' ? 'Lab archives | Elementle' : 'Freeplay | Elementle';
   document.querySelectorAll('.freeplay-nav').forEach(el => { if (playMode === 'freeplay') el.setAttribute('aria-current','page'); });
 }
@@ -312,7 +312,7 @@ const shareButtonElement = document.querySelector('.js-share-button');
   }
 
   function updatePlaceholder() {
-    var word = sampleNames[wordIdx];
+    var word = window.ElementleI18n ? window.ElementleI18n.t(sampleNames[wordIdx]) : sampleNames[wordIdx];
     var text = word.slice(0, charIdx);
     inputElement.setAttribute('placeholder', text + (cursorVisible ? '|' : '\u00A0'));
   }
@@ -323,7 +323,7 @@ const shareButtonElement = document.querySelector('.js-share-button');
       inputElement.setAttribute('placeholder', 'Element');
       return;
     }
-    var word = sampleNames[wordIdx];
+    var word = window.ElementleI18n ? window.ElementleI18n.t(sampleNames[wordIdx]) : sampleNames[wordIdx];
     if (!deleting) {
       charIdx++;
       stopBlink();
@@ -577,7 +577,7 @@ function renderGuess(options) {
   const fadeInAppliedList = JSON.parse(gameStorage.getItem('fadeInAppliedList')) || [];
   const guessCount = (guessedList && guessedList.length) || 0;
   const lastGuess = guessCount > 0 ? guessedList[guessCount - 1] : null;
-  const lastGuessCorrect = lastGuess && lastGuess.name && lastGuess.name.toLowerCase() === mystery.name.toLowerCase();
+  const lastGuessCorrect = lastGuess && lastGuess.atomicNumber === mystery.atomicNumber;
   const gameOver = guessedCorrectly === 'true' || lastGuessCorrect || guessCount >= 8;
   let nextSlotMarked = false;
 
@@ -587,7 +587,7 @@ function renderGuess(options) {
 
     if (guessedList && guessedList.length > 0 && guessedList[i]) {
       elementDiv.classList.add('guessed-element');
-      const guessedElement = guessedList[i];
+      const guessedElement = getElementFromAtomicNumber(guessedList[i].atomicNumber) || guessedList[i];
       const atomicSignal = (guessedElement.atomicNumber === mystery.atomicNumber) ? '&#127881;' : (guessedElement.atomicNumber < mystery.atomicNumber) ? '⬆️' : '⬇️';
       const familyClass = (guessedElement.family === mystery.family) ? 'green' : 'family';
 
@@ -653,7 +653,7 @@ function renderGuess(options) {
       const nameSpan = document.createElement('span');
       nameSpan.classList.add('name');
       nameSpan.textContent = guessedElement.name;
-      if (guessedElement.name.toLowerCase() === mystery.name.toLowerCase()) {
+      if (guessedElement.atomicNumber === mystery.atomicNumber) {
         nameSpan.classList.add('green');
         atomicNumberSpan.classList.add('green');
         elementDiv.classList.add('correct-card');
@@ -727,7 +727,7 @@ async function processGuess() {
   if (dailyReadOnly || _guessInFlight || inputElement.disabled || (practice && hintButton.disabled) || !getMysteryElement() || numberOfGuesses >= 8 || guessedCorrectly === 'true') return;
 
   const inputValue = inputElement.value.trim();
-  const guessedElement = elements.find(element => element.name.toLowerCase() === inputValue.toLowerCase());
+  const guessedElement = elements.find(element => window.ElementleI18n ? window.ElementleI18n.matchesElement(element, inputValue) : element.name.toLowerCase() === inputValue.toLowerCase());
 
   if (!guessedElement && inputValue !== '') {
     invalidGuess();
@@ -742,7 +742,7 @@ async function processGuess() {
 
   inputElement.value = '';
 
-  const alreadyGuessed = guessesList.some(guess => guess.name.toLowerCase() === guessedElement.name.toLowerCase());
+  const alreadyGuessed = guessesList.some(guess => guess.atomicNumber === guessedElement.atomicNumber);
   if (alreadyGuessed) {
     alreadyGuessedPopup();
     inputElement.focus();
@@ -791,7 +791,7 @@ async function processGuess() {
     if (latestCard) latestCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
-  const isCorrect = guessedElement.name.toLowerCase() === getMysteryElement().name.toLowerCase();
+  const isCorrect = guessedElement.atomicNumber === getMysteryElement().atomicNumber;
   const isGameOver = numberOfGuesses >= 8;
 
   recordVaultDaily(isCorrect);
@@ -900,13 +900,13 @@ function onInputChange() {
     return;
   }
 
-  const filtered = [];
-  elements.forEach((el) => {
+  const filtered = window.ElementleI18n ? window.ElementleI18n.searchElements(elements, value) : [];
+  if (!window.ElementleI18n) elements.forEach((el) => {
     if (el.name.substring(0, value.length).toLowerCase() === value) {
       filtered.push({ name: el.name, symbol: el.symbol });
     }
   });
-  filtered.sort((a, b) => a.name.localeCompare(b.name));
+  filtered.sort((a, b) => a.name.localeCompare(b.name, window.ElementleI18n?.locale));
   updateAutocompleteDropdown(filtered, value.length);
 }
 
@@ -932,10 +932,18 @@ function updateAutocompleteDropdown(list, matchLen) {
   list.forEach((el) => {
     const listItem = document.createElement('li');
     const elementButton = document.createElement('button');
-    const matched = el.name.substring(0, matchLen);
-    const rest = el.name.substring(matchLen);
-    elementButton.innerHTML = '<span class="ac-name"><span class="ac-match">' + matched + '</span>' + rest + '</span>';
+    const prefixMatches = (window.ElementleI18n?.normalize(el.name) || el.name.toLowerCase()).startsWith(window.ElementleI18n?.normalize(inputElement.value) || inputElement.value.toLowerCase());
+    const matched = prefixMatches ? el.name.substring(0, matchLen) : '';
+    const rest = prefixMatches ? el.name.substring(matchLen) : el.name;
+    const nameWrapper = document.createElement('span');
+    nameWrapper.className = 'ac-name';
+    const matchSpan = document.createElement('span');
+    matchSpan.className = 'ac-match';
+    matchSpan.textContent = matched;
+    nameWrapper.append(matchSpan, document.createTextNode(rest));
+    elementButton.append(nameWrapper);
     elementButton.setAttribute('data-name', el.name);
+    if (window.ElementleI18n) elementButton.setAttribute('translate', 'no');
     elementButton.addEventListener('click', onElementButtonClick);
     listItem.appendChild(elementButton);
     listElement.append(listItem);
@@ -1497,7 +1505,7 @@ function displayResults() {
       shareText += `❌/8\nhttps://elementlegame.com`;
     }
   
-    navigator.clipboard.writeText(shareText);
+    navigator.clipboard.writeText(window.ElementleI18n ? window.ElementleI18n.t(shareText) : shareText);
     createPopup('Copied results to clipboard');
   };
   updateLastPlayedDate();
@@ -1678,3 +1686,5 @@ function recordVaultDaily(won = guessedCorrectly === 'true') {
     guesses: Number(numberOfGuesses), won,
     hint: gameStorage.getItem('hintUsed:' + date) === 'true' });
 }
+
+window.addEventListener("elementle:language-ready", () => { if (getMysteryElement()) renderGuess(); if (inputElement.value) onInputChange(); });
