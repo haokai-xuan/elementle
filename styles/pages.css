@@ -60,7 +60,7 @@
 .community-distribution .is-player-result .bar-track { outline: 1px solid #8ec987; outline-offset: 2px; }
 
 @media (min-width: 1181px) {
-  .page-card.auth-modal {
+  .page-card.auth-modal, .page-card.account-settings {
     max-width: 484px;
     margin-inline: auto;
   }
@@ -193,7 +193,7 @@ button.billing-loading { cursor:wait; }
 @media (prefers-reduced-motion:reduce) { .stats-loading-indicator::before,.stats-is-loading .stat-value::after,.stats-is-loading .js-elelo-rating::after,.stats-is-loading .js-freeze-count::after,.stats-initial-loading .js-streak-days button::after,.stats-initial-loading .js-elelo-chart { animation:none; } }
 
 /* Language preferences remain available to guests and signed-in players. */
-.account-settings { margin: 24px auto 0; max-width: 560px; text-align: left; }
+.account-settings { margin: 24px auto 0; text-align: left; }
 .account-settings h2 { margin: 0 0 20px; font-size: 1.35rem; }
 .account-settings .language-label { display: block; margin-bottom: 8px; font-weight: 600; }
 .language-picker { position: relative; }

@@ -165,9 +165,6 @@ function renderStatsPage(root, loading) {
 
       </section>
 
-      <hr class="stats-section-divider">
-
-      ${window.ElementleElo.markup(loading)}
       <div class="guess-distribution">
         <h3 class="distribution-title">Guess distribution</h3>
         <div class="bars-container">
@@ -184,6 +181,8 @@ function renderStatsPage(root, loading) {
         <button type="button" class="auth-forgot-link js-distribution-retry" hidden>Try again</button>
       </section>
 
+      <hr class="stats-section-divider">
+      ${window.ElementleElo.markup(loading)}
       <hr class="stats-section-divider">
       <section class="lab-archives stats-calendar streak-calendar" aria-labelledby="streak-calendar-title">
         <div class="freeze-scenery" aria-hidden="true"><span>❄</span><span>❄</span><span>❄</span></div>

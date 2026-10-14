@@ -42,6 +42,8 @@
 .stats-section-divider { width:100%; height:0; flex:none; margin:20px 0; border:0; border-top:1px solid rgba(255,255,255,.1); }
 .js-stats-status:empty { display:none; }
 .stats-layout .stats-calendar { box-sizing:border-box; width:100%; max-width:none; margin:0; padding:28px 28px 14px; text-align:left; }
+.stats-layout .elelo-card { margin-block:0; }
+.stats-layout .stats-section-divider + .stats-calendar { padding-top:0; }
 .stats-calendar .lab-heading { height:44px; margin-bottom:16px; }
 .stats-calendar .lab-heading h2 { margin:0; font-size:28px; }
 .stats-calendar .calendar-body { display:grid; grid-template-rows:var(--calendar-intro-height,180px) 42px 16px 366px var(--calendar-legend-height,18px); gap:16px; }
