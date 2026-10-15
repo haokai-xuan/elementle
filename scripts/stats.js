@@ -543,7 +543,7 @@ function initializeStreakCalendar(root) {
     analyzableDates = new Set(data.analyzableDates || Object.keys(history).filter(key => ['solved','failed'].includes(history[key])));
     root.querySelector('.js-freeze-count').textContent = f ? f.available + ' / ' + f.capacity : '— / 2';
     root.querySelector('.js-freeze-progress').value = f?.progress || 0;
-    root.querySelector('.js-freeze-progress-label').textContent = f ? (f.available === f.capacity ? 'At capacity · ' : '') + f.progress + ' / ' + f.earnEvery + ' daily solves' : 'Freezes are coming soon';
+    root.querySelector('.js-freeze-progress-label').textContent = f ? (f.available === f.capacity ? 'At capacity · ' : '') + `${f.progress} / ${f.earnEvery} daily solves` : 'Freezes are coming soon';
     render();
     window.ElementleFreezes?.consume(data);
   };

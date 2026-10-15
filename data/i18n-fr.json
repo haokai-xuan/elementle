@@ -1921,7 +1921,7 @@
   "form[data-panel=\"reset\"]": "formulaire[data-panel=\"reset\"]",
   "form[data-panel=\"signup\"]": "formulaire[data-panel=\"signup\"]",
   "freezes remaining.": "gèle le reste.",
-  "freezes.": "se fige.",
+  "freezes.": "gels.",
   "gray blue": "gris bleu",
   "gray metallic": "gris métallisé",
   "gray metallic, bluish when oxidized": "gris métallisé, bleuâtre une fois oxydé",
@@ -2085,5 +2085,9 @@
   "🟩 Green family: same element family.": "🟩 Famille verte : même famille d'éléments.",
   "🟩 Green letter: correct letter and position.": "🟩 Lettre verte : lettre et position correctes.",
   "GUESS": "DEVINER",
-  "RIKEN": "RIKEN"
+  "RIKEN": "RIKEN",
+  "{0} / {1} daily solves": "{0} / {1} solutions quotidiennes",
+  "freezes": "gels",
+  "and": "et",
+  "or": "ou"
 }

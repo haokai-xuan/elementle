@@ -5,23 +5,23 @@ const acorn = require('acorn');
 const walk = require('acorn-walk');
 const {parseHTML} = require('linkedom');
 const sources = new Set();
-function add(value) {
+function add(value, visible = false) {
   if (typeof value !== 'string') return;
   value = value.replace(/\s+/g, ' ').trim();
-  if (/^[a-z]+:[a-z:-]+$/.test(value) || /^[0-9A-F]{6}$/.test(value) || ['GET','POST','INPUT','SCRIPT','SELECT','TEXTAREA','ELEME','TLE','UTC'].includes(value)) return;
+  if (/^[a-z]+:[a-z:-]+$/.test(value) || /^[0-9A-F]{6}$/.test(value) || ['GET','POST','INPUT','SCRIPT','SELECT','TEXTAREA','ELEME','TLE','UTC','ot','translate="no"'].includes(value)) return;
   if (/^(?:[.#/]|--|&\w+;|\(prefers-|\{\d+\}$)/.test(value)) return;
   if (!/[a-zA-Z]{2}/.test(value) || /https?:\/\/|^[/#.][\w/]|^[\w]+[-_][\w_-]+$|^\w*[a-z]\w*[A-Z]\w*$|^[a-z]+\.[a-z]+$/.test(value)) return;
-  if (/^[\w]+$/.test(value) && /^[a-z]/.test(value)) return;
+  if (!visible && /^[\w]+$/.test(value) && /^[a-z]/.test(value)) return;
   sources.add(value);
 }
 function markup(value) {
   const {document} = parseHTML('<html><body>'+value+'</body></html>');
   document.normalize();
   const visit = node => {
-    if (node.nodeType === 3) add(node.textContent);
+    if (node.nodeType === 3) add(node.textContent, true);
     if (node.nodeType === 1) {
       if (['SCRIPT','STYLE','SVG'].includes(node.tagName)) return;
-      for (const attr of ['placeholder','title','alt','aria-label']) add(node.getAttribute(attr));
+      for (const attr of ['placeholder','title','alt','aria-label']) add(node.getAttribute(attr), true);
     }
     for (const child of node.childNodes || []) visit(child);
   };
@@ -46,6 +46,6 @@ for (const element of require('../data/element-reference.json')) {
   for (const key of ['name','family','summary','appearance','discoveredBy']) add(element[key]);
   for (const [key,value] of Object.entries(element.attributes)) {add(key);add(value);}
 }
-for (const text of ['Settings','Language','Choose the language for the game, hints, and pages. Your choice is saved in this browser.','Language saved.','Could not save your language. Check your browser storage settings.']) add(text);
+for (const text of ['Settings','Language','Choose the language for the game, hints, and pages. Your choice is saved in this browser.','Language saved.','Could not save your language. Check your browser storage settings.','daily solves']) add(text);
 fs.writeFileSync('data/i18n-source.json',JSON.stringify([...sources].sort(),null,2)+'\n');
 console.log(`${sources.size} public translation sources`);

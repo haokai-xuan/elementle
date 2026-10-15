@@ -3,9 +3,10 @@
 (() => {
   'use strict';
   const KEY = 'elementle_language';
-  const languages = {en:'English', fr:'Français', es:'Español', de:'Deutsch', pt:'Português', nl:'Nederlands'};
-  const flags = {en:'🇬🇧', fr:'🇫🇷', es:'🇪🇸', de:'🇩🇪', pt:'🇧🇷', nl:'🇳🇱'};
-  const normalize = value => String(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase().trim();
+  const languages = {en:'English', fr:'Français', es:'Español', de:'Deutsch', pt:'Português', nl:'Nederlands', tr:'Türkçe', pl:'Polski'};
+  const languageOptions = Object.entries(languages).sort(([,a],[,b]) => a.localeCompare(b, 'en', {sensitivity:'base'}));
+  const flags = {en:'🇬🇧', fr:'🇫🇷', es:'🇪🇸', de:'🇩🇪', pt:'🇧🇷', nl:'🇳🇱', tr:'🇹🇷', pl:'🇵🇱'};
+  const normalize = value => String(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/ı/g, 'i').replace(/ł/g, 'l').trim();
   let locale = 'en';
   try { const saved = localStorage.getItem(KEY); if (Object.hasOwn(languages, saved)) locale = saved; } catch {}
   let catalog = {}, patterns = [], fragments = [], observer, loadError = false;
@@ -83,10 +84,10 @@
     return `<section class="account-settings page-card" aria-labelledby="account-settings-heading">
       <h2 id="account-settings-heading">Settings</h2>
       <span class="language-label" id="account-language-label">Language</span>
-      <select id="account-language" hidden translate="no">${Object.entries(languages).map(([code,name])=>`<option value="${code}"${code===locale?' selected':''}>${flags[code]} ${name}</option>`).join('')}</select>
+      <select id="account-language" hidden translate="no">${languageOptions.map(([code,name])=>`<option value="${code}"${code===locale?' selected':''}>${flags[code]} ${name}</option>`).join('')}</select>
       <details class="language-picker" translate="no">
         <summary aria-labelledby="account-language-label account-language-value" aria-describedby="language-description language-status"><span id="account-language-value" class="language-choice"><span class="language-flag" aria-hidden="true">${flags[locale]}</span><span>${languages[locale]}</span></span></summary>
-        <div class="language-options" role="group" aria-labelledby="account-language-label">${Object.entries(languages).map(([code,name])=>`<button type="button" class="language-choice" data-language="${code}" aria-pressed="${code===locale}"><span class="language-flag" aria-hidden="true">${flags[code]}</span><span>${name}</span></button>`).join('')}</div>
+        <div class="language-options" role="group" aria-labelledby="account-language-label">${languageOptions.map(([code,name])=>`<button type="button" class="language-choice" data-language="${code}" aria-pressed="${code===locale}"><span class="language-flag" aria-hidden="true">${flags[code]}</span><span>${name}</span></button>`).join('')}</div>
       </details>
       <p class="auth-help-text" id="language-description">Choose the language for the game, hints, and pages. Your choice is saved in this browser.</p>
       <p id="language-status" class="auth-help-text" role="status" aria-live="polite"></p>

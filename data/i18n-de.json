@@ -1921,7 +1921,7 @@
   "form[data-panel=\"reset\"]": "form[data-panel=\"reset\"]",
   "form[data-panel=\"signup\"]": "Formular[data-panel=\"signup\"]",
   "freezes remaining.": "friert verbleibend ein.",
-  "freezes.": "friert ein.",
+  "freezes.": "Streak-Schutz.",
   "gray blue": "graublau",
   "gray metallic": "graumetallic",
   "gray metallic, bluish when oxidized": "graumetallisch, bei Oxidation bläulich",
@@ -2085,5 +2085,9 @@
   "🟩 Green family: same element family.": "🟩 Grüne Familie: gleiche Elementfamilie.",
   "🟩 Green letter: correct letter and position.": "🟩 Grüner Buchstabe: Korrekter Buchstabe und richtige Position.",
   "GUESS": "RATEN",
-  "RIKEN": "RIKEN"
+  "RIKEN": "RIKEN",
+  "{0} / {1} daily solves": "{0} / {1} tägliche Lösungen",
+  "freezes": "Streak-Schutz",
+  "and": "und",
+  "or": "oder"
 }

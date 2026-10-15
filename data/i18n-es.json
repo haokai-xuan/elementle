@@ -1921,7 +1921,7 @@
   "form[data-panel=\"reset\"]": "formulario[data-panel=\"reset\"]",
   "form[data-panel=\"signup\"]": "formulario[panel de datos=\"registro\"]",
   "freezes remaining.": "se congela restante.",
-  "freezes.": "se congela.",
+  "freezes.": "congelamientos.",
   "gray blue": "gris azul",
   "gray metallic": "gris metalizado",
   "gray metallic, bluish when oxidized": "gris metálico, azulado al oxidarse",
@@ -2085,5 +2085,9 @@
   "🟩 Green family: same element family.": "🟩 Familia verde: misma familia de elementos.",
   "🟩 Green letter: correct letter and position.": "🟩 Letra verde: letra y posición correcta.",
   "GUESS": "ADIVINAR",
-  "RIKEN": "RIKEN"
+  "RIKEN": "RIKEN",
+  "{0} / {1} daily solves": "{0} / {1} soluciones diarias",
+  "freezes": "congelamientos",
+  "and": "y",
+  "or": "o"
 }

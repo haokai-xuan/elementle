@@ -4,9 +4,9 @@ const vm = require('node:vm');
 const {parseHTML} = require('linkedom');
 const elements = require('../data/elements');
 const source = fs.readFileSync(__dirname+'/i18n.js','utf8');
-const codes = ['en','fr','es','de','pt','nl'];
-const guessLabels = {en:'GUESS', fr:'DEVINER', es:'ADIVINAR', de:'RATEN', pt:'ADIVINHAR', nl:'RADEN'};
-const languageLabels = {en:'🇬🇧 English', fr:'🇫🇷 Français', es:'🇪🇸 Español', de:'🇩🇪 Deutsch', pt:'🇧🇷 Português', nl:'🇳🇱 Nederlands'};
+const codes = ['en','fr','es','de','pt','nl','tr','pl'];
+const guessLabels = {en:'GUESS', fr:'DEVINER', es:'ADIVINAR', de:'RATEN', pt:'ADIVINHAR', nl:'RADEN', tr:'TAHMİN ET', pl:'ZGADNIJ'};
+const languageLabels = {en:'🇬🇧 English', fr:'🇫🇷 Français', es:'🇪🇸 Español', de:'🇩🇪 Deutsch', pt:'🇧🇷 Português', nl:'🇳🇱 Nederlands', tr:'🇹🇷 Türkçe', pl:'🇵🇱 Polski'};
 async function browser(locale, denied = false, failFetch = false, html = '<!doctype html><html><head></head><body><main class="js-account-page"><p>Play</p><p class="auth-account-name">Gold</p></main><div id="dynamic"></div></body></html>') {
   const {window} = parseHTML(html);
   const saved = new Map([['elementle_language',locale],['guessesList',JSON.stringify([{name:'Gold',atomicNumber:79}])]]);
@@ -63,6 +63,18 @@ async function translatedGuess(api) {
     }
     assert.equal(window.document.querySelector('.auth-account-name').textContent,'Gold');
     const before = saved.get('guessesList');
+    for (const counter of ['3 / 10 daily solves', 'At capacity · 0 / 10 daily solves']) {
+      const prefix = counter.startsWith('At capacity') ? (locale === 'en' ? 'At capacity ·' : catalog['At capacity ·']) + ' ' : '';
+      const numbers = counter.startsWith('At capacity') ? '0 / 10 ' : '3 / 10 ';
+      const expected = prefix + numbers + (locale === 'en' ? 'daily solves' : catalog['daily solves']);
+      assert.equal(i18n.t(counter),expected,`${locale}: daily solve counter`);
+      const label = window.document.querySelector('#dynamic');
+      label.textContent = counter;
+      await new Promise(resolve=>setTimeout(resolve,0));
+      assert.equal(label.textContent,expected,`${locale}: rendered daily solve counter`);
+      i18n.refresh();
+      assert.equal(label.textContent,expected,`${locale}: counter remains translated`);
+    }
     for (const element of elements) {
       if (locale !== 'en') {
         assert.ok(catalog[element.name],`${locale}: missing element ${element.name}`);
@@ -70,6 +82,7 @@ async function translatedGuess(api) {
         for (const hint of element.hints) assert.ok(catalog[hint.replace(/\s+/g,' ').trim()],`${locale}: missing hint ${element.atomicNumber}`);
       }
       assert.equal(i18n.matchesElement(element,i18n.elementName(element)),true);
+      assert.equal(i18n.matchesElement(element,i18n.elementName(element).toLocaleUpperCase(locale)),true,`${locale}: uppercase element ${element.name}`);
       assert.equal(i18n.matchesElement(element,element.name),true);
       assert.equal(i18n.matchesElement(element,element.symbol),true);
       assert.ok(i18n.searchElements(elements,i18n.elementName(element)).some(e=>e.atomicNumber===element.atomicNumber));
@@ -107,6 +120,11 @@ async function translatedGuess(api) {
     const button = game.window.document.querySelector('.js-guess-button');
     assert.equal(button.textContent,guessLabels[locale],`${locale}: game Guess button`);
     assert.equal(game.window.document.querySelector('#guess-input').getAttribute('placeholder'),locale === 'en' ? 'Element' : catalog.Element);
+    const stats = await browser(locale,false,false,'<html><body><span class="freeze-count">❄ <strong class="js-freeze-count">0 / 2</strong><small> freezes</small></span></body></html>');
+    const freezeCounter = stats.window.document.querySelector('.freeze-count');
+    assert.equal(freezeCounter.querySelector('small').textContent,' ' + (locale === 'en' ? 'freezes' : catalog.freezes),`${locale}: freeze balance label`);
+    assert.equal(freezeCounter.querySelector('strong').textContent,'0 / 2');
+    assert.ok(freezeCounter.textContent.startsWith('❄ '));
     button.textContent = 'GUESS';
     await new Promise(resolve=>setTimeout(resolve,0));
     assert.equal(button.textContent,guessLabels[locale],`${locale}: updated Guess button`);
@@ -127,5 +145,11 @@ async function translatedGuess(api) {
   assert.ok(offline.window.document.querySelector('#language-status').textContent);
   const unknown = await browser('unsupported');
   assert.equal(unknown.window.ElementleI18n.locale,'en');
-  console.log('All 6 languages: complete hints, names, placeholders, dynamic UI, settings, offline fallback, and progress preservation.');
+  const turkish = await browser('tr');
+  assert.equal(turkish.window.ElementleI18n.matchesElement(elements[52],'İYOT'),true);
+  assert.equal(turkish.window.ElementleI18n.matchesElement(elements[78],'altin'),true);
+  const polish = await browser('pl');
+  assert.equal(polish.window.ElementleI18n.matchesElement(elements[81],'OLOW'),true);
+  assert.equal(polish.window.ElementleI18n.matchesElement(elements[15],'SIARKA'),true);
+  console.log('All 8 languages: complete hints, names, placeholders, dynamic UI, settings, offline fallback, and progress preservation.');
 })().catch(error=>{console.error(error);process.exitCode=1;});
