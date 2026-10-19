@@ -1,4 +1,6 @@
 (() => {
+  const t = value => window.ElementleI18n?.t(value) ?? value;
+  const format = (source,...values) => window.ElementleI18n?.format(source,...values) ?? source.replace(/\{(\d+)\}/g,(_, n)=>String(values[Number(n)] ?? ''));
   const elements = new Map(JSON.parse(document.getElementById('analysis-elements').textContent).map(e => [e.number, e]));
   const $ = id => document.getElementById(id);
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
@@ -35,7 +37,7 @@
   reduced.addEventListener('change', () => { clearInterval(animation); animation = null; animateBot(state); });
   function speak(title, message, mood) {
     clearTimeout(idleTimer);
-    $('bot-title').textContent = title; $('bot-message').textContent = message;
+    $('bot-title').textContent = t(title); $('bot-message').textContent = t(message);
     animateBot(mood);
     if (mood !== 'thinking') idleTimer = setTimeout(animateIdle, 8500);
   }
@@ -91,7 +93,7 @@
       cell.classList.toggle('eliminated', eliminated);
       cell.classList.toggle('optimal', n === step.optimal);
       cell.classList.toggle('actual', n === step.guess);
-      cell.setAttribute('aria-label', `${elements.get(n).name}: ${eliminated ? 'eliminated' : 'possible answer'}${n === step.optimal ? ', suggested guess' : ''}${n === step.guess ? ', your guess' : ''}`);
+      cell.setAttribute('aria-label', format('{0}: {1}{2}{3}',elements.get(n).name,eliminated ? 'eliminated' : 'possible answer',n === step.optimal ? ', suggested guess' : '',n === step.guess ? ', your guess' : ''));
     });
     document.querySelectorAll('.guess-turn').forEach((button, i) => {
       button.classList.toggle('selected', i === turn);
@@ -105,23 +107,23 @@
     let title, message, mood;
     if (step.correct) {
       title = 'Discovery complete!'; mood = 'celebrate';
-      message = step.before.length === 1 ? `You followed the clues to ${guess.name}, the only remaining answer.` : `${guess.name} was the answer. Your guess had ${step.quality}/100 information quality before you saw the result.`;
+      message = step.before.length === 1 ? format('You followed the clues to {0}, the only remaining answer.',guess.name) : format('{0} was the answer. Your guess had {1}/100 information quality before you saw the result.',guess.name,step.quality);
     } else if (step.before.length === 1) {
       title = 'The clues already gave the answer.'; mood = 'confused';
-      message = `${optimal.name} (${optimal.symbol}, ${optimal.number}) was the only possible answer before this turn. ${guess.name} was already ruled out, so this guess scored 0/100. Guess ${optimal.name} to finish; no further information is needed.`;
+      message = format('{0} ({1}, {2}) was the only possible answer before this turn. {3} was already ruled out, so this guess scored 0/100. Guess {4} to finish; no further information is needed.',optimal.name,optimal.symbol,optimal.number,guess.name,optimal.name);
     } else if (step.quality < 45) {
       title = 'Let’s rethink that move.'; mood = 'confused';
-      message = `${guess.name} scored ${step.quality}/100 for information. ${step.possible ? '' : 'It was already ruled out as an answer. '}${optimal.name} (${optimal.symbol}, ${optimal.number}) would offer ${step.optimalBits} expected bits, versus ${step.expectedBits}.`;
+      message = format('{0} scored {1}/100 for information. {2}{3} ({4}, {5}) would offer {6} expected bits, versus {7}.',guess.name,step.quality,step.possible ? '' : t('It was already ruled out as an answer.')+' ',optimal.name,optimal.symbol,optimal.number,step.optimalBits,step.expectedBits);
     } else if (step.quality >= 90) {
       title = 'A sharp choice.'; mood = 'explain';
-      message = `${guess.name} scored ${step.quality}/100, narrowing ${step.before.length} answers to ${step.after.length}. ${step.guess === step.optimal ? 'That was my optimal guess, too.' : `${optimal.name} (${optimal.symbol}, ${optimal.number}) was my suggested guess at ${step.optimalBits} expected bits.`}`;
+      message = format('{0} scored {1}/100, narrowing {2} answers to {3}. {4}',guess.name,step.quality,step.before.length,step.after.length,step.guess === step.optimal ? t('That was my optimal guess, too.') : format('{0} ({1}, {2}) was my suggested guess at {3} expected bits.',optimal.name,optimal.symbol,optimal.number,step.optimalBits));
     } else {
       title = 'You’re gathering useful clues.'; mood = 'encourage';
-      message = `${guess.name} scored ${step.quality}/100 and left ${step.after.length} possible answers. Try ${optimal.name} (${optimal.symbol}, ${optimal.number}) here for ${step.optimalBits} expected bits, versus ${step.expectedBits}.`;
+      message = format('{0} scored {1}/100 and left {2} possible answers. Try {3} ({4}, {5}) here for {6} expected bits, versus {7}.',guess.name,step.quality,step.after.length,optimal.name,optimal.symbol,optimal.number,step.optimalBits,step.expectedBits);
     }
-    if (step.correct) message += step.guess === step.optimal ? ' That was my optimal guess, too.' : ` My suggested guess before this turn was ${optimal.name} (${optimal.symbol}, ${optimal.number}), at ${step.optimalBits} expected bits.`;
-    if (!step.before.includes(step.optimal)) message += ' My suggestion is an information probe, even though it cannot be the answer.';
-    if (step.hintAvailable) message += ' Your hint was available at this turn.';
+    if (step.correct) message += ' '+(step.guess === step.optimal ? t('That was my optimal guess, too.') : format('My suggested guess before this turn was {0} ({1}, {2}), at {3} expected bits.',optimal.name,optimal.symbol,optimal.number,step.optimalBits));
+    if (!step.before.includes(step.optimal)) message += ' '+t('My suggestion is an information probe, even though it cannot be the answer.');
+    if (step.hintAvailable) message += ' '+t('Your hint was available at this turn.');
     speak(title, message, mood);
   }
   function select(index) { turn = index; before = false; render(); }
@@ -135,7 +137,7 @@
   });
   function display(data) {
     const mode = data.mode || 'daily';
-    $('analysis-context').textContent = (mode === 'archive' ? 'YOUR ARCHIVE GAME' : mode === 'freeplay' ? 'YOUR FREEPLAY GAME' : 'YOUR DAILY GAME') + ' / ANALYSIS';
+    $('analysis-context').textContent = format('{0} / ANALYSIS',mode === 'archive' ? 'YOUR ARCHIVE GAME' : mode === 'freeplay' ? 'YOUR FREEPLAY GAME' : 'YOUR DAILY GAME');
     $('analysis-back').href = mode === 'archive' ? '/?mode=archive&date=' + data.archiveDate : mode === 'freeplay' ? '/?mode=freeplay' : '/';
     result = data; turn = 0; before = false;
     const labels = { rating:'Game Rating', efficiency:'Guess efficiency', information:'Information gain', independence:'Independence' };
@@ -171,7 +173,7 @@
       button.addEventListener('click', () => select(index)); li.append(button); return li;
     }));
     const answer = elements.get(data.answer);
-    $('analysis-result').textContent = `${data.won ? 'Solved' : 'Answer'}: ${answer.name} (${answer.symbol}) · ${data.steps.length}/8 guesses`;
+    $('analysis-result').textContent = format('{0}: {1} ({2}) · {3}/8 guesses',data.won ? 'Solved' : 'Answer',answer.name,answer.symbol,data.steps.length);
     $('analysis-scores').hidden = false;
     $('analysis-content').hidden = false; render();
   }
@@ -219,5 +221,5 @@
     }
   }
   $('analysis-retry').addEventListener('click', load);
-  load();
+  Promise.resolve(window.ElementleI18n?.ready).then(load);
 })();

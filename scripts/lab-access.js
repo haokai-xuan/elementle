@@ -122,7 +122,7 @@
     gate.dataset.state = state;
     gate.querySelector('#lab-access-title').textContent = state === 'checking' ? 'Checking your Lab access…' : state === 'error' ? 'Unable to verify membership' : 'A Lab subscription is required';
     gate.querySelector('.lab-access-box').setAttribute('aria-busy', String(state === 'checking'));
-    gate.querySelector('#lab-access-description').textContent = state === 'checking' ? 'Your membership will be verified in a moment.' : state === 'error' ? 'We couldn’t check your subscription. Retry to access this feature.' : `${labels[feature]} ${feature === 'archive' ? 'are' : 'is'} included with Elementle Lab. Subscribe to unlock this feature and more.`;
+    gate.querySelector('#lab-access-description').textContent = state === 'checking' ? 'Your membership will be verified in a moment.' : state === 'error' ? 'We couldn’t check your subscription. Retry to access this feature.' : `${labels[feature]}: included with Elementle Lab. Subscribe to unlock this feature and more.`;
     gate.querySelector('.lab-access-subscribe').href = '/lab?feature=' + encodeURIComponent(feature);
     gate.querySelector('.lab-access-subscribe').hidden = state !== 'required';
     gate.querySelector('.lab-access-retry').hidden = state !== 'error';

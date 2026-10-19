@@ -18,7 +18,7 @@ const result = { answer:118, won:true, hintUsed:false, referenceGuesses:4, refer
   {guess:26,optimal:26,before:[26,118],after:[118],quality:100,feedback:['gray','gray','up','diff'],expectedBits:1,optimalBits:1,correct:false,possible:true},
   {guess:118,optimal:118,before:[118],after:[118],quality:100,feedback:['green','green','same','same'],expectedBits:0,optimalBits:0,correct:true,possible:true}
 ]};
-async function run({fail=false,token=null,missing=false,rating=91,knownMistake=false,idleChance=1,reducedMotion=false,deferReveal=false,elELO=null,gameId=null,mode='daily',localGameId=null,owner=token}={}) {
+async function run({i18n=null,steps=null,answer=result.answer,fail=false,token=null,missing=false,rating=91,knownMistake=false,idleChance=1,reducedMotion=false,deferReveal=false,elELO=null,gameId=null,mode='daily',localGameId=null,owner=token}={}) {
   const ids = new Map(), cells = data.map(e => { const n = new Node(); n.dataset={number:String(e.number)}; return n; });
   const get = id => { if(!ids.has(id)) ids.set(id,new Node()); return ids.get(id); };
   get('analysis-elements').textContent = JSON.stringify(data);
@@ -26,7 +26,7 @@ async function run({fail=false,token=null,missing=false,rating=91,knownMistake=f
   const delays = [];
   const timers = new Map(), intervals = new Map();
   const context = {
-    window:{innerWidth:390},
+    window:{innerWidth:390,ElementleI18n:i18n},
     document:{hidden:false, getElementById:get, createElement:()=>new Node(), addEventListener(){}, querySelectorAll:selector=>selector==='.periodic-cell' ? cells : get('analysis-guesses').children.map(li=>li.children[0])},
     Math:Object.assign(Object.create(Math),{random:()=>chance}),
     matchMedia:()=>({matches:reducedMotion,addEventListener(){}}), Image:class{},
@@ -36,7 +36,7 @@ async function run({fail=false,token=null,missing=false,rating=91,knownMistake=f
     URLSearchParams,location:{search:localGameId ? '?mode=freeplay&localGameId='+localGameId : gameId ? '?gameId='+gameId : '?date=20261008'},AbortSignal,
     localStorage:{getItem:key=>key==='elementle_token' ? token : null},
     sessionStorage:{getItem:()=>missing ? null : JSON.stringify(localGameId ? {id:localGameId,owner,freeplay:{atomicNumber:118,guesses:[1,26,118],hintUsed:false,hintAt:null}} : {localDate:'20261008',guesses:[1,26,118],hintUsed:false,hintAt:0})},
-    fetch:async(url,options)=>{ request={url,options}; return {ok:!fail,json:async()=>fail ? {error:'Service offline'} : {...result,mode,archiveDate:20261007,elELO,scores:{...result.scores,rating},steps:knownMistake ? result.steps.map((step,i)=>i===1 ? {...step,before:[118],guess:32,optimal:118,quality:0,possible:false,expectedBits:0,optimalBits:0} : step) : result.steps}}; }
+    fetch:async(url,options)=>{ request={url,options}; return {ok:!fail,json:async()=>fail ? {error:'Service offline'} : {...result,answer,mode,archiveDate:20261007,elELO,scores:{...result.scores,rating},steps:steps || (knownMistake ? result.steps.map((step,i)=>i===1 ? {...step,before:[118],guess:32,optimal:118,quality:0,possible:false,expectedBits:0,optimalBits:0} : step) : result.steps)}}; }
   };
   vm.runInNewContext(fs.readFileSync(require.resolve('./analysis.js'),'utf8'),context);
   await new Promise(resolve=>setImmediate(resolve));
@@ -46,7 +46,8 @@ async function run({fail=false,token=null,missing=false,rating=91,knownMistake=f
   }
   return {get,cells,request,delays,setChance:value=>{chance=value;},fireTimer:()=>{const [id,fn]=timers.entries().next().value;timers.delete(id);fn();},fireFrame:()=>intervals.values().next().value()};
 }
-(async()=>{
+module.exports = {run,result};
+if (require.main === module) (async()=>{
   for (const [chance,delay] of [[0,3000],[.5,5000],[1,7000]]) {
     const thinking = await run({idleChance:chance,deferReveal:true});
     assert.equal(thinking.delays[0],delay);

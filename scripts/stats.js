@@ -424,7 +424,7 @@ function initializeCommunityDistribution(root, period) {
     const day = getLocalDay(isToday ? 0 : -1);
     requestedDay = day.key;
     const id = ++requestId;
-    dateLabel.textContent = day.label + ' · All players · X = unsuccessful';
+    dateLabel.textContent = window.ElementleI18n?.format('{0} · All players · X = unsuccessful',day.label) ?? day.label + ' · All players · X = unsuccessful';
     status.textContent = 'Loading results…';
     status.classList?.add('stats-loading-indicator');
     section.setAttribute?.('aria-busy','true');
@@ -465,7 +465,7 @@ function initializeCommunityDistribution(root, period) {
       }
     } catch {
       if (id !== requestId) return;
-      status.textContent = 'Could not load ' + (isToday ? 'today’s' : 'yesterday’s') + ' results.';
+      status.textContent = `Could not load ${isToday ? 'today’s' : 'yesterday’s'} results.`;
       retry.hidden = false;
     } finally {
       if (id === requestId) {status.classList?.remove('stats-loading-indicator');section.setAttribute?.('aria-busy','false');}

@@ -2667,3 +2667,27 @@ body.modal-open {
 @media(prefers-reduced-motion:reduce) { .reveal-answer { animation:none; } }
 
 @media(max-width:600px) { .popup { top:max(16px,env(safe-area-inset-top)); padding:12px 16px; font-size:1rem; line-height:1.4; } }
+
+/* Arabic text flows right to left; chemical symbols and scientific grids do not. */
+html[dir="rtl"] .home-logo,
+html[dir="rtl"] .grid-container,
+html[dir="rtl"] .periodic-table,
+html[dir="rtl"] .cell-symbol,
+html[dir="rtl"] .symbol,
+html[dir="rtl"] .reveal-answer-symbol,
+html[dir="rtl"] .atomic-number,
+html[dir="rtl"] input[type="email"],
+html[dir="rtl"] input[type="password"],
+html[dir="rtl"] .auth-account-email { direction: ltr; unicode-bidi: isolate; }
+html[dir="rtl"] .cell-name { direction: rtl; }
+html[dir="rtl"] .auth-label { letter-spacing: normal; }
+html[dir="rtl"] .help-article,
+html[dir="rtl"] .account-billing,
+html[dir="rtl"] .elo-help-tooltip,
+html[dir="rtl"] .elelo-tiers li,
+html[dir="rtl"] .elelo-tiers li span,
+html[dir="rtl"] .elelo-tiers small,
+html[dir="rtl"] .element-properties caption,
+html[dir="rtl"] .element-properties th,
+html[dir="rtl"] .element-properties td,
+html[dir="rtl"] .guess-turn { text-align: start; }

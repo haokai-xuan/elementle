@@ -376,6 +376,7 @@ document.body.addEventListener('click', () => {
 });
 
 document.body.addEventListener('keydown', (event) => {
+  if (event.isComposing || event.keyCode === 229) return;
   if (event.key === 'Enter'){
     if (event.target.closest('button, a, textarea, [contenteditable="true"]')) return;
       if (document.querySelector('.autocomplete-list')) {
@@ -963,6 +964,7 @@ function updateAcHighlight() {
 }
 
 inputElement.addEventListener('keydown', (e) => {
+  if (e.isComposing || e.keyCode === 229) return;
   const listEl = document.querySelector('.autocomplete-list');
   if (!listEl) return;
   const btns = listEl.querySelectorAll('button');
@@ -1328,7 +1330,7 @@ function displayResults() {
     if (!document.querySelector('.js-analysis-button')) {
       const button = document.createElement('button');
       button.className = 'share-button js-analysis-button';
-      button.innerHTML = '<img class="analysis-button-icon" src="/images/elbot_frames/idle_01.png" width="24" height="24" alt="" aria-hidden="true"><span>Analyze with el<span class="elbot-brand">B</span>ot</span>';
+      button.innerHTML = '<img class="analysis-button-icon" src="/images/elbot_frames/idle_01.png" width="24" height="24" alt="" aria-hidden="true"><span data-i18n="Analyze with elBot">Analyze with <span translate="no">el<span class="elbot-brand">B</span>ot</span></span>';
       button.addEventListener('click', async () => {
         button.disabled = true;
         if (playMode === 'freeplay') {
