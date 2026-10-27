@@ -300,7 +300,7 @@ async function loadLeaderboard(root) {
       return `
         <li class="leaderboard-row${rankClass}${currentUserClass}" style="--row-i: ${index}"${isCurrentUser ? ' aria-current="true"' : ''}>
           <div class="leaderboard-rank">${rank}</div>
-          <div class="leaderboard-username"><span class="leaderboard-name-text">${escapeHtmlText(username)}</span>${isLab === true ? '<img class="leaderboard-lab-icon" src="/images/lab_icon.png" width="18" height="18" alt="Elementle Lab member" title="Elementle Lab member">' : ''}</div>
+          <div class="leaderboard-username"><span class="leaderboard-name-text">${escapeHtmlText(username)}</span>${isLab === true ? '<img class="leaderboard-lab-icon" src="/images/lab_icon-216.webp" width="18" height="18" alt="Elementle Lab member" title="Elementle Lab member">' : ''}</div>
           <div class="leaderboard-streak"><i class="fa-solid fa-fire"></i>${streak}</div>
         </li>
       `;

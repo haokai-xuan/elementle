@@ -1330,7 +1330,7 @@ function displayResults() {
     if (!document.querySelector('.js-analysis-button')) {
       const button = document.createElement('button');
       button.className = 'share-button js-analysis-button';
-      button.innerHTML = '<img class="analysis-button-icon" src="/images/elbot_frames/idle_01.png" width="24" height="24" alt="" aria-hidden="true"><span data-i18n="Analyze with elBot">Analyze with <span translate="no">el<span class="elbot-brand">B</span>ot</span></span>';
+      button.innerHTML = '<img class="analysis-button-icon" src="/images/elbot_frames/idle_01.webp" width="24" height="24" alt="" aria-hidden="true"><span data-i18n="Analyze with elBot">Analyze with <span translate="no">el<span class="elbot-brand">B</span>ot</span></span>';
       button.addEventListener('click', async () => {
         button.disabled = true;
         if (playMode === 'freeplay') {

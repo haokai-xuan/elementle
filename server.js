@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const express = require('express');
+const compression = require('compression');
 const path = require('path');
 const { readPage } = require('./lib/page-template');
 
@@ -10,6 +11,8 @@ const port = process.env.PORT || 3000;
 const API_BASE_URL = (process.env.API_BASE_URL || 'http://127.0.0.1:8000').replace(/\/$/, '');
 const API_KEY = process.env.API_KEY || '';
 
+// Compress text (including generated pages and JSON) before it leaves Railway.
+app.use(compression());
 app.use(express.json());
 require('./lib/social-auth')(app, { apiBaseUrl: API_BASE_URL, apiKey: API_KEY });
 require('./lib/lab-proxy')(app, { apiBaseUrl: API_BASE_URL, apiKey: API_KEY });
@@ -36,7 +39,20 @@ app.get('/analysis', (req, res) => res.type('html').send(analysisPage));
 const gameHistoryPage = require('./lib/game-history-page')(__dirname);
 app.get('/game-history', (req, res) => res.type('html').send(gameHistoryPage));
 
-app.use(express.static(path.join(__dirname)));
+// Images can be reused across visits. Keep code and catalogs revalidated so a
+// deployment never leaves clients running an older game against a newer API.
+for (const directory of ['images', 'styles', 'scripts', 'data']) {
+  app.use(`/${directory}`, express.static(path.join(__dirname, directory), {
+    maxAge: directory === 'images' ? '1d' : 0,
+    index: false
+  }));
+}
+// Only public documents belong at the root; don't serve the repository itself.
+const publicDocuments = new Set(['reset.html', 'verify.html', 'ads.txt', 'robots.txt', 'sitemap.xml']);
+app.use((req, res, next) => {
+  if (!publicDocuments.has(req.path.slice(1))) return next();
+  return express.static(__dirname, { index: false })(req, res, next);
+});
 
 const elementPages = require('./lib/element-pages').createElementPages(__dirname);
 app.get('/elements', (req, res) => res.type('html').send(elementPages.overview));

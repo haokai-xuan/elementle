@@ -31,7 +31,7 @@
         <p class="game-result-rating-note"></p>
       </div>
       <a class="game-result-view" href="#" hidden>View guesses</a>
-      <a class="game-result-analysis" href="#"><img src="/images/elbot_frames/idle_01.png" width="28" height="28" alt="">Analyze with elBot</a>
+      <a class="game-result-analysis" href="#"><img src="/images/elbot_frames/idle_01.webp" width="28" height="28" alt="">Analyze with elBot</a>
       <button type="button" class="game-result-close">Close</button>
     </div>`;
     const node = selector => dialog.querySelector(selector);

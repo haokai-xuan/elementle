@@ -3,9 +3,9 @@
 (() => {
   'use strict';
   const KEY = 'elementle_language';
-  const languages = {en:'English', fr:'Français', es:'Español', de:'Deutsch', pt:'Português', nl:'Nederlands', tr:'Türkçe', pl:'Polski', sv:'Svenska', sr:'Српски', ru:'Русский', ar:'العربية الفصحى', vi:'Tiếng Việt', zh:'简体中文', ko:'한국어', ja:'日本語'};
+  const languages = {en:'English', fr:'Français', es:'Español', de:'Deutsch', pt:'Português', nl:'Nederlands', tr:'Türkçe', pl:'Polski', sv:'Svenska', sr:'Српски', ru:'Русский', ar:'العربية الفصحى', vi:'Tiếng Việt', zh:'简体中文', ko:'한국어', ja:'日本語', it:'Italiano'};
   const languageOptions = Object.entries(languages).sort(([,a],[,b]) => a.localeCompare(b, 'en', {sensitivity:'base'}));
-  const flags = {en:'🇬🇧', fr:'🇫🇷', es:'🇪🇸', de:'🇩🇪', pt:'🇧🇷', nl:'🇳🇱', tr:'🇹🇷', pl:'🇵🇱', sv:'🇸🇪', sr:'🇷🇸', ru:'🇷🇺', ar:'🇸🇦', vi:'🇻🇳', zh:'🇨🇳', ko:'🇰🇷', ja:'🇯🇵'};
+  const flags = {en:'🇬🇧', fr:'🇫🇷', es:'🇪🇸', de:'🇩🇪', pt:'🇧🇷', nl:'🇳🇱', tr:'🇹🇷', pl:'🇵🇱', sv:'🇸🇪', sr:'🇷🇸', ru:'🇷🇺', ar:'🇸🇦', vi:'🇻🇳', zh:'🇨🇳', ko:'🇰🇷', ja:'🇯🇵', it:'🇮🇹'};
   const normalize = value => String(value).normalize('NFD').replace(/[\u0300-\u036f\u0640\u064b-\u065f\u0670]/g, '').toLowerCase().replace(/ı/g, 'i').replace(/ł/g, 'l').replace(/đ/g, 'd').trim();
   let locale = 'en';
   try { const saved = localStorage.getItem(KEY); if (Object.hasOwn(languages, saved)) locale = saved; } catch {}

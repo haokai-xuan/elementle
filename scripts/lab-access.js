@@ -88,7 +88,7 @@
       gate = document.createElement('div');
       gate.className = 'lab-access-gate';
       gate.innerHTML = `<section class="lab-access-box" role="dialog" aria-modal="true" aria-labelledby="lab-access-title" aria-describedby="lab-access-description" tabindex="-1">
-        <img src="/images/lab_icon.png" width="64" height="64" alt="">
+        <img src="/images/lab_icon-216.webp" width="64" height="64" alt="">
         <p class="lab-access-eyebrow">ELEMENTLE LAB</p>
         <h2 id="lab-access-title"></h2><p id="lab-access-description"></p>
         <a class="lab-access-subscribe" href="/lab">Explore Elementle Lab →</a>

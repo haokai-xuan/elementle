@@ -23,13 +23,13 @@ async function run({i18n=null,steps=null,answer=result.answer,fail=false,token=n
   const get = id => { if(!ids.has(id)) ids.set(id,new Node()); return ids.get(id); };
   get('analysis-elements').textContent = JSON.stringify(data);
   let request, chance = idleChance, timerId = 0;
-  const delays = [];
+  const delays = [], loadedImages = [];
   const timers = new Map(), intervals = new Map();
   const context = {
     window:{innerWidth:390,ElementleI18n:i18n},
     document:{hidden:false, getElementById:get, createElement:()=>new Node(), addEventListener(){}, querySelectorAll:selector=>selector==='.periodic-cell' ? cells : get('analysis-guesses').children.map(li=>li.children[0])},
     Math:Object.assign(Object.create(Math),{random:()=>chance}),
-    matchMedia:()=>({matches:reducedMotion,addEventListener(){}}), Image:class{},
+    matchMedia:()=>({matches:reducedMotion,addEventListener(){}}), Image:class{set src(value){this._src=value;loadedImages.push(value);}get src(){return this._src;}},
     setInterval:fn=>{const id=++timerId;intervals.set(id,fn);return id;},clearInterval:id=>intervals.delete(id),
     performance:{now:()=>0},
     setTimeout:(fn,ms)=>{delays.push(ms);const id=++timerId;timers.set(id,fn);return id;},clearTimeout:id=>timers.delete(id),
@@ -44,10 +44,16 @@ async function run({i18n=null,steps=null,answer=result.answer,fail=false,token=n
     const [id,fn] = timers.entries().next().value; timers.delete(id); fn();
     await new Promise(resolve=>setImmediate(resolve));
   }
-  return {get,cells,request,delays,setChance:value=>{chance=value;},fireTimer:()=>{const [id,fn]=timers.entries().next().value;timers.delete(id);fn();},fireFrame:()=>intervals.values().next().value()};
+  return {get,cells,request,delays,loadedImages,setChance:value=>{chance=value;},fireTimer:()=>{const [id,fn]=timers.entries().next().value;timers.delete(id);fn();},fireFrame:()=>intervals.values().next().value()};
 }
 module.exports = {run,result};
 if (require.main === module) (async()=>{
+  const lazy = await run({deferReveal:true});
+  assert.equal(lazy.loadedImages.length,3);
+  assert.ok(lazy.loadedImages.every(src=>/thinking_0[123]\.webp$/.test(src)));
+  const still = await run({reducedMotion:true,deferReveal:true});
+  assert.equal(still.loadedImages.length,0);
+  assert.match(still.get('bot-frame').src,/thinking_01\.webp$/);
   for (const [chance,delay] of [[0,3000],[.5,5000],[1,7000]]) {
     const thinking = await run({idleChance:chance,deferReveal:true});
     assert.equal(thinking.delays[0],delay);

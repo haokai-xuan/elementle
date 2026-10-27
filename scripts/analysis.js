@@ -7,15 +7,20 @@
   const states = { idle:3, reading:5, thinking:3, explain:3, encourage:2, celebrate:3, confused:2 };
   const frames = {};
   let state = '', frame = 0, animation, idleTimer, result, turn = 0, before = false, requestId = 0;
-  for (const [name, count] of Object.entries(states)) {
-    frames[name] = Array.from({length:count}, (_,i) => {
-      const img = new Image(); img.src = `/images/elbot_frames/${name}_0${i+1}.png`; return img;
+  function loadFrames(name) {
+    if (frames[name]) return frames[name];
+    frames[name] = Array.from({length:states[name]}, (_,i) => {
+      const img = new Image(); img.src = `/images/elbot_frames/${name}_0${i+1}.webp`; return img;
     });
+    return frames[name];
   }
   function animateBot(next) {
     if (state === next && animation) return;
     state = next; frame = 0; clearInterval(animation);
-    $('bot-frame').src = frames[state][0].src;
+    // Fetch only the moods actually shown during this visit. Reduced-motion
+    // users need just the first frame, with no hidden animation downloads.
+    $('bot-frame').src = `/images/elbot_frames/${state}_01.webp`;
+    if (!reduced.matches && !document.hidden) loadFrames(state);
     if (!reduced.matches && !document.hidden) animation = setInterval(() => {
       frame = (frame + 1) % frames[state].length;
       $('bot-frame').src = frames[state][frame].src;
@@ -27,7 +32,7 @@
     const reading = !reduced.matches && Math.random() < .5;
     animateBot(reading ? 'reading' : 'idle');
     // Let the five reading frames play twice, then pick another idle activity.
-    idleTimer = setTimeout(animateIdle, reading ? 420 * frames.reading.length * 2 : 10000);
+    idleTimer = setTimeout(animateIdle, reading ? 420 * states.reading * 2 : 10000);
   }
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) { clearInterval(animation); animation = null; clearTimeout(idleTimer); }

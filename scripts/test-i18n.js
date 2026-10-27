@@ -5,9 +5,9 @@ const {parseHTML} = require('linkedom');
 const elements = require('../data/elements');
 const {run:runAnalysis,result:analysisResult} = require('./test-analysis');
 const source = fs.readFileSync(__dirname+'/i18n.js','utf8');
-const codes = ['en','fr','es','de','pt','nl','tr','pl','sv','sr','ru','ar','vi','zh','ko','ja'];
-const guessLabels = {en:'GUESS', fr:'DEVINER', es:'ADIVINAR', de:'RATEN', pt:'ADIVINHAR', nl:'RADEN', tr:'TAHMİN ET', pl:'ZGADNIJ', sv:'GISSA', sr:'ПОГОДИ', ru:'УГАДАТЬ', ar:'خمّن', vi:'ĐOÁN', zh:'猜测', ko:'추측', ja:'回答'};
-const languageLabels = {en:'🇬🇧 English', fr:'🇫🇷 Français', es:'🇪🇸 Español', de:'🇩🇪 Deutsch', pt:'🇧🇷 Português', nl:'🇳🇱 Nederlands', tr:'🇹🇷 Türkçe', pl:'🇵🇱 Polski', sv:'🇸🇪 Svenska', sr:'🇷🇸 Српски', ru:'🇷🇺 Русский', ar:'🇸🇦 العربية الفصحى', vi:'🇻🇳 Tiếng Việt', zh:'🇨🇳 简体中文', ko:'🇰🇷 한국어', ja:'🇯🇵 日本語'};
+const codes = ['en','fr','es','de','pt','nl','tr','pl','sv','sr','ru','ar','vi','zh','ko','ja','it'];
+const guessLabels = {en:'GUESS', fr:'DEVINER', es:'ADIVINAR', de:'RATEN', pt:'ADIVINHAR', nl:'RADEN', tr:'TAHMİN ET', pl:'ZGADNIJ', sv:'GISSA', sr:'ПОГОДИ', ru:'УГАДАТЬ', ar:'خمّن', vi:'ĐOÁN', zh:'猜测', ko:'추측', ja:'回答', it:'INDOVINA'};
+const languageLabels = {en:'🇬🇧 English', fr:'🇫🇷 Français', es:'🇪🇸 Español', de:'🇩🇪 Deutsch', pt:'🇧🇷 Português', nl:'🇳🇱 Nederlands', tr:'🇹🇷 Türkçe', pl:'🇵🇱 Polski', sv:'🇸🇪 Svenska', sr:'🇷🇸 Српски', ru:'🇷🇺 Русский', ar:'🇸🇦 العربية الفصحى', vi:'🇻🇳 Tiếng Việt', zh:'🇨🇳 简体中文', ko:'🇰🇷 한국어', ja:'🇯🇵 日本語', it:'🇮🇹 Italiano'};
 async function browser(locale, denied = false, failFetch = false, html = '<!doctype html><html><head></head><body><main class="js-account-page"><p>Play</p><p class="auth-account-name">Gold</p></main><div id="dynamic"></div></body></html>') {
   const {window} = parseHTML(html);
   const saved = new Map([['elementle_language',locale],['guessesList',JSON.stringify([{name:'Gold',atomicNumber:79}])]]);
@@ -297,7 +297,8 @@ if (require.main === module) (async()=>{
     ['vi','Sắt','oxy','Ôxy'],
     ['zh','铁','氧','氧'],
     ['ko','철','산','산소'],
-    ['ja','鉄','酸','酸素']
+    ['ja','鉄','酸','酸素'],
+    ['it','Ferro','ossi','Ossigeno']
   ]) {
     const {window} = await browser(locale);
     const api = window.ElementleI18n;
@@ -323,7 +324,8 @@ if (require.main === module) (async()=>{
     ['vi','Thủy ngân','Chì','Thiếc'],
     ['zh','汞','铅','锡'],
     ['ko','수은','납','주석'],
-    ['ja','水銀','鉛','スズ']
+    ['ja','水銀','鉛','スズ'],
+    ['it','Mercurio','Piombo','Stagno']
   ]) {
     const {catalog} = await browser(locale);
     assert.equal(catalog.Mercury,mercury,`${locale}: chemical mercury, not the planet`);
