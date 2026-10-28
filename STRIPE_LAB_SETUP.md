@@ -41,7 +41,7 @@ For fully local testing, start the API on port 8000 and set the website's `API_B
 
 - Sign in to a test Elementle account and visit `/lab`. Checkout must show a 7-day trial and exactly the selected recurring price, with a payment method collected. Use Stripe's documented test card `4242 4242 4242 4242`, any future expiry, and any CVC in test mode only.
 - Return from checkout and confirm the account shows **Lab free trial active**. A signed webhook or the authenticated status refresh grants access; the success URL alone cannot grant membership.
-- Confirm archives, freeplay, vault, and elBot analysis work, the freeze capacity is 2, and the browser makes no Mediavine ad-script request. Guests and free accounts should receive 401/402 on protected API endpoints and have one freeze slot.
+- Confirm archives, freeplay, vault, and elBot analysis work, the freeze capacity is 2, and the source contains Mediavine’s all-ads blocklist setting before its static script (the wrapper loads, but subscriber ads stay disabled). Guests and free accounts should receive 401/402 on protected API endpoints and have one freeze slot.
 - Reopen Checkout while subscribed: the API must direct you to manage the existing subscription. Repeated checkout clicks reuse an open session; changing plans expires the old session.
 - Cancel through Manage subscription and verify the cancellation date. Test immediate cancellation in Stripe too: access must be revoked. Test trial expiry and failed payments with Stripe test clocks where applicable. On the first failed invoice, confirm Lab and its two freeze slots remain active for three days, and a comprehensive branded email is queued/delivered. Advance the clock to the configured retry, simulate failure, and confirm access and capacity are reduced; settle the invoice and confirm access is restored. Check that recovery before the retry and older failure events cannot reopen a grace window or remove paid access. Resubscribing to the same account must not grant another trial.
 - Replay a webhook: it should return 200 without double-processing. Deliver an older event after a newer one: current Stripe state must win. Tampered or unsigned webhooks must return 400. Check Workbench for successful deliveries.
@@ -136,7 +136,7 @@ loading of Stripe's own hosted page after redirect.
 
 ## Daily game membership lookup
 
-Ordinary daily-game loading does not call `/api/billing/status`, and focus or
+The daily-game browser bootstrap does not call `/api/billing/status`, and focus or
 visibility changes on the daily page do not start a membership request. The page
 uses a valid existing cache or waits for the existing game response. Its
 server-provided freeze capacity supplies the access flag (two for Lab, one for
@@ -147,5 +147,9 @@ This access-only cache lasts at most 30 seconds and can be used by paid-feature
 gates. Account and Lab billing views do not reuse an access-only entry as billing
 details; they retrieve the full saved status. Explicit billing changes from
 another tab and paid-feature denials still invalidate/recheck membership. While
-membership is unknown, a signed-in daily page holds ads until the game response
-confirms whether they should load. Backend paid-feature authorization is unchanged.
+membership is unknown, ads stay disabled. Separately, the frontend server reads a signed 60-second ad-status cookie locally
+without contacting billing during HTML delivery. Unknown or expired signed-in
+sessions start ad-free, and `/api/ad-session` verifies membership in the background
+after DOM readiness. A newly confirmed free visitor gets one reload to enable ads;
+subscribers and routine successful refreshes do not reload. Verified upgrades force
+a refresh; other external changes can remain cached for up to 60 seconds. Backend paid-feature authorization is unchanged.

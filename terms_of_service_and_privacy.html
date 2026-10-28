@@ -60,8 +60,10 @@
     <h2>Browser storage</h2>
     <p>Elementle uses browser local storage and session storage to remember game progress, sign-up reminder preferences, cached statistics, analysis context and interface state on the device you use. For example, this can include submitted guesses, the number of guesses, whether a puzzle is complete and, after sign-in, a session token. Local storage remains on your device until it is cleared by you, your browser or the site. Clearing it can reset local game progress or sign you out, but it does not delete server-side account history or cancel a Stripe subscription.</p>
 
+    <p>A secure, HttpOnly cookie lets the server check your membership and disable subscriber ads before sending a page. It lasts up to 30 days and is cleared on logout.</p>
+
     <h2 id="advertising-and-cookies">Advertising, analytics and cookies</h2>
-    <p>Elementle uses Mediavine to manage advertising for free users. The advertising script is loaded only after checking signed-in membership; verified Lab members do not load it.</p>
+    <p>Elementle uses Mediavine for advertising. Its script loads on every page. Ads are disabled for Lab members and signed-in visitors whose membership cannot be verified.</p>
     <p>Elementle uses Google Analytics to understand use of the site. Google may process browser and device information, identifiers, IP addresses and site activity as described in its <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer">Partner Sites policy</a> and <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.</p>
     <p>Where available, use the Manage Preferences link provided by Mediavine in the footer of an advertising-enabled page to review or change advertising consent. Advertising controls are available on pages where the advertising script has loaded. Browser cookie controls also let you block or delete cookies. Advertising consent choices do not necessarily control separate services such as Google Analytics.</p>
     <h3>Mediavine Programmatic Advertising (Ver 1.1)</h3>

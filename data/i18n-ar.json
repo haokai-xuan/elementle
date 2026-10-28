@@ -2172,5 +2172,7 @@
   "{0}: included with Elementle Lab. Subscribe to unlock this feature and more.": "{0}: متضمن مع Elementle Lab. اشترك لفتح هذه الميزة وأكثر من ذلك.",
   "{0}. {1} ({2})": "{0}. {1} ({2})",
   "Meet elBot": "تعرّف على elBot",
-  "{0} · All players · X = unsuccessful": "{0} · جميع اللاعبين · X = غير ناجح"
+  "{0} · All players · X = unsuccessful": "{0} · جميع اللاعبين · X = غير ناجح",
+  "Elementle uses Mediavine for advertising. Its script loads on every page. Ads are disabled for Lab members and signed-in visitors whose membership cannot be verified.": "يستخدم Elementle خدمة Mediavine للإعلانات. يتم تحميل البرنامج النصي الخاص بها في كل صفحة. تُعطَّل الإعلانات لأعضاء Lab وللزوار المسجلين الذين يتعذر التحقق من عضويتهم.",
+  "A secure, HttpOnly cookie lets the server check your membership and disable subscriber ads before sending a page. It lasts up to 30 days and is cleared on logout.": "يسمح ملف تعريف ارتباط آمن من نوع HttpOnly للخادم بالتحقق من عضويتك وتعطيل إعلانات المشتركين قبل إرسال الصفحة. يستمر لمدة تصل إلى 30 يومًا ويُحذف عند تسجيل الخروج."
 }

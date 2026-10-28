@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const source = fs.readFileSync(__dirname + '/lab-access.js', 'utf8');
-async function run({ token = null, status = {isLab:false}, path = '/', mode = '', hash = '', failure = false, cache = new Map(), now = () => Date.now(), search = '', deferred = false, beforeReady }) {
+async function run({ token = null, status = {isLab:false}, path = '/', mode = '', hash = '', failure = false, cache = new Map(), now = () => Date.now(), search = '', adsEnabled = false, adState, deferred = false, beforeReady }) {
   const events = {}, dom = {}, scripts = [], redirects = [], root = {dataset:{}};
   let requests=0, tick;
   let release;
@@ -23,6 +23,7 @@ async function run({ token = null, status = {isLab:false}, path = '/', mode = ''
     addEventListener(name,fn){dom[name]=fn;},querySelectorAll:()=>[],
     createElement:tag=>new Node(tag),head:{append:node=>{if(node.tagName==='SCRIPT')scripts.push(node);}}};
   const window = {
+    ElementleAds:{enabled:adsEnabled,state:adState,sync:async()=>{}},
     addEventListener(name,fn){ events[name]=fn; },
     setInterval(fn){tick=fn;},
     dispatchEvent(event){ events[event.type]?.(event); }
@@ -42,10 +43,10 @@ async function run({ token = null, status = {isLab:false}, path = '/', mode = ''
   return {window,scripts,redirects,get requests(){return requests;},tick,urls,cache,root,events,body,main,gate:body.children.find(node=>node.className==='lab-access-gate')};
 }
 (async()=>{
-  const guest=await run({});assert.equal(guest.requests,0);assert.equal(guest.scripts.length,1);
+  const guest=await run({});assert.equal(guest.requests,0);assert.equal(guest.scripts.length,0);
   const free=await run({token:'jwt',status:{isLab:false}});assert.equal(free.requests,0);assert.equal(free.scripts.length,0);
   free.events.focus();free.tick();await new Promise(resolve=>setImmediate(resolve));assert.equal(free.requests,0);
-  free.window.ElementleLab.consumeGame({streakFreezes:{capacity:1}});await new Promise(resolve=>setImmediate(resolve));assert.equal(free.scripts.length,1);
+  free.window.ElementleLab.consumeGame({streakFreezes:{capacity:1}});await new Promise(resolve=>setImmediate(resolve));assert.equal(free.scripts.length,0);
   const trial=await run({token:'jwt',status:{isLab:true,status:'trialing'}});assert.equal(trial.requests,0);
   trial.window.ElementleLab.consumeGame({streakFreezes:{capacity:2}});await new Promise(resolve=>setImmediate(resolve));assert.equal(trial.scripts.length,0);assert.equal(trial.root.dataset.lab,'active');
   const detailed=await run({token:'jwt',path:'/account',cache:trial.cache,status:{isLab:true,status:'trialing',plan:'monthly'}});assert.equal(detailed.requests,1);assert.equal(detailed.window.ElementleLab.status.plan,'monthly');
@@ -81,7 +82,15 @@ async function run({ token = null, status = {isLab:false}, path = '/', mode = ''
   access.isLab=false;await changed.window.ElementleLab.refresh();await new Promise(resolve=>setImmediate(resolve));
   assert.equal(changed.body.children.length,2);assert.equal(changed.main.inert,true);
   const lab=await run({path:'/lab'});assert.equal(lab.scripts.length,0);
-  free.events['elementle:auth-change']();assert.equal(free.redirects.at(-1),'reload');
+  const paidLab=await run({path:'/lab',token:'member',status:{isLab:true}});assert.equal(paidLab.scripts.length,0);
+  const enabled=await run({adsEnabled:true});
+  enabled.window.ElementleLab.consumeGame({streakFreezes:{capacity:2}}); // guests cannot assert membership
+  const upgrading=await run({token:'jwt',adsEnabled:true});
+  upgrading.window.ElementleLab.consumeGame({streakFreezes:{capacity:2}});
+  assert.equal(upgrading.window.ElementleLab.status.isLab,true);
+  assert.equal(upgrading.redirects.length,0); // The ad guard refreshes the signed cache before reloading.
+  guest.events.focus();await new Promise(resolve=>setImmediate(resolve));assert.equal(guest.scripts.length,0);
+  free.events['elementle:auth-change']();await new Promise(resolve=>setImmediate(resolve));assert.equal(free.redirects.at(-1),'reload');
   // Cache persists across navigation, expires from the original fetch, and is account-bound.
   const cache=new Map();let clock=100000;
   await run({token:'member',path:'/vault',status:{isLab:true},cache,now:()=>clock});

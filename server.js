@@ -14,6 +14,7 @@ const API_KEY = process.env.API_KEY || '';
 // Compress text (including generated pages and JSON) before it leaves Railway.
 app.use(compression());
 app.use(express.json());
+require('./lib/ad-session')(app, { apiBaseUrl: API_BASE_URL, apiKey: API_KEY });
 require('./lib/social-auth')(app, { apiBaseUrl: API_BASE_URL, apiKey: API_KEY });
 require('./lib/lab-proxy')(app, { apiBaseUrl: API_BASE_URL, apiKey: API_KEY });
 
@@ -39,6 +40,11 @@ app.get('/analysis', (req, res) => res.type('html').send(analysisPage));
 const gameHistoryPage = require('./lib/game-history-page')(__dirname);
 app.get('/game-history', (req, res) => res.type('html').send(gameHistoryPage));
 
+// Auth documents use the same head integration as every other page.
+for (const name of ['reset', 'verify']) {
+  app.get(`/${name}.html`, sendHtmlPage(name));
+}
+
 // Images can be reused across visits. Keep code and catalogs revalidated so a
 // deployment never leaves clients running an older game against a newer API.
 for (const directory of ['images', 'styles', 'scripts', 'data']) {
@@ -48,7 +54,7 @@ for (const directory of ['images', 'styles', 'scripts', 'data']) {
   }));
 }
 // Only public documents belong at the root; don't serve the repository itself.
-const publicDocuments = new Set(['reset.html', 'verify.html', 'ads.txt', 'robots.txt', 'sitemap.xml']);
+const publicDocuments = new Set(['ads.txt', 'robots.txt', 'sitemap.xml']);
 app.use((req, res, next) => {
   if (!publicDocuments.has(req.path.slice(1))) return next();
   return express.static(__dirname, { index: false })(req, res, next);

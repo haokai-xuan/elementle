@@ -6,9 +6,10 @@
     return localStorage.getItem(TOKEN_KEY);
   }
 
-  function setToken(token) {
+  async function setToken(token) {
     if (token) localStorage.setItem(TOKEN_KEY, token);
     else localStorage.removeItem(TOKEN_KEY);
+    try { await window.ElementleAds?.sync(); } catch {}
     window.dispatchEvent(new Event("elementle:auth-change"));
     if (token && (new URLSearchParams(location.search).get('returnTo') === '/lab' || sessionStorage.getItem('elementle_lab_return') === '1')) { sessionStorage.removeItem('elementle_lab_return'); location.assign('/lab'); }
   }
@@ -147,8 +148,8 @@
 
   function bindAuthEvents(root, loggedIn) {
     if (loggedIn) {
-      root.querySelector('.js-auth-logout')?.addEventListener('click', () => {
-        setToken(null);
+      root.querySelector('.js-auth-logout')?.addEventListener('click', async () => {
+        await setToken(null);
         localStorage.removeItem('guessesList');
         localStorage.removeItem('numberOfGuesses');
         localStorage.removeItem('guessedCorrectly');
@@ -215,7 +216,7 @@
           return;
         }
         if (data.token) {
-          setToken(data.token);
+          await setToken(data.token);
           updateProfileButton();
           showAuth();
         }
@@ -363,7 +364,7 @@
       const result = await response.json();
       if (!response.ok || result.error) throw new Error(result.error || 'Sign-in failed.');
       if (result.token) {
-        setToken(result.token);
+        await setToken(result.token);
         updateProfileButton();
         showAuth();
         return;

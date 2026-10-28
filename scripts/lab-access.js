@@ -1,5 +1,5 @@
 (() => {
-  let sequence = 0, adsLoaded = false, gate = null, previousFocus = null;
+  let sequence = 0, adsLoaded = Boolean(window.ElementleAds?.enabled), gate = null, previousFocus = null;
   const lockedNodes = new Map();
   const token = () => localStorage.getItem('elementle_token');
   const CACHE_KEY = 'elementle_lab_status_v1', CACHE_MS = 30000;
@@ -11,6 +11,7 @@
   function cachedStatus(auth, allowStale = false) {
     try {
       const cached = JSON.parse(sessionStorage.getItem(CACHE_KEY) || 'null');
+      if (window.ElementleAds?.state === 'free' && cached?.status?.isLab) return null;
       if (cached?.auth !== auth || typeof cached.status?.isLab !== 'boolean' || (billingPage && cached.status.accessOnly)) return null;
       const now = Date.now(), status = cached.status;
       const end = status.status === 'past_due' ? status.paymentGraceUntil : status.status === 'trialing' ? status.trialEnd : status.currentPeriodEnd;
@@ -45,7 +46,6 @@
     saveStatus(auth, status);
     api.ready = Promise.resolve(status);
     document.documentElement.dataset.lab = isLab ? 'active' : 'free';
-    if (isLab && adsLoaded) { location.reload(); return; }
     window.dispatchEvent(new CustomEvent('elementle:lab-change', {detail:status}));
   }
   function checkIfNeeded(force = false) {
@@ -161,7 +161,6 @@
       if (force && auth) {
         try { localStorage.setItem('elementle_lab_revision', Date.now() + ':' + Math.random()); } catch {}
       }
-      if (status.isLab && adsLoaded) location.reload();
       document.documentElement.dataset.lab = status.isLab ? 'active' : 'free';
       window.dispatchEvent(new CustomEvent('elementle:lab-change', { detail: status }));
       return status;
@@ -210,13 +209,8 @@
         return;
       }
       removeGate();
-      if (status.isLab || adsLoaded || location.pathname === '/lab') return;
-      adsLoaded = true;
-      const script = document.createElement('script');
-      script.src = 'https://scripts.mediavine.com/tags/80c3c057-e005-4c3f-a5a4-5b6e721e5808.js';
-      script.async = true;
-      script.dataset.noptimize = '1'; script.dataset.cfasync = 'false';
-      document.head.append(script);
+      // Ad delivery is decided before the static wrapper executes. Never add a
+      // second wrapper or remove subscriber blocklist settings in a running page.
     } catch {
       updateBadge();
       if (feature && feature === gatedFeature()) showGate(feature, 'error');
@@ -225,6 +219,10 @@
   window.addEventListener('elementle:auth-change', () => {
     clearCache();
     api.status = null;
+    if (window.ElementleAds) {
+      window.ElementleAds.sync().then(() => location.reload()).catch(() => location.reload());
+      return;
+    }
     if (adsLoaded) { location.reload(); return; }
     checkIfNeeded().then(updatePage).catch(() => {});
   });

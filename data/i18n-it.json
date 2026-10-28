@@ -2174,5 +2174,7 @@
   "elBot": "elBot",
   "elELO": "elELO",
   "Wikipedia": "Wikipedia",
-  "GitHub": "GitHub"
+  "GitHub": "GitHub",
+  "Elementle uses Mediavine for advertising. Its script loads on every page. Ads are disabled for Lab members and signed-in visitors whose membership cannot be verified.": "Elementle utilizza Mediavine per la pubblicità. Il suo script viene caricato su ogni pagina. Gli annunci sono disattivati per i membri Lab e per i visitatori che hanno effettuato l’accesso la cui iscrizione non può essere verificata.",
+  "A secure, HttpOnly cookie lets the server check your membership and disable subscriber ads before sending a page. It lasts up to 30 days and is cleared on logout.": "Un cookie sicuro e HttpOnly consente al server di verificare la tua iscrizione e disattivare gli annunci per gli abbonati prima di inviare una pagina. Dura fino a 30 giorni e viene eliminato alla disconnessione."
 }

@@ -2168,5 +2168,7 @@
   "{0}: included with Elementle Lab. Subscribe to unlock this feature and more.": "{0}: ingår i Elementle Lab. Prenumerera för att låsa upp den här funktionen och mer.",
   "{0}. {1} ({2})": "{0}. {1} ({2})",
   "Meet elBot": "Möt elBot",
-  "{0} · All players · X = unsuccessful": "{0} · Alla spelare · X = misslyckat"
+  "{0} · All players · X = unsuccessful": "{0} · Alla spelare · X = misslyckat",
+  "Elementle uses Mediavine for advertising. Its script loads on every page. Ads are disabled for Lab members and signed-in visitors whose membership cannot be verified.": "Elementle använder Mediavine för annonsering. Dess skript laddas på varje sida. Annonser är avstängda för Lab-medlemmar och inloggade besökare vars medlemskap inte kan verifieras.",
+  "A secure, HttpOnly cookie lets the server check your membership and disable subscriber ads before sending a page. It lasts up to 30 days and is cleared on logout.": "En säker HttpOnly-cookie låter servern kontrollera ditt medlemskap och stänga av annonser för prenumeranter innan en sida skickas. Den gäller i upp till 30 dagar och tas bort när du loggar ut."
 }

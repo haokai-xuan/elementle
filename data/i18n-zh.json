@@ -2172,5 +2172,7 @@
   "{0}: included with Elementle Lab. Subscribe to unlock this feature and more.": "{0}：包含在Elementle Lab中。订阅即可解锁此功能及更多功能。",
   "{0}. {1} ({2})": "{0}. {1} ({2})",
   "Meet elBot": "认识 elBot",
-  "{0} · All players · X = unsuccessful": "{0} · 所有玩家 · X = 失败"
+  "{0} · All players · X = unsuccessful": "{0} · 所有玩家 · X = 失败",
+  "Elementle uses Mediavine for advertising. Its script loads on every page. Ads are disabled for Lab members and signed-in visitors whose membership cannot be verified.": "Elementle 使用 Mediavine 提供广告。其脚本会在每个页面加载。Lab 会员以及无法验证会员资格的已登录访客不会看到广告。",
+  "A secure, HttpOnly cookie lets the server check your membership and disable subscriber ads before sending a page. It lasts up to 30 days and is cleared on logout.": "安全的 HttpOnly Cookie 让服务器能够在发送页面之前检查您的会员资格，并为订阅者禁用广告。此 Cookie 最长保留 30 天，并在退出登录时清除。"
 }

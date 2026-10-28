@@ -18,7 +18,8 @@
     "test:guest-results": "node scripts/test-guest-results.js",
     "test:lab": "node scripts/test-lab.js && node scripts/test-account-billing.js && node scripts/test-subscription-return.js && node scripts/test-leaderboard-lab.js && node scripts/test-billing-proxy.js",
     "test:i18n": "node scripts/extract-i18n.js --check && node scripts/test-i18n.js",
-    "i18n:extract": "node scripts/extract-i18n.js"
+    "i18n:extract": "node scripts/extract-i18n.js",
+    "test:ads": "node --test scripts/test-ad-session.js scripts/test-ad-guard.js"
   },
   "dependencies": {
     "compression": "^1.8.2",
