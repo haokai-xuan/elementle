@@ -3,12 +3,12 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const source = fs.readFileSync(require.resolve('./guest-results.js'), 'utf8');
 const key = 'elementle_pending_guest_results';
-function setup() {
+function setup({readyState,gameReady,gameSaved}={}) {
   const saved = new Map(), events = {}, calls = [];
   let status = 200, fail = false;
   const ctx = {
-    window:{addEventListener:(name,fn)=>{events[name]=fn;}},
-    document:{hidden:false,addEventListener:(name,fn)=>{events[name]=fn;}},
+    window:{ElementleGameReady:gameReady,ElementlePendingGameSave:()=>gameSaved,addEventListener:(name,fn)=>{events[name]=fn;}},
+    document:{readyState,hidden:false,addEventListener:(name,fn)=>{events[name]=fn;}},
     localStorage:{getItem:key=>saved.get(key) || null,setItem:(key,value)=>saved.set(key,value)},
     AbortSignal,
     fetch:async(url,options)=>{ calls.push({url,options}); if (fail) throw Error('Offline'); return {ok:status===200,status}; }
@@ -20,6 +20,19 @@ const tick = () => new Promise(resolve=>setImmediate(resolve));
 (async()=>{
   const guestId = '8e505dbd-339b-4d93-9471-3a88c2efea37';
   const body = {mode:'daily',localDate:'20261009',guesses:[1,26],hintUsed:true,hintAt:1};
+  let ready,save;
+  const delayed=setup({readyState:'interactive',gameReady:new Promise(resolve=>ready=resolve),gameSaved:new Promise(resolve=>save=resolve)});
+  delayed.api.record(guestId,body);
+  await tick();assert.equal(delayed.calls.length,0);
+  delayed.events.DOMContentLoaded();await tick();assert.equal(delayed.calls.length,0);
+  ready(true);await tick();assert.equal(delayed.calls.length,0);
+  save();await tick();assert.equal(delayed.calls.length,1);
+  assert.deepEqual(JSON.parse(delayed.saved.get(key)),{});
+  // DOMContentLoaded does not need to fire again when a later result is queued.
+  delayed.api.record(guestId,body);await tick();assert.equal(delayed.calls.length,2);
+  const unavailable=setup({gameReady:Promise.resolve(false)});
+  unavailable.api.record(guestId,body);await tick();assert.equal(unavailable.calls.length,0);
+  assert.equal(Object.keys(JSON.parse(unavailable.saved.get(key))).length,1);
   const t=setup(); t.setFail(true);
   t.api.record(guestId,body);await tick();
   assert.equal(Object.keys(JSON.parse(t.saved.get(key))).length,1);

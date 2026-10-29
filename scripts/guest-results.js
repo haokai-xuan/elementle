@@ -1,6 +1,9 @@
 /* Retry immutable completed guest main results without blocking local play. */
 (() => {
   const storageKey = 'elementle_pending_guest_results';
+  const pageReady = document.readyState === 'loading' || document.readyState === 'interactive'
+    ? new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve, {once:true}))
+    : Promise.resolve();
   let running = false;
   function read() {
     try { return JSON.parse(localStorage.getItem(storageKey) || '{}'); } catch { return {}; }
@@ -10,6 +13,10 @@
     if (running) return;
     running = true;
     try {
+      // Old results can wait; reserve startup networking for the active puzzle.
+      await pageReady;
+      if (window.ElementleGameReady && await window.ElementleGameReady !== true) return;
+      await window.ElementlePendingGameSave?.();
       for (const [key, entry] of Object.entries(read())) {
         try {
           const response = await fetch('/api/game/guest-result', {
