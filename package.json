@@ -16,7 +16,7 @@
     "test:analysis": "node scripts/test-analysis.js && node scripts/test-practice-analysis.js && node scripts/test-practice-loading.js && node scripts/test-practice-bootstrap.js && node scripts/test-freeplay-draft.js",
     "test:post-game": "node scripts/test-post-game.js && node scripts/test-game-result.js && node scripts/test-game-history.js && node scripts/test-game-bootstrap.js",
     "test:guest-results": "node scripts/test-guest-results.js",
-    "test:lab": "node scripts/test-lab.js && node scripts/test-account-billing.js && node scripts/test-subscription-return.js && node scripts/test-leaderboard-lab.js && node scripts/test-billing-proxy.js",
+    "test:lab": "node scripts/test-lab.js && node scripts/test-account-billing.js && node scripts/test-subscription-return.js && node scripts/test-leaderboard-lab.js && node scripts/test-billing-proxy.js && node --test scripts/test-login-prompts.js",
     "test:i18n": "node scripts/extract-i18n.js --check && node scripts/test-i18n.js",
     "i18n:extract": "node scripts/extract-i18n.js",
     "test:ads": "node --test scripts/test-ad-session.js scripts/test-ad-guard.js"

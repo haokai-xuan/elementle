@@ -4,7 +4,7 @@
   const token = () => localStorage.getItem('elementle_token');
   const CACHE_KEY = 'elementle_lab_status_v1', CACHE_MS = 30000;
   let pending = null;
-  const api = { status: null, ready: null, loading: false, refresh, checkResponse, consumeGame };
+  const api = { status: null, ready: null, loading: false, refresh, checkResponse, consumeGame, requireLogin };
   function clearCache() {
     try { sessionStorage.removeItem(CACHE_KEY); } catch {}
   }
@@ -52,6 +52,7 @@
     return (dailyMain || passiveStats) && !gatedFeature() ? useLocalStatus() : refresh(force, !force);
   }
   function checkResponse(response) {
+    if (response.status === 401 && !token()) { requireLogin(); return; }
     if (response.status !== 402) return;
     clearCache();
     api.status = null;
@@ -69,6 +70,7 @@
     const path = location.pathname.replace(/\/+$/, '') || '/';
     if (path === '/vault' || path.startsWith('/vault/')) return 'vault';
     if (path === '/analysis') return 'analysis';
+    if (path === '/game-history' && !token()) return 'account';
     if (['/', '/index.html'].includes(path) && ['archive', 'freeplay'].includes(mode)) return mode;
     return null;
   }
@@ -82,7 +84,13 @@
     if (previousFocus?.isConnected && !previousFocus.closest('[inert]')) previousFocus.focus({ preventScroll: true });
     previousFocus = null;
   }
-  function showGate(feature, state = 'required') {
+  function requireLogin(returnTo = location.pathname + location.search + location.hash) {
+    if (token()) return false;
+    showGate('account', 'login', returnTo);
+    return true;
+  }
+  function showGate(feature, state = 'required', returnTo = location.pathname + location.search + location.hash) {
+    if (state === 'required' && !token()) state = 'login';
     if (!gate) {
       previousFocus = document.activeElement;
       gate = document.createElement('div');
@@ -120,11 +128,13 @@
     }
     const labels = { vault: 'The Vault', analysis: 'elBot game analysis', archive: 'Lab archives', freeplay: 'Freeplay' };
     gate.dataset.state = state;
-    gate.querySelector('#lab-access-title').textContent = state === 'checking' ? 'Checking your Lab access…' : state === 'error' ? 'Unable to verify membership' : 'A Lab subscription is required';
+    gate.querySelector('#lab-access-title').textContent = state === 'checking' ? 'Checking your Lab access…' : state === 'error' ? 'Unable to verify membership' : state === 'login' ? 'Sign in' : 'A Lab subscription is required';
     gate.querySelector('.lab-access-box').setAttribute('aria-busy', String(state === 'checking'));
-    gate.querySelector('#lab-access-description').textContent = state === 'checking' ? 'Your membership will be verified in a moment.' : state === 'error' ? 'We couldn’t check your subscription. Retry to access this feature.' : `${labels[feature]}: included with Elementle Lab. Subscribe to unlock this feature and more.`;
-    gate.querySelector('.lab-access-subscribe').href = '/lab?feature=' + encodeURIComponent(feature);
-    gate.querySelector('.lab-access-subscribe').hidden = state !== 'required';
+    gate.querySelector('#lab-access-description').textContent = state === 'checking' ? 'Your membership will be verified in a moment.' : state === 'error' ? 'We couldn’t check your subscription. Retry to access this feature.' : state === 'login' ? 'Sign in to access this feature.' : `${labels[feature]}: included with Elementle Lab. Subscribe to unlock this feature and more.`;
+    const action = gate.querySelector('.lab-access-subscribe');
+    action.textContent = state === 'login' ? 'Log in' : 'Explore Elementle Lab →';
+    action.href = state === 'login' ? '/account?returnTo=' + encodeURIComponent(returnTo) : '/lab?feature=' + encodeURIComponent(feature);
+    action.hidden = !['required', 'login'].includes(state);
     gate.querySelector('.lab-access-retry').hidden = state !== 'error';
     const back = gate.querySelector('.lab-access-back');
     back.href = feature === 'archive' && location.pathname.startsWith('/stats') ? '/stats' : '/';
@@ -198,6 +208,10 @@
   async function updatePage() {
     if (!document.body) return;
     const feature = gatedFeature();
+    if (!token() && (feature || gate?.dataset.state === 'login')) {
+      if (feature) showGate(feature, 'login');
+      return;
+    }
     if (!feature) removeGate();
     else if (!api.status) showGate(feature, 'checking');
     try {
@@ -219,6 +233,7 @@
   window.addEventListener('elementle:auth-change', () => {
     clearCache();
     api.status = null;
+    if (window.ElementleAuthNavigating) return;
     if (window.ElementleAds) {
       window.ElementleAds.sync().then(() => location.reload()).catch(() => location.reload());
       return;

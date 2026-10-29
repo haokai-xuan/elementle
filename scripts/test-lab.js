@@ -51,13 +51,17 @@ async function run({ token = null, status = {isLab:false}, path = '/', mode = ''
   trial.window.ElementleLab.consumeGame({streakFreezes:{capacity:2}});await new Promise(resolve=>setImmediate(resolve));assert.equal(trial.scripts.length,0);assert.equal(trial.root.dataset.lab,'active');
   const detailed=await run({token:'jwt',path:'/account',cache:trial.cache,status:{isLab:true,status:'trialing',plan:'monthly'}});assert.equal(detailed.requests,1);assert.equal(detailed.window.ElementleLab.status.plan,'monthly');
   const failed=await run({token:'jwt',failure:true});assert.equal(failed.scripts.length,0);
-  for(const path of ['/vault','/vault/26','/analysis','/analysis/']){
+  for(const path of ['/vault','/vault/26','/analysis','/analysis/','/game-history']){
     const gated=await run({path});assert.equal(gated.redirects.length,0);assert.equal(gated.scripts.length,0);
-    assert.equal(gated.gate.dataset.state,'required');assert.equal(gated.main.inert,true);
-    assert.match(gated.gate.querySelector('.lab-access-subscribe').href,/^\/lab\?feature=/);
+    assert.equal(gated.gate.dataset.state,'login');assert.equal(gated.main.inert,true);
+    assert.equal(gated.gate.querySelector('.lab-access-subscribe').href,'/account?returnTo='+encodeURIComponent(path));
+    assert.equal(gated.gate.querySelector('.lab-access-subscribe').textContent,'Log in');
+    assert.equal(gated.gate.querySelector('#lab-access-title').textContent,'Sign in');
+    assert.equal(gated.requests,0);
   }
   for(const mode of ['archive','freeplay']){
-    const gated=await run({mode});assert.equal(gated.gate.dataset.state,'required');assert.equal(gated.redirects.length,0);
+    const gated=await run({mode});assert.equal(gated.gate.dataset.state,'login');assert.equal(gated.redirects.length,0);
+    assert.equal(gated.gate.querySelector('.lab-access-subscribe').href,'/account?returnTo='+encodeURIComponent('/?mode='+mode));
   }
   const freeAnalysis=await run({path:'/analysis',token:'jwt',status:{isLab:false}});
   assert.equal(freeAnalysis.gate.dataset.state,'required');
@@ -67,7 +71,7 @@ async function run({ token = null, status = {isLab:false}, path = '/', mode = ''
   const paidAnalysis=await run({path:'/analysis',token:'jwt',status:{isLab:true}});
   assert.equal(paidAnalysis.gate,undefined);assert.equal(paidAnalysis.main.inert,false);
   assert.match(require('../lib/analysis-page')(require('node:path').resolve(__dirname,'..')),/src="\/scripts\/lab-access\.js"/);
-  const legacy=await run({path:'/index.html',mode:'archive'});assert.equal(legacy.gate.dataset.state,'required');
+  const legacy=await run({path:'/index.html',mode:'archive'});assert.equal(legacy.gate.dataset.state,'login');
   const archives=await run({path:'/stats',hash:'#lab-archives',token:'member'});assert.equal(archives.gate,undefined);assert.equal(archives.requests,0);
   archives.events.focus();archives.tick();await new Promise(resolve=>setImmediate(resolve));assert.equal(archives.requests,0);
   const stats=await run({path:'/stats'});assert.equal(stats.gate,undefined);assert.equal(stats.main.inert,false);
@@ -82,6 +86,11 @@ async function run({ token = null, status = {isLab:false}, path = '/', mode = ''
   access.isLab=false;await changed.window.ElementleLab.refresh();await new Promise(resolve=>setImmediate(resolve));
   assert.equal(changed.body.children.length,2);assert.equal(changed.main.inert,true);
   const lab=await run({path:'/lab'});assert.equal(lab.scripts.length,0);
+  assert.equal(lab.window.ElementleLab.requireLogin('/lab?feature=vault'),true);
+  const prompt=lab.body.children.find(node=>node.className==='lab-access-gate');
+  assert.equal(prompt.querySelector('.lab-access-subscribe').href,'/account?returnTo=%2Flab%3Ffeature%3Dvault');
+  assert.equal(free.window.ElementleLab.requireLogin('/lab'),false);
+  const history=await run({path:'/game-history',token:'jwt',status:{isLab:false}});assert.equal(history.gate,undefined);
   const paidLab=await run({path:'/lab',token:'member',status:{isLab:true}});assert.equal(paidLab.scripts.length,0);
   const enabled=await run({adsEnabled:true});
   enabled.window.ElementleLab.consumeGame({streakFreezes:{capacity:2}}); // guests cannot assert membership

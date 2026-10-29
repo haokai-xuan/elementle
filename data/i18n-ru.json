@@ -2170,5 +2170,6 @@
   "Meet elBot": "Знакомьтесь: elBot",
   "{0} · All players · X = unsuccessful": "{0} · Все игроки · X = неудачно",
   "Elementle uses Mediavine for advertising. Its script loads on every page. Ads are disabled for Lab members and signed-in visitors whose membership cannot be verified.": "Elementle использует Mediavine для рекламы. Его скрипт загружается на каждой странице. Реклама отключена для участников Lab и вошедших в аккаунт посетителей, чью подписку не удалось проверить.",
-  "A secure, HttpOnly cookie lets the server check your membership and disable subscriber ads before sending a page. It lasts up to 30 days and is cleared on logout.": "Защищённый файл cookie HttpOnly позволяет серверу проверить подписку и отключить рекламу для подписчиков перед отправкой страницы. Он хранится до 30 дней и удаляется при выходе из аккаунта."
+  "A secure, HttpOnly cookie lets the server check your membership and disable subscriber ads before sending a page. It lasts up to 30 days and is cleared on logout.": "Защищённый файл cookie HttpOnly позволяет серверу проверить подписку и отключить рекламу для подписчиков перед отправкой страницы. Он хранится до 30 дней и удаляется при выходе из аккаунта.",
+  "Sign in to access this feature.": "Войдите в аккаунт, чтобы воспользоваться этой функцией."
 }

@@ -6,12 +6,26 @@
     return localStorage.getItem(TOKEN_KEY);
   }
 
+  function safeReturnTo(value) {
+    if (typeof value !== 'string' || !value.startsWith('/') || value.startsWith('//') || /[\\\x00-\x1f]/.test(value)) return null;
+    const pathname = value.split(/[?#]/)[0];
+    return /^\/(?:index\.html|lab|stats|analysis|game-history|vault(?:\/\d+)?)?\/?$/.test(pathname) ? value : null;
+  }
+
   async function setToken(token) {
     if (token) localStorage.setItem(TOKEN_KEY, token);
     else localStorage.removeItem(TOKEN_KEY);
+    let returnTo = null;
+    if (token) {
+      returnTo = safeReturnTo(new URLSearchParams(location.search).get('returnTo')) || safeReturnTo(sessionStorage.getItem('elementle_auth_return'));
+      if (!returnTo && sessionStorage.getItem('elementle_lab_return') === '1') returnTo = '/lab';
+      sessionStorage.removeItem('elementle_auth_return');
+      sessionStorage.removeItem('elementle_lab_return');
+    }
     try { await window.ElementleAds?.sync(); } catch {}
+    window.ElementleAuthNavigating = Boolean(returnTo);
     window.dispatchEvent(new Event("elementle:auth-change"));
-    if (token && (new URLSearchParams(location.search).get('returnTo') === '/lab' || sessionStorage.getItem('elementle_lab_return') === '1')) { sessionStorage.removeItem('elementle_lab_return'); location.assign('/lab'); }
+    if (returnTo) location.assign(returnTo);
   }
 
   function decodeJwtPayload(token) {
@@ -340,7 +354,11 @@
   updateProfileButton();
 
   const params = new URLSearchParams(window.location.search);
-  if (document.querySelector('.js-account-page')) showAuth(params.get('tab'));
+  if (document.querySelector('.js-account-page')) {
+    const returnTo = safeReturnTo(params.get('returnTo'));
+    if (returnTo) sessionStorage.setItem('elementle_auth_return', returnTo);
+    showAuth(params.get('tab'));
+  }
   if (params.get('verified') === '1') {
     if (!document.querySelector('.js-account-page')) {
       window.location.replace('/account?verified=1');

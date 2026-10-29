@@ -2174,5 +2174,6 @@
   "Meet elBot": "Gặp gỡ elBot",
   "{0} · All players · X = unsuccessful": "{0} · Tất cả người chơi · X = không thành công",
   "Elementle uses Mediavine for advertising. Its script loads on every page. Ads are disabled for Lab members and signed-in visitors whose membership cannot be verified.": "Elementle sử dụng Mediavine để quảng cáo. Tập lệnh của dịch vụ này tải trên mọi trang. Quảng cáo bị tắt đối với thành viên Lab và khách đã đăng nhập có tư cách thành viên chưa thể xác minh.",
-  "A secure, HttpOnly cookie lets the server check your membership and disable subscriber ads before sending a page. It lasts up to 30 days and is cleared on logout.": "Một cookie an toàn có thuộc tính HttpOnly cho phép máy chủ kiểm tra tư cách thành viên và tắt quảng cáo cho người đăng ký trước khi gửi trang. Cookie tồn tại tối đa 30 ngày và bị xóa khi đăng xuất."
+  "A secure, HttpOnly cookie lets the server check your membership and disable subscriber ads before sending a page. It lasts up to 30 days and is cleared on logout.": "Một cookie an toàn có thuộc tính HttpOnly cho phép máy chủ kiểm tra tư cách thành viên và tắt quảng cáo cho người đăng ký trước khi gửi trang. Cookie tồn tại tối đa 30 ngày và bị xóa khi đăng xuất.",
+  "Sign in to access this feature.": "Đăng nhập để sử dụng tính năng này."
 }

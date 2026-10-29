@@ -18,7 +18,7 @@
     plans.hidden = data.isLab;
     manage.hidden = !data.canManage;
     document.getElementById('lab-disclosure').hidden = data.isLab;
-    for (const button of buttons) button.textContent = data.trialEligible ? 'Start 7-day free trial' : `Subscribe ${button.dataset.plan}`;
+    for (const button of buttons) button.textContent = !localStorage.getItem('elementle_token') ? 'Log in' : data.trialEligible ? 'Start 7-day free trial' : `Subscribe ${button.dataset.plan}`;
     for (const caption of document.querySelectorAll('.lab-trial, .lab-trial-highlight')) caption.hidden = !data.trialEligible || data.isLab;
     message.textContent = '';
     const end = data.status === 'trialing' ? data.trialEnd : data.currentPeriodEnd;
@@ -33,7 +33,10 @@
   }
   async function openBilling(endpoint, body, selected) {
     if (busy) return;
-    if (!localStorage.getItem('elementle_token')) { sessionStorage.setItem('elementle_lab_return', '1'); location.href = '/account?returnTo=%2Flab'; return; }
+    if (!localStorage.getItem('elementle_token')) {
+      if (window.ElementleLab.requireLogin?.(location.pathname + location.search)) return;
+      sessionStorage.setItem('elementle_lab_return', '1'); location.href = '/account?returnTo=%2Flab'; return;
+    }
     busy = true;
     [...buttons, manage].forEach(button => button.disabled = true);
     message.textContent = 'Opening secure Stripe billing…';

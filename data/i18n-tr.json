@@ -2174,5 +2174,6 @@
   "Meet elBot": "elBot ile tanışın",
   "{0} · All players · X = unsuccessful": "{0} · Tüm oyuncular · X = başarısız",
   "Elementle uses Mediavine for advertising. Its script loads on every page. Ads are disabled for Lab members and signed-in visitors whose membership cannot be verified.": "Elementle, reklamlar için Mediavine kullanır. Komut dosyası her sayfada yüklenir. Lab üyeleri ve üyeliği doğrulanamayan oturum açmış ziyaretçiler için reklamlar devre dışıdır.",
-  "A secure, HttpOnly cookie lets the server check your membership and disable subscriber ads before sending a page. It lasts up to 30 days and is cleared on logout.": "Güvenli bir HttpOnly çerezi, sunucunun sayfayı göndermeden önce üyeliğinizi kontrol etmesini ve aboneler için reklamları devre dışı bırakmasını sağlar. En fazla 30 gün saklanır ve oturum kapatıldığında silinir."
+  "A secure, HttpOnly cookie lets the server check your membership and disable subscriber ads before sending a page. It lasts up to 30 days and is cleared on logout.": "Güvenli bir HttpOnly çerezi, sunucunun sayfayı göndermeden önce üyeliğinizi kontrol etmesini ve aboneler için reklamları devre dışı bırakmasını sağlar. En fazla 30 gün saklanır ve oturum kapatıldığında silinir.",
+  "Sign in to access this feature.": "Bu özelliği kullanmak için oturum açın."
 }
