@@ -61,10 +61,12 @@
     updatePage();
   }
   window.ElementleLab = api;
-  const stylesheet = document.createElement('link');
-  stylesheet.rel = 'stylesheet';
-  stylesheet.href = '/styles/lab-access.css';
-  document.head.append(stylesheet);
+  if (!document.querySelector?.('.js-bundled-lab-styles')) {
+    const stylesheet = document.createElement('link');
+    stylesheet.rel = 'stylesheet';
+    stylesheet.href = '/styles/lab-access.css';
+    document.head.append(stylesheet);
+  }
   function gatedFeature() {
     const mode = new URLSearchParams(location.search).get('mode');
     const path = location.pathname.replace(/\/+$/, '') || '/';

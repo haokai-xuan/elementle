@@ -31,7 +31,7 @@ function markup(value) {
 }
 for (const dir of ['.','scripts','lib','data']) {
   for (const file of fs.readdirSync(dir)) {
-    if (!/\.(?:html|js)$/.test(file) || /^(?:test-|audit-|extract-i18n|i18n|locales)/.test(file) || ['social-auth.js','lab-proxy.js','ad-session.js','ad-guard.js','dev.js'].includes(file)) continue;
+    if (!/\.(?:html|js)$/.test(file) || /^(?:test-|audit-|extract-i18n|i18n|locales)/.test(file) || ['social-auth.js','lab-proxy.js','ad-session.js','ad-guard.js','public-assets.js','dev.js'].includes(file)) continue;
     const source = fs.readFileSync(path.join(dir,file),'utf8');
     if (file.endsWith('.html')) {markup(source); continue;}
     const tree = acorn.parse(source,{ecmaVersion:'latest',sourceType:'script'});

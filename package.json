@@ -8,6 +8,7 @@
     "start": "node server.js",
     "dev": "node scripts/dev.js",
     "test": "node scripts/audit-element-pages.js",
+    "test:assets": "node scripts/test-public-assets.js",
     "test:stats": "node scripts/test-stats-render.js && node scripts/test-stats-loading.js && node scripts/test-stats-prefetch.js",
     "test:elo-ui": "node scripts/test-elelo-ui.js",
     "test:freezes": "node scripts/test-streak-freezes.js",

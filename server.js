@@ -14,6 +14,7 @@ const API_KEY = process.env.API_KEY || '';
 // Compress text (including generated pages and JSON) before it leaves Railway.
 app.use(compression());
 app.use(express.json());
+require('./lib/public-assets').createPublicAssets(__dirname).register(app);
 require('./lib/ad-session')(app, { apiBaseUrl: API_BASE_URL, apiKey: API_KEY });
 require('./lib/social-auth')(app, { apiBaseUrl: API_BASE_URL, apiKey: API_KEY });
 require('./lib/lab-proxy')(app, { apiBaseUrl: API_BASE_URL, apiKey: API_KEY });
@@ -45,9 +46,9 @@ for (const name of ['reset', 'verify']) {
   app.get(`/${name}.html`, sendHtmlPage(name));
 }
 
-// Images can be reused across visits. Keep code and catalogs revalidated so a
-// deployment never leaves clients running an older game against a newer API.
-for (const directory of ['images', 'styles', 'scripts', 'data']) {
+// HTML references content-hashed /assets URLs with long-lived caching. Keep
+// original URLs revalidated for dynamic requests and older clients.
+for (const directory of ['images', 'styles', 'scripts', 'data', 'fonts']) {
   app.use(`/${directory}`, express.static(path.join(__dirname, directory), {
     maxAge: directory === 'images' ? '1d' : 0,
     index: false
