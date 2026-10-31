@@ -184,7 +184,7 @@
   }
   async function load() {
     const id = ++requestId; $('analysis-retry').hidden = true;
-    const revealAt = performance.now() + 3000 + Math.random() * 4000; // 3 to 7 seconds
+    const revealAt = performance.now() + 350; // Brief transition; slower requests add no extra wait.
     $('analysis-scores').hidden = true;
     $('analysis-content').hidden = true;
     speak('Connecting the clues…', 'I’m comparing your decisions with every available guess.', 'thinking');

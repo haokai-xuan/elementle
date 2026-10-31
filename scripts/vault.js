@@ -19,7 +19,7 @@
  function render(data, guest) {
   const records = [...data.records, ...(guest?window.ElementleVault.guestRecords():[])];
   const stats = window.ElementleVault.aggregate(records,data.startDate);
-  const note = `Main daily game only · Counting from ${date(data.startDate)}${guest?' · Guest progress is saved in this browser.':''}`;
+  const note = `Main daily game only · Collecting since ${date(data.startDate)}${guest?' · Guest progress is saved in this browser.':''}`;
   if (number) {
    const e = elements.find(e=>e.number===number), s=stats[number]||empty;
    content.innerHTML = `<a class="vault-back" href="/vault?inside=1">← Back to the vault</a><header class="vault-element-hero">${tile(e,s,true)}<div><p class="element-eyebrow">VAULT / ATOMIC NUMBER ${number}</p><h1>${s.solved?e.name:'?'}</h1><p>${s.solved?e.family:'Undiscovered'}</p></div></header>`;

@@ -20,7 +20,8 @@ function markup(value) {
   const visit = node => {
     if (node.nodeType === 3) add(node.textContent, true);
     if (node.nodeType === 1) {
-      if (['SCRIPT','STYLE'].includes(node.tagName)) return;
+      // Explicitly English editorial copy is not part of the localized UI catalog.
+      if (['SCRIPT','STYLE'].includes(node.tagName) || node.getAttribute('translate') === 'no') return;
       if (node.matches('meta[name="description"], meta[property="og:title"], meta[property="og:description"]')) add(node.getAttribute('content'),true);
       for (const attr of ['placeholder','title','alt','aria-label','aria-valuetext','data-i18n']) add(node.getAttribute(attr), true);
       if (node.hasAttribute('data-i18n')) return;

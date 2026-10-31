@@ -18,11 +18,11 @@ const result = { answer:118, won:true, hintUsed:false, referenceGuesses:4, refer
   {guess:26,optimal:26,before:[26,118],after:[118],quality:100,feedback:['gray','gray','up','diff'],expectedBits:1,optimalBits:1,correct:false,possible:true},
   {guess:118,optimal:118,before:[118],after:[118],quality:100,feedback:['green','green','same','same'],expectedBits:0,optimalBits:0,correct:true,possible:true}
 ]};
-async function run({i18n=null,steps=null,answer=result.answer,fail=false,token=null,missing=false,rating=91,knownMistake=false,idleChance=1,reducedMotion=false,deferReveal=false,elELO=null,gameId=null,mode='daily',localGameId=null,owner=token}={}) {
+async function run({i18n=null,steps=null,answer=result.answer,fail=false,token=null,missing=false,rating=91,knownMistake=false,idleChance=1,reducedMotion=false,deferReveal=false,elELO=null,gameId=null,mode='daily',localGameId=null,owner=token,responseElapsed=0}={}) {
   const ids = new Map(), cells = data.map(e => { const n = new Node(); n.dataset={number:String(e.number)}; return n; });
   const get = id => { if(!ids.has(id)) ids.set(id,new Node()); return ids.get(id); };
   get('analysis-elements').textContent = JSON.stringify(data);
-  let request, chance = idleChance, timerId = 0;
+  let request, chance = idleChance, timerId = 0, clock = 0;
   const delays = [], loadedImages = [];
   const timers = new Map(), intervals = new Map();
   const context = {
@@ -31,12 +31,12 @@ async function run({i18n=null,steps=null,answer=result.answer,fail=false,token=n
     Math:Object.assign(Object.create(Math),{random:()=>chance}),
     matchMedia:()=>({matches:reducedMotion,addEventListener(){}}), Image:class{set src(value){this._src=value;loadedImages.push(value);}get src(){return this._src;}},
     setInterval:fn=>{const id=++timerId;intervals.set(id,fn);return id;},clearInterval:id=>intervals.delete(id),
-    performance:{now:()=>0},
+    performance:{now:()=>clock},
     setTimeout:(fn,ms)=>{delays.push(ms);const id=++timerId;timers.set(id,fn);return id;},clearTimeout:id=>timers.delete(id),
     URLSearchParams,location:{search:localGameId ? '?mode=freeplay&localGameId='+localGameId : gameId ? '?gameId='+gameId : '?date=20261008'},AbortSignal,
     localStorage:{getItem:key=>key==='elementle_token' ? token : null},
     sessionStorage:{getItem:()=>missing ? null : JSON.stringify(localGameId ? {id:localGameId,owner,freeplay:{atomicNumber:118,guesses:[1,26,118],hintUsed:false,hintAt:null}} : {localDate:'20261008',guesses:[1,26,118],hintUsed:false,hintAt:0})},
-    fetch:async(url,options)=>{ request={url,options}; return {ok:!fail,json:async()=>fail ? {error:'Service offline'} : {...result,answer,mode,archiveDate:20261007,elELO,scores:{...result.scores,rating},steps:steps || (knownMistake ? result.steps.map((step,i)=>i===1 ? {...step,before:[118],guess:32,optimal:118,quality:0,possible:false,expectedBits:0,optimalBits:0} : step) : result.steps)}}; }
+    fetch:async(url,options)=>{ clock=responseElapsed; request={url,options}; return {ok:!fail,json:async()=>fail ? {error:'Service offline'} : {...result,answer,mode,archiveDate:20261007,elELO,scores:{...result.scores,rating},steps:steps || (knownMistake ? result.steps.map((step,i)=>i===1 ? {...step,before:[118],guess:32,optimal:118,quality:0,possible:false,expectedBits:0,optimalBits:0} : step) : result.steps)}}; }
   };
   vm.runInNewContext(fs.readFileSync(require.resolve('./analysis.js'),'utf8'),context);
   await new Promise(resolve=>setImmediate(resolve));
@@ -54,8 +54,8 @@ if (require.main === module) (async()=>{
   const still = await run({reducedMotion:true,deferReveal:true});
   assert.equal(still.loadedImages.length,0);
   assert.match(still.get('bot-frame').src,/thinking_01\.webp$/);
-  for (const [chance,delay] of [[0,3000],[.5,5000],[1,7000]]) {
-    const thinking = await run({idleChance:chance,deferReveal:true});
+  for (const [responseElapsed,delay] of [[0,350],[200,150]]) {
+    const thinking = await run({responseElapsed,deferReveal:true});
     assert.equal(thinking.delays[0],delay);
     assert.equal(thinking.get('analysis-content').hidden,true);
     assert.equal(thinking.get('analysis-scores').hidden,true);
@@ -64,6 +64,9 @@ if (require.main === module) (async()=>{
     await new Promise(resolve=>setImmediate(resolve));
     assert.equal(thinking.get('analysis-content').hidden,false);
   }
+  const slowResponse = await run({responseElapsed:500,deferReveal:true});
+  assert.equal(slowResponse.get('analysis-content').hidden,false, 'slow requests should render immediately without an extra reveal timer');
+  assert.ok(!slowResponse.delays.some(delay => delay > 0 && delay < 8500));
   const {get,cells,request} = await run();
   assert.equal(request.url,'/api/game/analysis');
   assert.equal(get('analysis-content').hidden,false);

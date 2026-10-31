@@ -14,7 +14,8 @@
 .analysis-main button:focus-visible { outline:3px solid #9ccc8e; outline-offset:4px; }
 .analysis-main button:disabled { opacity:.35; cursor:default; }
 #analysis-retry,.feedback-toggle { background:#30442c; border:1px solid #638c56; border-radius:8px; padding:10px 16px; font-size:16px; margin-top:12px; }
-.analysis-scores { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:28px; }
+.analysis-scores { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:28px; }
+.analysis-scores:has(.elelo-analysis) { grid-template-columns:repeat(5,minmax(0,1fr)); }
 @keyframes analysis-arrive {
   from { opacity:0; transform:translateY(8px); }
   to { opacity:1; transform:translateY(0); }
@@ -25,9 +26,12 @@
 #analysis-scores .score-card:nth-child(4) { animation-delay:120ms; }
 #analysis-content:not([hidden]) .guess-ledger { animation:analysis-arrive .45s cubic-bezier(.22,1,.36,1) 100ms backwards; }
 #analysis-content:not([hidden]) .analysis-table-panel { animation:analysis-arrive .45s cubic-bezier(.22,1,.36,1) 140ms backwards; }
-.score-card { position:relative; border:1px solid #434843; border-radius:12px; background:#242724; padding:20px 32px 20px 24px; display:grid; gap:10px; }
+.score-card { min-width:0; overflow-wrap:anywhere; position:relative; border:1px solid #434843; border-radius:12px; background:#242724; padding:20px 32px 20px 24px; display:grid; align-content:start; gap:10px; }
 .score-card > span { color:#c0c5bd; font-size:16px; }
-.score-card strong { font-size:36px; }
+.score-card strong { font-size:clamp(28px,3vw,36px); }
+.elelo-analysis { background:#252e23; border-color:#536a48; }
+.elelo-analysis > span { color:#b9d6ac; }
+.elelo-analysis > small { line-height:1.4; }
 .score-card small { font-size:15px; color:#9caa98; font-weight:normal; }
 .score-primary { background:var(--rating-surface); border-color:var(--rating-border); }
 .score-primary strong,.score-primary > span,.score-primary small { color:var(--rating-color); }
@@ -75,6 +79,6 @@
 .metric-help > .help-copy { display:block; position:absolute; right:0; top:28px; width:240px; max-width:75vw; box-sizing:border-box; padding:12px 14px; background:#30372d; border:1px solid #738267; border-radius:9px; box-shadow:0 8px 24px #0008; color:#ecf2e8; font:16px/1.6 "Iceland",sans-serif; visibility:hidden; opacity:0; pointer-events:none; transition:opacity .15s; }
 .metric-help:hover > .help-copy,.metric-help:focus-within > .help-copy,.metric-help.help-open > .help-copy { visibility:visible; opacity:1; pointer-events:auto; }
 [hidden] { display:none !important; }
-@media(max-width:1000px) { .analysis-workspace { grid-template-columns:1fr; } .guess-ledger ol { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:1000px) { .analysis-scores,.analysis-scores:has(.elelo-analysis) { grid-template-columns:repeat(2,minmax(0,1fr)); } .elelo-analysis { grid-column:1 / -1; grid-template-columns:minmax(0,1fr) auto; align-items:center; } .elelo-analysis > strong { grid-column:2; grid-row:1 / 3; } .elelo-analysis > small { grid-column:1; } .analysis-workspace { grid-template-columns:1fr; } .guess-ledger ol { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:600px) { .analysis-main { width:calc(100% - 28px); margin-top:24px; } .analysis-heading { align-items:start; flex-direction:column; gap:12px; } .bot-panel { gap:12px; padding:16px 12px; align-items:start; } .bot-stage,.bot-stage img { width:84px; height:110px; flex-basis:84px; } .bot-speech h2 { font-size:21px; } .bot-speech > p:last-of-type { font-size:15px; } .bot-speech .element-eyebrow { font-size:10px; } .analysis-scores { grid-template-columns:repeat(2,1fr); gap:8px; } .score-card { padding:15px 30px 15px 15px; } .score-card strong { font-size:30px; } .score-card > span { font-size:13px; } .guess-ledger ol { grid-template-columns:1fr; } .analysis-table-panel .periodic-scroll { padding-left:0; padding-right:0; } }
 @media(prefers-reduced-motion:reduce) { .analysis-main * { transition:none !important; animation:none !important; } }
