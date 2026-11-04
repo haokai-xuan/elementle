@@ -5,3 +5,5 @@
 .lab-trial-highlight{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin:0 0 26px;color:#becaba;font-size:13px;line-height:1.6;text-align:center}
 .lab-trial-highlight span{padding:6px 13px;border:1px solid #8ec98766;border-radius:20px;background:#538d4e1f;color:#a8dfa2;font-size:14px;font-weight:700}
 .lab-trial{color:#a8dfa2}
+
+.lab-cancel-anytime{margin:12px 0 0;text-align:center;color:#c7edc2;font-size:14px;font-weight:700;line-height:1.5}
