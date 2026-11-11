@@ -16,17 +16,8 @@
     indicate(membership, false);
     membership.textContent = !localStorage.getItem('elementle_token') ? 'Sign in to start your trial' : data.isLab ? (data.complimentaryActive ? 'Complimentary membership' : data.status === 'trialing' ? 'Lab free trial active' : 'Lab membership active') : 'Free account';
     plans.hidden = data.isLab;
-    // Older running servers can still serve HTML from before these elements
-    // were added, while unversioned scripts already contain this update.
-    let links = document.getElementById('lab-feature-links');
-    if (!links) {
-      links = document.createElement('div');
-      links.id = 'lab-feature-links';
-      links.className = 'lab-actions';
-      links.innerHTML = '<a href="/?mode=freeplay">Play Freeplay</a><a href="/?mode=archive">Archives</a><a href="/vault">Open Vault</a>';
-      plans.before(links);
-    }
-    links.hidden = !data.isLab;
+    // Remove the shortcuts from older HTML still served during a rollout.
+    document.getElementById('lab-feature-links')?.remove();
     manage.hidden = !data.canManage;
     const secure = document.getElementById('lab-secure') || document.querySelector('.lab-secure');
     if (secure) secure.hidden = Boolean(data.complimentaryActive && !data.hasSubscription);

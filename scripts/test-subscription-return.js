@@ -3,7 +3,7 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 async function scenario(search='') {
   const nodes={},events={},redirects=[];
-  const node=id=>nodes[id]||=( {textContent:'',hidden:false,disabled:false,dataset:{},attrs:{},classes:new Set(),classList:{toggle(name,active){if(active)nodes[id].classes.add(name);else nodes[id].classes.delete(name);}},setAttribute(name,value){this.attrs[name]=value;},addEventListener(name,fn){this[name]=fn;}} );
+  const node=id=>nodes[id]||=( {remove(){},textContent:'',hidden:false,disabled:false,dataset:{},attrs:{},classes:new Set(),classList:{toggle(name,active){if(active)nodes[id].classes.add(name);else nodes[id].classes.delete(name);}},setAttribute(name,value){this.attrs[name]=value;},addEventListener(name,fn){this[name]=fn;}} );
   const button=node('monthly');button.dataset.plan='monthly';
   let requests=0,finishMembership,finishOpening;
   const free={status:'none',isLab:false,trialEligible:true,canManage:false};
@@ -38,12 +38,10 @@ async function scenario(search='') {
   assert.equal(node('lab-disclosure').hidden,true);
   assert.equal(node('lab-secure').hidden,true);
   assert.equal(node('lab-manage').hidden,true);
-  assert.equal(node('lab-feature-links').hidden,false);
   assert.match(node('lab-message').textContent,/complimentary membership ends on/);
   assert.match(node('lab-message').textContent,/No payment required/);
   events['elementle:lab-change']({detail:free});
   assert.equal(node('lab-plans').hidden,false);
-  assert.equal(node('lab-feature-links').hidden,true);
 
 }
 (async()=>{await scenario();await scenario('?checkout=canceled');console.log('Back-navigation clears Stripe opening message, reenables controls, and refreshes membership.');})().catch(error=>{console.error(error);process.exitCode=1;});

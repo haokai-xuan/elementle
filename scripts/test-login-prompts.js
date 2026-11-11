@@ -47,7 +47,7 @@ test('existing Lab checkout returns still work and logout does not follow a pend
 });
 test('guest checkout offers login first without starting a billing request', async () => {
   const nodes = {}, events = {}, prompts = [];
-  const node = id => nodes[id] ||= { hidden: false, textContent: '', dataset: {}, classList: { toggle() {} }, setAttribute() {}, addEventListener(name, fn) { this[name] = fn; } };
+  const node = id => nodes[id] ||= { remove() {}, hidden: false, textContent: '', dataset: {}, classList: { toggle() {} }, setAttribute() {}, addEventListener(name, fn) { this[name] = fn; } };
   const button = node('monthly'); button.dataset.plan = 'monthly';
   const guest = { isLab: false, status: 'none', trialEligible: true, canManage: false };
   await vm.runInNewContext(fs.readFileSync(__dirname + '/subscription.js', 'utf8'), {
