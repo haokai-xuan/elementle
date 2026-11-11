@@ -22,7 +22,17 @@ assert.equal(summary({...active,status:'canceled',isLab:false,nextBillingDate:nu
 assert.match(summary({...active,status:'past_due',paymentGraceUntil:1900000000}).note,/Lab stays active.*three days/);
 assert.match(summary({...active,status:'past_due',isLab:false}).note,/suspended/);
 assert.match(summary({status:'none',isLab:false}).method,/No payment/);
+const comp={status:'none',isLab:true,complimentaryActive:true,hasSubscription:false,complimentaryExpiresAt:1900000000,canManage:false};
+assert.equal(summary(comp).method,'No payment required');
+assert.match(summary(comp).next,/Access ends/);
+assert.equal(summary({...comp,complimentaryExpiresAt:null}).next,'No scheduled expiry');
+assert.match(summary({...active,complimentaryActive:true,hasSubscription:true}).note,/does not cancel/);
+assert.match(summary({status:'none',isLab:false,complimentaryEnded:true}).note,/complimentary Lab access ended/);
+
 authenticated=true;
+events['elementle:lab-change']({detail:comp});
+assert.equal(buttons[0].hidden,true);
+assert.equal(buttons[1].hidden,true);
 events['elementle:lab-change']({detail:active});
 assert.match(values['[data-billing="method"]'].textContent,/4242/);assert.equal(buttons[1].hidden,false);
 assert.equal(buttons[1].disabled,false);

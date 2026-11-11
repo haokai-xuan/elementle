@@ -19,7 +19,13 @@ const api = spawn(python, ['app.py'], {
   },
   stdio: 'inherit'
 });
-const web = spawn(process.execPath, [path.resolve(__dirname, '../server.js')], {
+// Restart the frontend when page templates or assets change: the server keeps
+// both HTML templates and content-hashed assets in memory until it restarts.
+const rootDir = path.resolve(__dirname, '..');
+const watchPaths = ['server.js', 'lib', 'scripts', 'styles', 'data', 'images', 'fonts',
+  ...fs.readdirSync(rootDir).filter(name => name.endsWith('.html'))];
+const watchArgs = watchPaths.map(name => '--watch-path=' + path.join(rootDir, name));
+const web = spawn(process.execPath, ['--watch', ...watchArgs, path.join(rootDir, 'server.js')], {
   env: { ...process.env, API_BASE_URL: `http://127.0.0.1:${apiPort}` },
   stdio: 'inherit'
 });

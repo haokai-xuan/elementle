@@ -18,6 +18,8 @@ require('./lib/public-assets').createPublicAssets(__dirname).register(app);
 require('./lib/ad-session')(app, { apiBaseUrl: API_BASE_URL, apiKey: API_KEY });
 require('./lib/social-auth')(app, { apiBaseUrl: API_BASE_URL, apiKey: API_KEY });
 require('./lib/lab-proxy')(app, { apiBaseUrl: API_BASE_URL, apiKey: API_KEY });
+require('./lib/admin-page')(app, { rootDir: __dirname, apiBaseUrl: API_BASE_URL, apiKey: API_KEY });
+require('./lib/admin-proxy')(app, { apiBaseUrl: API_BASE_URL, apiKey: API_KEY });
 
 function sendHtmlPage(name) {
   const html = readPage(__dirname, name);

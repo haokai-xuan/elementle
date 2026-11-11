@@ -14,7 +14,7 @@
       if (window.ElementleAds?.state === 'free' && cached?.status?.isLab) return null;
       if (cached?.auth !== auth || typeof cached.status?.isLab !== 'boolean' || (billingPage && cached.status.accessOnly)) return null;
       const now = Date.now(), status = cached.status;
-      const end = status.status === 'past_due' ? status.paymentGraceUntil : status.status === 'trialing' ? status.trialEnd : status.currentPeriodEnd;
+      const end = 'accessExpiresAt' in status ? status.accessExpiresAt : status.status === 'past_due' ? status.paymentGraceUntil : status.status === 'trialing' ? status.trialEnd : status.currentPeriodEnd;
       if (status.isLab && end && end * 1000 <= now) return null;
       const checkedAt = cached.checkedAt ?? cached.expires - CACHE_MS;
       if (cached.expires > now || (allowStale && now >= checkedAt && now - checkedAt < 300000)) return status;
@@ -23,7 +23,7 @@
   }
   function saveStatus(auth, status) {
     let expires = Date.now() + CACHE_MS;
-    const end = status.status === 'past_due' ? status.paymentGraceUntil : status.status === 'trialing' ? status.trialEnd : status.currentPeriodEnd;
+    const end = 'accessExpiresAt' in status ? status.accessExpiresAt : status.status === 'past_due' ? status.paymentGraceUntil : status.status === 'trialing' ? status.trialEnd : status.currentPeriodEnd;
     if (status.isLab && end) expires = Math.min(expires, end * 1000);
     try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({auth, status, expires, checkedAt:Date.now()})); } catch {}
   }
@@ -204,7 +204,7 @@
   if (dailyMain || passiveStats) useLocalStatus(); else refresh(returningFromStripe, true);
   function updateBadge() {
     document.querySelectorAll('.js-lab-account-status').forEach(node => {
-      node.textContent = api.status ? (api.status.isLab ? (api.status.status === 'trialing' ? 'Elementle Lab · Free trial' : 'Elementle Lab member') : 'Free account · Explore Elementle Lab') : 'Elementle Lab';
+      node.textContent = api.status ? (api.status.isLab ? (api.status.complimentaryActive ? 'Elementle Lab · Complimentary membership' : api.status.status === 'trialing' ? 'Elementle Lab · Free trial' : 'Elementle Lab member') : 'Free account · Explore Elementle Lab') : 'Elementle Lab';
     });
   }
   async function updatePage() {

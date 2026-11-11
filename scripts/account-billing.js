@@ -1,16 +1,18 @@
 (() => {
   function summary(data) {
     const date = stamp => stamp ? new Date(stamp * 1000).toLocaleString() : '—';
+    if (data.complimentaryActive && !data.hasSubscription) return {status:'Complimentary membership',plan:'Elementle Lab · Complimentary',next:data.complimentaryExpiresAt ? 'Access ends ' + date(data.complimentaryExpiresAt) : 'No scheduled expiry',method:'No payment required',note:'All Lab benefits are included. You will not be charged automatically.'};
     const statuses = {none:'Free account',trialing:'Free trial active',active:'Active',past_due:data.isLab?'Payment failed · Lab grace period':'Payment failed · Lab suspended',unpaid:'Unpaid · Lab suspended',canceled:'Canceled',incomplete:'Payment incomplete',incomplete_expired:'Checkout expired',paused:'Paused'};
     const method = data.paymentMethod;
     const brand = method?.brand ? method.brand.charAt(0).toUpperCase() + method.brand.slice(1) : method?.type?.replaceAll('_', ' ');
     let methodLabel = method ? (brand || 'Payment method') + (method.last4 ? ' •••• ' + method.last4 : '') : 'No payment method on file';
     if (method?.expMonth && method.expYear) methodLabel += ' · Expires ' + String(method.expMonth).padStart(2,'0') + '/' + method.expYear;
-    let note = '';
+    let note = data.complimentaryEnded && !data.isLab ? 'Your complimentary Lab access ended. Explore Lab to choose a subscription.' : '';
     if (data.cancelAtPeriodEnd && data.isLab) note = 'Renewal canceled. Lab access ends on ' + date(data.currentPeriodEnd) + '. Your freeze capacity then returns to one.';
     else if (data.status === 'trialing') note = 'Your trial ends on ' + date(data.trialEnd) + '. Cancel before then to avoid the first charge.';
     if (data.status === 'past_due' || data.status === 'unpaid') note = data.isLab ? 'Lab stays active until ' + date(data.paymentGraceUntil) + '. Stripe retries after three days. Update your payment method to avoid losing access.' : 'Lab access is suspended. Update your payment method and settle the outstanding invoice in Manage billing to restore access.';
-    return {status:statuses[data.status] || 'Membership unavailable',plan:data.plan === 'monthly'?'Monthly · $1.99 USD/month':data.plan === 'yearly'?'Yearly · $17.99 USD/year':'No subscription',next:data.nextBillingDate?date(data.nextBillingDate):'No upcoming renewal',method:methodLabel,note};
+    if (data.complimentaryActive) note = 'Complimentary Lab access is active' + (data.complimentaryExpiresAt ? ' until ' + date(data.complimentaryExpiresAt) : ' with no scheduled expiry') + '. Your subscription is managed separately below; this grant does not cancel it.';
+    return {status:data.complimentaryActive ? 'Complimentary membership' : statuses[data.status] || 'Membership unavailable',plan:data.plan === 'monthly'?'Monthly · $1.99 USD/month':data.plan === 'yearly'?'Yearly · $17.99 USD/year':'No subscription',next:data.nextBillingDate?date(data.nextBillingDate):'No upcoming renewal',method:methodLabel,note};
   }
   window.ElementleBilling = { summary };
   function section() { return document.querySelector('.account-billing'); }
@@ -31,7 +33,7 @@
     for (const [name, value] of Object.entries(fields)) if (!(portalOpening && name === 'note')) root.querySelector('[data-billing="'+name+'"]').textContent = value;
     root.querySelectorAll('[data-billing-action]').forEach(button => {
       if (button.dataset.billingAction !== 'refresh') {
-        button.hidden = false;
+        button.hidden = Boolean((data.complimentaryActive || data.complimentaryGrantedAt) && !data.hasSubscription);
         button.disabled = portalOpening || !canManage(data);
         button.title = canManage(data) ? '' : 'Subscribe to Elementle Lab to manage billing.';
       }
@@ -69,7 +71,13 @@
     finally{portalOpening=false;indicate(button,false);indicate(section()?.querySelector('[data-billing="note"]'),false);if(window.ElementleLab?.status)render(window.ElementleLab.status);else button.disabled=false;if(portalError && section())section().querySelector('[data-billing="note"]').textContent=portalError;}
   });
   window.addEventListener('elementle:lab-change',event=>render(event.detail));
+  function checkAdmin() {
+    if (!section() || !localStorage.getItem('elementle_token')) return;
+    fetch('/api/admin/me', {headers:{Authorization:'Bearer ' + localStorage.getItem('elementle_token')},cache:'no-store'}).then(r=>{if(r.ok){const link=document.querySelector('.js-admin-link');if(link)link.hidden=false;}}).catch(()=>{});
+  }
+  checkAdmin();
   window.addEventListener('elementle:account-render',()=>{
+    checkAdmin();
     if(window.ElementleLab?.status)render(window.ElementleLab.status);
     refresh();
   });

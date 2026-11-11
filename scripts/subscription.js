@@ -14,20 +14,36 @@
   function render(data) {
     status = data;
     indicate(membership, false);
-    membership.textContent = !localStorage.getItem('elementle_token') ? 'Sign in to start your trial' : data.isLab ? (data.status === 'trialing' ? 'Lab free trial active' : 'Lab membership active') : 'Free account';
+    membership.textContent = !localStorage.getItem('elementle_token') ? 'Sign in to start your trial' : data.isLab ? (data.complimentaryActive ? 'Complimentary membership' : data.status === 'trialing' ? 'Lab free trial active' : 'Lab membership active') : 'Free account';
     plans.hidden = data.isLab;
+    // Older running servers can still serve HTML from before these elements
+    // were added, while unversioned scripts already contain this update.
+    let links = document.getElementById('lab-feature-links');
+    if (!links) {
+      links = document.createElement('div');
+      links.id = 'lab-feature-links';
+      links.className = 'lab-actions';
+      links.innerHTML = '<a href="/?mode=freeplay">Play Freeplay</a><a href="/?mode=archive">Archives</a><a href="/vault">Open Vault</a>';
+      plans.before(links);
+    }
+    links.hidden = !data.isLab;
     manage.hidden = !data.canManage;
+    const secure = document.getElementById('lab-secure') || document.querySelector('.lab-secure');
+    if (secure) secure.hidden = Boolean(data.complimentaryActive && !data.hasSubscription);
     document.getElementById('lab-disclosure').hidden = data.isLab;
     for (const button of buttons) button.textContent = !localStorage.getItem('elementle_token') ? 'Log in' : data.trialEligible ? 'Start 7-day free trial' : `Subscribe ${button.dataset.plan}`;
     for (const caption of document.querySelectorAll('.lab-trial, .lab-trial-highlight')) caption.hidden = !data.trialEligible || data.isLab;
     message.textContent = '';
     const end = data.status === 'trialing' ? data.trialEnd : data.currentPeriodEnd;
-    if (data.status === 'past_due' && data.isLab) {
+    if (data.complimentaryActive) {
+      message.textContent = (data.complimentaryExpiresAt ? 'Your complimentary membership ends on ' + new Date(data.complimentaryExpiresAt * 1000).toLocaleDateString() + '.' : 'Your complimentary membership has no scheduled expiry.') + (data.hasSubscription ? ' Your subscription is managed separately below; this grant does not change its billing.' : ' No payment required. You will not be charged automatically.');
+    } else if (data.status === 'past_due' && data.isLab) {
       message.textContent = `Your payment failed. Lab stays active until ${new Date(data.paymentGraceUntil * 1000).toLocaleString(window.ElementleI18n?.locale)}. Update your payment method before the three-day retry to keep access.`;
     } else if (data.isLab && end) {
       const date = new Date(end * 1000).toLocaleDateString(window.ElementleI18n?.locale, {month:'long',day:'numeric',year:'numeric'});
       message.textContent = data.cancelAtPeriodEnd ? `Your Lab access ends on ${date}.` : data.status === 'trialing' ? `Your free trial ends on ${date}. Manage billing below to cancel before your first charge.` : `Your subscription renews on ${date}.`;
     } else if (data.status === 'past_due' || data.status === 'unpaid') message.textContent = 'Your payment needs attention. Update your payment method in Manage subscription to restore Lab access.';
+    else if (data.complimentaryEnded && !data.isLab) message.textContent = 'Your complimentary Lab access ended. Choose a plan to continue using Lab.';
     else if (new URLSearchParams(location.search).get('checkout') === 'canceled') message.textContent = 'Checkout canceled. You can choose a plan whenever you’re ready.';
     else if (new URLSearchParams(location.search).has('feature')) message.textContent = 'This feature is included with Elementle Lab. Start your 7-day free trial to unlock it.';
   }

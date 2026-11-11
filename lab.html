@@ -24,14 +24,15 @@
 <div><span aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M3.34 7l17.32 10M3.34 17 20.66 7M9 4l3 3 3-3M9 20l3-3 3 3M20 10l-4-1 1-4M4 10l4-1-1-4M4 14l4 1-1 4M20 14l-4 1 1 4"/></svg></span><h2>Two freeze slots</h2><p>Store up to 2 streak freezes instead of 1. Earn a freeze every 10 daily solves.</p></div>
 </section>
 <p class="lab-trial-highlight" hidden><span>7-day free trial</span> Full Lab access on either plan.</p>
-<section aria-label="Choose your subscription" id="lab-plans" class="lab-plans">
+<section aria-label="Choose your subscription" id="lab-plans" class="lab-plans" hidden>
 <article class="lab-plan"><h2>Monthly</h2><p class="lab-price">$1.99 <small>USD / month</small></p><p class="lab-trial">7 days free, then $1.99/month.</p><button type="button" data-plan="monthly">Start 7-day free trial</button><p class="lab-cancel-anytime">Cancel anytime</p></article>
 <article class="lab-plan lab-plan-yearly"><span class="lab-saving">SAVE 25%</span><h2>Yearly</h2><p class="lab-price">$17.99 <small>USD / year</small></p><p class="lab-equivalent">About $1.50/month, billed yearly.</p><p class="lab-trial">7 days free, then $17.99/year.</p><button type="button" data-plan="yearly">Start 7-day free trial</button><p class="lab-cancel-anytime">Cancel anytime</p></article>
 </section>
-<p class="lab-disclosure" id="lab-disclosure">Payment method required. Your subscription renews automatically after the trial at the selected price, plus any applicable taxes. Cancel before your trial ends to avoid a charge. One trial per account. Manage or cancel anytime through Stripe.</p>
+<p class="lab-disclosure" id="lab-disclosure" hidden>Payment method required. Your subscription renews automatically after the trial at the selected price, plus any applicable taxes. Cancel before your trial ends to avoid a charge. One trial per account. Manage or cancel anytime through Stripe.</p>
+<div class="lab-actions" id="lab-feature-links" hidden><a href="/?mode=freeplay">Play Freeplay</a><a href="/?mode=archive">Archives</a><a href="/vault">Open Vault</a></div>
 <div class="lab-actions"><button type="button" id="lab-manage" hidden>Manage subscription</button></div>
 <p id="lab-message" role="status" aria-live="polite"></p>
-<p class="lab-secure">Secure checkout and billing powered by Stripe. <a href="/terms_of_service_and_privacy">Terms &amp; Privacy</a></p>
+<p class="lab-secure" id="lab-secure" hidden>Secure checkout and billing powered by Stripe. <a href="/terms_of_service_and_privacy">Terms &amp; Privacy</a></p>
 </main>
 <!-- site-footer -->
 <script src="/scripts/auth.js"></script><script src="/scripts/subscription.js"></script>

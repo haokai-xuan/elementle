@@ -86,9 +86,10 @@
         ${user.provider !== 'password' ? '<p class="auth-help-text">Sign in with ' + escapeHtml(user.provider === 'google' ? 'Google' : user.provider) + '. This account has no Elementle password to reset.</p>' : ''}
         <section class="account-billing" aria-labelledby="account-billing-heading">
           <h2 id="account-billing-heading">Elementle Lab</h2>
-          <dl><div><dt>Subscription status</dt><dd data-billing="status">Loading…</dd></div>
-          <div><dt>Subscription type</dt><dd data-billing="plan">—</dd></div>
-          <div><dt>Next billing date</dt><dd data-billing="next">—</dd></div>
+          <a href="/admin" class="js-admin-link" hidden>Manage Lab access →</a>
+          <dl><div><dt>Access status</dt><dd data-billing="status">Loading…</dd></div>
+          <div><dt>Membership</dt><dd data-billing="plan">—</dd></div>
+          <div><dt>Renewal / access expiry</dt><dd data-billing="next">—</dd></div>
           <div><dt>Billing method</dt><dd data-billing="method">—</dd></div></dl>
           <p class="account-billing-note" data-billing="note" role="status" aria-live="polite"></p>
           <div class="account-billing-actions"><button class="auth-btn auth-btn-outline" type="button" data-billing-action="payment_method_update" disabled>Update payment method</button>

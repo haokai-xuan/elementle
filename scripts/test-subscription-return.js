@@ -32,5 +32,18 @@ async function scenario(search='') {
   assert.equal(button.disabled,false);
   assert.equal(requests,1);
   if(search)assert.match(node('lab-message').textContent,/Checkout canceled/);
+  events['elementle:lab-change']({detail:{isLab:true,status:'none',complimentaryActive:true,complimentaryExpiresAt:1900000000,canManage:false,hasSubscription:false,trialEligible:true}});
+  assert.equal(node('lab-membership').textContent,'Complimentary membership');
+  assert.equal(node('lab-plans').hidden,true);
+  assert.equal(node('lab-disclosure').hidden,true);
+  assert.equal(node('lab-secure').hidden,true);
+  assert.equal(node('lab-manage').hidden,true);
+  assert.equal(node('lab-feature-links').hidden,false);
+  assert.match(node('lab-message').textContent,/complimentary membership ends on/);
+  assert.match(node('lab-message').textContent,/No payment required/);
+  events['elementle:lab-change']({detail:free});
+  assert.equal(node('lab-plans').hidden,false);
+  assert.equal(node('lab-feature-links').hidden,true);
+
 }
 (async()=>{await scenario();await scenario('?checkout=canceled');console.log('Back-navigation clears Stripe opening message, reenables controls, and refreshes membership.');})().catch(error=>{console.error(error);process.exitCode=1;});
