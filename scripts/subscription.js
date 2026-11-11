@@ -36,7 +36,7 @@
     message.textContent = '';
     const end = data.status === 'trialing' ? data.trialEnd : data.currentPeriodEnd;
     if (data.complimentaryActive) {
-      message.textContent = (data.complimentaryExpiresAt ? 'Your complimentary membership ends on ' + new Date(data.complimentaryExpiresAt * 1000).toLocaleDateString() + '.' : 'Your complimentary membership has no scheduled expiry.') + (data.hasSubscription ? ' Your subscription is managed separately below; this grant does not change its billing.' : ' No payment required. You will not be charged automatically.');
+      message.textContent = (data.complimentaryExpiresAt ? 'Your complimentary membership ends on ' + new Date(data.complimentaryExpiresAt * 1000).toLocaleDateString() + '.' : 'Your complimentary membership includes lifetime access.') + (data.hasSubscription ? ' Your subscription is managed separately below; this grant does not change its billing.' : ' No payment required. You will not be charged automatically.');
     } else if (data.status === 'past_due' && data.isLab) {
       message.textContent = `Your payment failed. Lab stays active until ${new Date(data.paymentGraceUntil * 1000).toLocaleString(window.ElementleI18n?.locale)}. Update your payment method before the three-day retry to keep access.`;
     } else if (data.isLab && end) {

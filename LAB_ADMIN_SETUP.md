@@ -15,7 +15,7 @@ The current Railway CLI session requires `railway login` before CLI deployment. 
 
 ## Access behavior
 
-A valid Stripe membership or a valid complimentary grant enables every Lab feature, the public Lab badge, ad suppression, and two freeze slots. The grant source is private. The Account page privately labels complimentary access, lists expiry or no scheduled expiry, and hides billing controls when there is no Stripe subscription. Lab replaces its pricing controls with access status and feature links. Expiry/revocation never creates a charge or deletes saved games. It does not consume the account's normal trial eligibility.
+A valid Stripe membership or a valid complimentary grant enables every Lab feature, the public Lab badge, ad suppression, and two freeze slots. The grant source is private. The Account page privately labels complimentary access, lists expiry or lifetime access, and hides billing controls when there is no Stripe subscription. Lab replaces its pricing controls with access status and feature links. Expiry/revocation never creates a charge or deletes saved games. It does not consume the account's normal trial eligibility.
 
 Grants are attached to permanent user IDs. The users table contains completed registrations; pending email verification does not create an eligible account. No pending invitations or notification emails are sent by this feature.
 

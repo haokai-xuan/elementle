@@ -25,7 +25,7 @@ assert.match(summary({status:'none',isLab:false}).method,/No payment/);
 const comp={status:'none',isLab:true,complimentaryActive:true,hasSubscription:false,complimentaryExpiresAt:1900000000,canManage:false};
 assert.equal(summary(comp).method,'No payment required');
 assert.match(summary(comp).next,/Access ends/);
-assert.equal(summary({...comp,complimentaryExpiresAt:null}).next,'No scheduled expiry');
+assert.equal(summary({...comp,complimentaryExpiresAt:null}).next,'Lifetime access');
 assert.match(summary({...active,complimentaryActive:true,hasSubscription:true}).note,/does not cancel/);
 assert.match(summary({status:'none',isLab:false,complimentaryEnded:true}).note,/complimentary Lab access ended/);
 

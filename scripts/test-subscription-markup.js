@@ -25,7 +25,7 @@ async function verify(legacy) {
   assert.doesNotMatch(document.getElementById('lab-message').textContent,/Cannot set|properties of null/);
   events['elementle:lab-change']({detail:{...status,complimentaryExpiresAt:null}});
   assert.equal(document.querySelectorAll('#lab-feature-links').length,1);
-  assert.match(document.getElementById('lab-message').textContent,/no scheduled expiry/);
+  assert.match(document.getElementById('lab-message').textContent,/lifetime access/);
   events['elementle:lab-change']({detail:{status:'none',isLab:false,trialEligible:true,canManage:false}});
   assert.equal(document.getElementById('lab-plans').hidden,false);
   assert.equal(document.querySelector('.lab-secure').hidden,false);

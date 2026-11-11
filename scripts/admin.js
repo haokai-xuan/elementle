@@ -1,6 +1,6 @@
 (() => {
   const $ = id => document.getElementById(id);
-  const date = value => value ? new Date(value * 1000).toLocaleString() : 'No scheduled expiry';
+  const date = value => value ? new Date(value * 1000).toLocaleString() : 'Lifetime access';
   let users = [], offset = 0, hasMore = false, selected = null, action = 'grant', loading = false;
   const token = () => localStorage.getItem('elementle_token');
   async function api(path, body) {
@@ -24,7 +24,7 @@
     for (const user of users) {
       const card = node('article', '', 'admin-user');
       card.append(node('h2', user.username), node('p', user.email));
-      const access = user.complimentaryActive ? 'Complimentary · ' + (user.complimentaryExpiresAt ? 'ends ' + date(user.complimentaryExpiresAt) : 'no scheduled expiry') : user.isLab ? 'Lab · ' + user.status + ' · ' + (user.plan || 'subscription') : 'Free account';
+      const access = user.complimentaryActive ? 'Complimentary · ' + (user.complimentaryExpiresAt ? 'ends ' + date(user.complimentaryExpiresAt) : 'lifetime access') : user.isLab ? 'Lab · ' + user.status + ' · ' + (user.plan || 'subscription') : 'Free account';
       card.append(node('p', access, 'admin-badge'));
       if (user.complimentaryGrantedAt) card.append(node('p', 'Grant: ' + date(user.complimentaryGrantedAt) + (user.complimentaryEnded ? ' · Ended' : ''), 'admin-meta'));
       if (user.hasSubscription) card.append(node('p', 'Subscription: ' + user.status + (user.nextBillingDate ? ' · next billing ' + date(user.nextBillingDate) : ''), 'admin-meta'));
